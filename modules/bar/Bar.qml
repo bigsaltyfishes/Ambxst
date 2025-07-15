@@ -16,7 +16,9 @@ PanelWindow {
         right: true
     }
 
-    implicitHeight: 40
+    color: "transparent"
+
+    implicitHeight: 44
     margins.top: 0
     margins.left: 0
     margins.right: 0
@@ -25,7 +27,7 @@ PanelWindow {
         id: bar
         anchors.fill: parent
         anchors.margins: 0
-        color: Colors.background
+        color: "transparent"
         radius: 0
         border.color: Colors.outline
         border.width: 0
@@ -35,7 +37,7 @@ PanelWindow {
             anchors.left: parent.left
             anchors.right: parent.right
             anchors.margins: 4
-            spacing: 16
+            spacing: 4
 
             Workspaces {
                 bar: QtObject {

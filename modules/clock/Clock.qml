@@ -1,15 +1,27 @@
 import QtQuick
+import QtQuick.Layouts
 import "../theme"
 
-Text {
-    id: timeDisplay
+Rectangle {
+    id: clockContainer
 
     property string currentTime: ""
+    color: Colors.surface
+    radius: 16
 
-    text: currentTime
-    color: Colors.foreground
-    font.pixelSize: 12
-    font.family: "Iosevka Nerd Font"
+    Layout.preferredWidth: timeDisplay.implicitWidth + 18
+    Layout.preferredHeight: timeDisplay.implicitHeight + 18
+
+    Text {
+        id: timeDisplay
+        anchors.centerIn: parent
+
+        text: clockContainer.currentTime
+        color: Colors.foreground
+        font.pixelSize: 14
+        font.family: "Iosevka Nerd Font"
+        font.bold: true
+    }
 
     Timer {
         interval: 1000
@@ -17,7 +29,7 @@ Text {
         repeat: true
         onTriggered: {
             var now = new Date();
-            timeDisplay.currentTime = Qt.formatDateTime(now, "hh:mm:ss");
+            clockContainer.currentTime = Qt.formatDateTime(now, "hh:mm:ss");
         }
     }
 }
