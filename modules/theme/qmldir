@@ -1,1 +1,1 @@
-singleton Colors Colors.qml
+singleton Colors ColorsWrapper.qml
