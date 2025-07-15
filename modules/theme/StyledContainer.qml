@@ -1,5 +1,6 @@
 import QtQuick
 import Qt5Compat.GraphicalEffects
+import "../theme"
 
 Rectangle {
     color: Colors.surface
@@ -13,7 +14,7 @@ Rectangle {
         verticalOffset: 0
         radius: 8
         samples: 16
-        color: "#88000000"
+        color: Qt.rgba(Colors.shadow.r, Colors.shadow.g, Colors.shadow.b, 0.5)
         transparentBorder: true
     }
 }

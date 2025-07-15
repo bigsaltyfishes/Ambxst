@@ -19,13 +19,11 @@ PanelWindow {
     color: "transparent"
 
     implicitHeight: 44
-    margins.top: 0
-    margins.left: 0
-    margins.right: 0
 
     Rectangle {
         id: bar
         anchors.fill: parent
+        anchors.centerIn: parent
         anchors.margins: 0
         color: "transparent"
         radius: 0
