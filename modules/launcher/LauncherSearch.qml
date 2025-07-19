@@ -57,7 +57,7 @@ Rectangle {
                     id: searchInput
                     Layout.fillWidth: true
                     placeholderText: "Search applications..."
-                    placeholderTextColor: Colors.surfaceBright
+                    placeholderTextColor: Colors.outline
                     font.pixelSize: 14
                     color: Colors.foreground
                     background: null
