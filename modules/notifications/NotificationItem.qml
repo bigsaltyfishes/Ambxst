@@ -121,7 +121,7 @@ Item {
             }
         }
 
-        color: (expanded && !onlyNotification) ? (notificationObject.urgency == NotificationUrgency.Critical) ? Colors.adapter.error : Colors.adapter.surfaceContainerLow : Colors.adapter.background
+        color: (expanded && !onlyNotification) ? (notificationObject.urgency == NotificationUrgency.Critical) ? Colors.adapter.error : Colors.adapter.surfaceContainerLow : Colors.background
 
         implicitHeight: expanded ? (contentColumn.implicitHeight + padding * 2) : summaryRow.implicitHeight
 

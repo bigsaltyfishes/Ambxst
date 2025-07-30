@@ -25,7 +25,7 @@ QtObject {
 
     readonly property QtObject m3colors: QtObject {
         readonly property color m3secondaryContainer: Colors.adapter.outline
-        readonly property color m3onPrimary: Colors.adapter.background
+        readonly property color m3onPrimary: Colors.background
         readonly property color m3onSecondaryContainer: Colors.adapter.overBackground
     }
 

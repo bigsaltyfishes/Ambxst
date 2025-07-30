@@ -12,7 +12,7 @@ Button {
     implicitHeight: 36
 
     background: StyledContainer {
-        color: root.pressed ? Colors.adapter.primary : (root.hovered ? Colors.adapter.surfaceBright : Colors.adapter.background)
+        color: root.pressed ? Colors.adapter.primary : (root.hovered ? Colors.adapter.surfaceBright : Colors.background)
 
         Behavior on color {
             ColorAnimation {
@@ -31,7 +31,7 @@ Button {
         text: "󰈸"
         font.family: Styling.defaultFont
         font.pixelSize: 20
-        color: root.pressed ? Colors.adapter.background : Colors.adapter.primary
+        color: root.pressed ? Colors.background : Colors.adapter.primary
         horizontalAlignment: Text.AlignHCenter
         verticalAlignment: Text.AlignVCenter
 

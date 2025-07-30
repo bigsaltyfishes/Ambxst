@@ -93,7 +93,7 @@ Item {
         id: background
         anchors.left: parent.left
         width: parent.width
-        color: Colors.adapter.background
+        color: Colors.background
         radius: 16
         anchors.leftMargin: root.xOffset
 

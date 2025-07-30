@@ -4,7 +4,7 @@ import qs.modules.theme
 import qs.modules.globals
 
 Rectangle {
-    color: Colors.adapter.background
+    color: Colors.background
     radius: GlobalStates.roundness
     border.color: Colors.adapter.surfaceBright
     border.width: 0

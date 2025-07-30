@@ -2,11 +2,12 @@ pragma Singleton
 pragma ComponentBehavior: Bound
 import QtQuick
 import Quickshell
+import Quickshell.Io
 import Quickshell.Hyprland
 
 Singleton {
     id: root
-    property bool oledMode: true
+    property bool oledMode: false
     property bool sidebarLeftOpen: false
     property bool sidebarRightOpen: false
     property bool overviewOpen: false
