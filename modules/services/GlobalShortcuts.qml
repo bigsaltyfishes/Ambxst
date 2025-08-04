@@ -8,7 +8,7 @@ Item {
     GlobalShortcut {
         id: launcherShortcut
         appid: "ambyst"
-        name: "toggle-launcher"
+        name: "launcher"
         description: "Toggle application launcher"
 
         onPressed: {
@@ -26,7 +26,7 @@ Item {
     GlobalShortcut {
         id: dashboardShortcut
         appid: "ambyst"
-        name: "toggle-dashboard"
+        name: "dashboard"
         description: "Toggle dashboard"
 
         onPressed: {
