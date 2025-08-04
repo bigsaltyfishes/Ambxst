@@ -13,7 +13,13 @@ Item {
 
         onPressed: {
             console.log("Launcher shortcut pressed");
-            GlobalStates.launcherOpen = !GlobalStates.launcherOpen;
+            // Toggle launcher - si ya está abierto, se cierra; si no, abre launcher y cierra dashboard
+            if (GlobalStates.launcherOpen) {
+                GlobalStates.launcherOpen = false;
+            } else {
+                GlobalStates.dashboardOpen = false;
+                GlobalStates.launcherOpen = true;
+            }
         }
     }
 
@@ -25,7 +31,13 @@ Item {
 
         onPressed: {
             console.log("Dashboard shortcut pressed");
-            GlobalStates.dashboardOpen = !GlobalStates.dashboardOpen;
+            // Toggle dashboard - si ya está abierto, se cierra; si no, abre dashboard y cierra launcher
+            if (GlobalStates.dashboardOpen) {
+                GlobalStates.dashboardOpen = false;
+            } else {
+                GlobalStates.launcherOpen = false;
+                GlobalStates.dashboardOpen = true;
+            }
         }
     }
 }

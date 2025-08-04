@@ -66,7 +66,13 @@ PanelWindow {
                 cursorShape: Qt.PointingHandCursor
 
                 onClicked: {
-                    GlobalStates.dashboardOpen = true;
+                    // Toggle dashboard - si ya está abierto, se cierra; si no, abre dashboard y cierra launcher
+                    if (GlobalStates.dashboardOpen) {
+                        GlobalStates.dashboardOpen = false;
+                    } else {
+                        GlobalStates.launcherOpen = false;
+                        GlobalStates.dashboardOpen = true;
+                    }
                 }
 
                 Rectangle {

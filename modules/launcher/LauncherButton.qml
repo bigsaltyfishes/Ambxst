@@ -45,8 +45,13 @@ Button {
     }
 
     onClicked: {
-        // Toggle launcher
-        GlobalStates.launcherOpen = !GlobalStates.launcherOpen;
+        // Toggle launcher - si ya está abierto, se cierra; si no, abre launcher y cierra dashboard
+        if (GlobalStates.launcherOpen) {
+            GlobalStates.launcherOpen = false;
+        } else {
+            GlobalStates.dashboardOpen = false;
+            GlobalStates.launcherOpen = true;
+        }
     }
 
     ToolTip.visible: false
