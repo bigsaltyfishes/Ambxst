@@ -88,13 +88,15 @@ Item {
         captureSource: GlobalStates.overviewOpen ? root.toplevel : null
         live: true
 
+        // Background rectangle with rounded corners
         Rectangle {
-            id: previewContainer
+            id: previewBackground
             anchors.fill: parent
             radius: Configuration.roundness - 4
             color: pressed ? Colors.adapter.surfaceContainerHighest : hovered ? Colors.adapter.surfaceContainer : Colors.adapter.surface
             border.color: Colors.adapter.surfaceContainerHighest
             border.width: 2
+            visible: !windowPreview.hasContent
             clip: true
 
             Behavior on color {
@@ -102,84 +104,106 @@ Item {
                     duration: Configuration.animDuration / 2
                 }
             }
+        }
 
-            // Overlay content when preview is not available or for additional info
-            Column {
-                anchors.centerIn: parent
-                spacing: 4
-                visible: !windowPreview.hasContent
+        // Overlay content when preview is not available
+        Column {
+            anchors.centerIn: parent
+            spacing: 4
+            visible: !windowPreview.hasContent
+            z: 10
 
-                Image {
-                    id: windowIcon
-                    property real iconSize: Math.min(root.targetWindowWidth, root.targetWindowHeight) * (root.compactMode ? root.iconToWindowRatioCompact : root.iconToWindowRatio)
-
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    source: Quickshell.iconPath(root.iconPath, "image-missing")
-                    width: iconSize
-                    height: iconSize
-                    sourceSize: Qt.size(iconSize, iconSize)
-
-                    Behavior on width {
-                        NumberAnimation {
-                            duration: Configuration.animDuration
-                            easing.type: Easing.OutQuart
-                        }
-                    }
-                    Behavior on height {
-                        NumberAnimation {
-                            duration: Configuration.animDuration
-                            easing.type: Easing.OutQuart
-                        }
-                    }
-                }
-
-                Text {
-                    id: windowTitle
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    text: root.windowData?.title || ""
-                    font.family: Styling.defaultFont
-                    font.pixelSize: Math.max(8, Math.min(12, root.targetWindowHeight * 0.1))
-                    font.weight: Font.Medium
-                    color: Colors.adapter.onSurface
-                    opacity: root.compactMode ? 0 : 0.8
-                    width: Math.min(implicitWidth, root.targetWindowWidth - 8)
-                    elide: Text.ElideRight
-                    horizontalAlignment: Text.AlignHCenter
-
-                    Behavior on opacity {
-                        NumberAnimation {
-                            duration: Configuration.animDuration / 2
-                        }
-                    }
-                }
-            }
-
-            // Overlay icon when preview is available (smaller, in corner)
             Image {
-                id: overlayIcon
-                visible: windowPreview.hasContent && !root.compactMode
-                anchors.bottom: parent.bottom
-                anchors.right: parent.right
-                anchors.margins: 4
+                id: windowIcon
+                property real iconSize: Math.min(root.targetWindowWidth, root.targetWindowHeight) * (root.compactMode ? root.iconToWindowRatioCompact : root.iconToWindowRatio)
+
+                anchors.horizontalCenter: parent.horizontalCenter
                 source: Quickshell.iconPath(root.iconPath, "image-missing")
-                width: 16
-                height: 16
-                sourceSize: Qt.size(16, 16)
-                opacity: 0.8
+                width: iconSize
+                height: iconSize
+                sourceSize: Qt.size(iconSize, iconSize)
+
+                Behavior on width {
+                    NumberAnimation {
+                        duration: Configuration.animDuration
+                        easing.type: Easing.OutQuart
+                    }
+                }
+                Behavior on height {
+                    NumberAnimation {
+                        duration: Configuration.animDuration
+                        easing.type: Easing.OutQuart
+                    }
+                }
             }
 
-            // XWayland indicator
-            Rectangle {
-                visible: root.windowData?.xwayland || false
-                anchors.top: parent.top
-                anchors.right: parent.right
-                anchors.margins: 2
-                width: 6
-                height: 6
-                radius: 3
-                color: Colors.adapter.error
-                z: 10
+            Text {
+                id: windowTitle
+                anchors.horizontalCenter: parent.horizontalCenter
+                text: root.windowData?.title || ""
+                font.family: Styling.defaultFont
+                font.pixelSize: Math.max(8, Math.min(12, root.targetWindowHeight * 0.1))
+                font.weight: Font.Medium
+                color: Colors.adapter.onSurface
+                opacity: root.compactMode ? 0 : 0.8
+                width: Math.min(implicitWidth, root.targetWindowWidth - 8)
+                elide: Text.ElideRight
+                horizontalAlignment: Text.AlignHCenter
+
+                Behavior on opacity {
+                    NumberAnimation {
+                        duration: Configuration.animDuration / 2
+                    }
+                }
             }
+        }
+
+        // Overlay border and effects when preview is available
+        Rectangle {
+            id: previewOverlay
+            anchors.fill: parent
+            radius: Configuration.roundness - 4
+            color: pressed ? Qt.rgba(Colors.adapter.surfaceContainerHighest.r, Colors.adapter.surfaceContainerHighest.g, Colors.adapter.surfaceContainerHighest.b, 0.3) : 
+                   hovered ? Qt.rgba(Colors.adapter.surfaceContainer.r, Colors.adapter.surfaceContainer.g, Colors.adapter.surfaceContainer.b, 0.2) : 
+                   "transparent"
+            border.color: Colors.adapter.surfaceContainerHighest
+            border.width: 2
+            visible: windowPreview.hasContent
+            z: 5
+
+            Behavior on color {
+                ColorAnimation {
+                    duration: Configuration.animDuration / 2
+                }
+            }
+        }
+
+        // Overlay icon when preview is available (smaller, in corner)
+        Image {
+            id: overlayIcon
+            visible: windowPreview.hasContent && !root.compactMode
+            anchors.bottom: parent.bottom
+            anchors.right: parent.right
+            anchors.margins: 4
+            source: Quickshell.iconPath(root.iconPath, "image-missing")
+            width: 16
+            height: 16
+            sourceSize: Qt.size(16, 16)
+            opacity: 0.8
+            z: 10
+        }
+
+        // XWayland indicator
+        Rectangle {
+            visible: root.windowData?.xwayland || false
+            anchors.top: parent.top
+            anchors.right: parent.right
+            anchors.margins: 2
+            width: 6
+            height: 6
+            radius: 3
+            color: Colors.adapter.error
+            z: 10
         }
     }
 

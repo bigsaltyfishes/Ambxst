@@ -141,12 +141,40 @@ Item {
             Repeater {
                 model: ScriptModel {
                     values: {
-                        return ToplevelManager.toplevels.values.filter((toplevel) => {
-                            const address = `0x${toplevel.HyprlandToplevel.address}`
-                            var win = overviewRoot.windowByAddress[address]
+                        console.log("ToplevelManager.toplevels:", ToplevelManager.toplevels)
+                        console.log("ToplevelManager.toplevels.values length:", ToplevelManager.toplevels.values.length)
+                        
+                        // Primero intentemos con el método original para comparar
+                        const originalWindows = overviewRoot.windowList.filter(win => {
                             const inWorkspaceGroup = (overviewRoot.workspaceGroup * overviewRoot.workspacesShown < win?.workspace?.id && win?.workspace?.id <= (overviewRoot.workspaceGroup + 1) * overviewRoot.workspacesShown)
                             const inMonitor = overviewRoot.monitor?.id === win.monitor
                             return inWorkspaceGroup && inMonitor
+                        })
+                        console.log("Original windowList filtered:", originalWindows.length)
+                        
+                        // Ahora intentemos con toplevels
+                        const toplevels = ToplevelManager.toplevels.values.filter((toplevel) => {
+                            const address = `0x${toplevel.HyprlandToplevel.address}`
+                            var win = overviewRoot.windowByAddress[address]
+                            console.log("Checking toplevel:", address, "found window:", !!win)
+                            if (!win) return false
+                            const inWorkspaceGroup = (overviewRoot.workspaceGroup * overviewRoot.workspacesShown < win?.workspace?.id && win?.workspace?.id <= (overviewRoot.workspaceGroup + 1) * overviewRoot.workspacesShown)
+                            const inMonitor = overviewRoot.monitor?.id === win.monitor
+                            console.log("Workspace check:", inWorkspaceGroup, "Monitor check:", inMonitor)
+                            return inWorkspaceGroup && inMonitor
+                        })
+                        console.log("Toplevels filtered:", toplevels.length)
+                        
+                        // Por ahora devolvamos las ventanas originales con toplevels simulados
+                        return originalWindows.map(win => {
+                            // Buscar el toplevel correspondiente
+                            const toplevel = ToplevelManager.toplevels.values.find(t => 
+                                `0x${t.HyprlandToplevel.address}` === win.address
+                            )
+                            return {
+                                windowData: win,
+                                toplevel: toplevel || null
+                            }
                         })
                     }
                 }
@@ -154,9 +182,8 @@ Item {
                 delegate: OverviewWindow {
                     id: window
                     required property var modelData
-                    property var address: `0x${modelData.HyprlandToplevel.address}`
-                    windowData: overviewRoot.windowByAddress[address]
-                    toplevel: modelData
+                    windowData: modelData.windowData
+                    toplevel: modelData.toplevel
                     scale: overviewRoot.scale
                     availableWorkspaceWidth: overviewRoot.workspaceImplicitWidth
                     availableWorkspaceHeight: overviewRoot.workspaceImplicitHeight
