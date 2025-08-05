@@ -177,7 +177,8 @@ Item {
                 root.dragFinished(targetWorkspace);
                 overviewRoot.draggingTargetWorkspace = -1;
 
-                if (targetWorkspace === -1) {
+                // Reset position if no target workspace or same workspace
+                if (targetWorkspace === -1 || targetWorkspace === windowData?.workspace.id) {
                     root.x = root.initX;
                     root.y = root.initY;
                 }
