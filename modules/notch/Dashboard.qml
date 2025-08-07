@@ -274,14 +274,22 @@ NotchAnimationBehavior {
         implicitHeight: 300
 
         property string searchText: ""
+        property int wallpaperSize: 96
+        property int wallpaperSpacing: 8
+        readonly property int wallpaperCellSize: wallpaperSize + wallpaperSpacing
+        readonly property int gridColumns: 3
+        readonly property int gridWidth: wallpaperCellSize * gridColumns + wallpaperSpacing * 2
+
         property var filteredWallpapers: {
-            if (!GlobalStates.wallpaperManager) return []
-            if (searchText.length === 0) return GlobalStates.wallpaperManager.wallpaperPaths
-            
-            return GlobalStates.wallpaperManager.wallpaperPaths.filter(function(path) {
-                const fileName = path.split('/').pop().toLowerCase()
-                return fileName.includes(searchText.toLowerCase())
-            })
+            if (!GlobalStates.wallpaperManager)
+                return [];
+            if (searchText.length === 0)
+                return GlobalStates.wallpaperManager.wallpaperPaths;
+
+            return GlobalStates.wallpaperManager.wallpaperPaths.filter(function (path) {
+                const fileName = path.split('/').pop().toLowerCase();
+                return fileName.includes(searchText.toLowerCase());
+            });
         }
 
         Row {
@@ -291,7 +299,7 @@ NotchAnimationBehavior {
 
             // Sidebar izquierdo con search y opciones
             Column {
-                width: parent.width - (104 * 3 + 16 * 2) - 16  // Expandir para llenar el espacio restante
+                width: parent.width - gridWidth - 16  // Expandir para llenar el espacio restante
                 height: parent.height
                 spacing: 12
 
@@ -360,7 +368,7 @@ NotchAnimationBehavior {
 
             // Grid de wallpapers a la derecha con ancho fijo
             Column {
-                width: 104 * 3 + 16 * 2  // Ancho fijo para exactamente 3 columnas con spacing
+                width: gridWidth  // Ancho calculado dinámicamente
                 height: parent.height
                 spacing: 8
 
@@ -371,21 +379,22 @@ NotchAnimationBehavior {
                     GridView {
                         id: wallpaperGrid
                         width: parent.width
-                        cellWidth: 104
-                        cellHeight: 104
+                        cellWidth: wallpaperCellSize
+                        cellHeight: wallpaperCellSize
                         model: filteredWallpapers
 
                         delegate: Rectangle {
-                            width: 96
-                            height: 96
+                            width: wallpaperSize
+                            height: wallpaperSize
                             radius: Config.roundness > 0 ? Config.roundness : 0
                             color: Colors.surface
                             border.color: isCurrentWallpaper ? Colors.adapter.primary : Colors.adapter.outline
                             border.width: isCurrentWallpaper ? 2 : 1
 
                             property bool isCurrentWallpaper: {
-                                if (!GlobalStates.wallpaperManager) return false
-                                return GlobalStates.wallpaperManager.currentWallpaper === modelData
+                                if (!GlobalStates.wallpaperManager)
+                                    return false;
+                                return GlobalStates.wallpaperManager.currentWallpaper === modelData;
                             }
 
                             Behavior on border.color {
@@ -412,12 +421,12 @@ NotchAnimationBehavior {
 
                                 onEntered: {
                                     if (!parent.isCurrentWallpaper) {
-                                        parent.color = Colors.surfaceContainerHigh
+                                        parent.color = Colors.surfaceContainerHigh;
                                     }
                                 }
                                 onExited: {
                                     if (!parent.isCurrentWallpaper) {
-                                        parent.color = Colors.surface
+                                        parent.color = Colors.surface;
                                     }
                                 }
                                 onPressed: parent.scale = 0.95
@@ -425,7 +434,7 @@ NotchAnimationBehavior {
 
                                 onClicked: {
                                     if (GlobalStates.wallpaperManager) {
-                                        GlobalStates.wallpaperManager.setWallpaper(modelData)
+                                        GlobalStates.wallpaperManager.setWallpaper(modelData);
                                     }
                                 }
                             }
