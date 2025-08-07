@@ -291,7 +291,7 @@ NotchAnimationBehavior {
 
             // Sidebar izquierdo con search y opciones
             Column {
-                width: 150
+                width: parent.width - (104 * 3 + 16 * 2) - 16  // Expandir para llenar el espacio restante
                 height: parent.height
                 spacing: 12
 
@@ -358,9 +358,9 @@ NotchAnimationBehavior {
                 }
             }
 
-            // Grid de wallpapers a la derecha
+            // Grid de wallpapers a la derecha con ancho fijo
             Column {
-                width: parent.width - 150 - 16
+                width: 104 * 3 + 16 * 2  // Ancho fijo para exactamente 3 columnas con spacing
                 height: parent.height
                 spacing: 8
 
@@ -370,13 +370,14 @@ NotchAnimationBehavior {
 
                     GridView {
                         id: wallpaperGrid
-                        cellWidth: width / 3
-                        cellHeight: cellWidth * 0.6
+                        width: parent.width
+                        cellWidth: 104
+                        cellHeight: 104
                         model: filteredWallpapers
 
                         delegate: Rectangle {
-                            width: wallpaperGrid.cellWidth - 8
-                            height: wallpaperGrid.cellHeight - 8
+                            width: 96
+                            height: 96
                             radius: Config.roundness > 0 ? Config.roundness : 0
                             color: Colors.surface
                             border.color: isCurrentWallpaper ? Colors.adapter.primary : Colors.adapter.outline
