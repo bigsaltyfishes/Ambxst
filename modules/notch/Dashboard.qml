@@ -12,6 +12,10 @@ NotchAnimationBehavior {
         property int currentTab: 0
     }
 
+    readonly property var tabModel: ["Widgets", "Pins", "Kanban", "Wallpapers"]
+    readonly property int tabCount: tabModel.length
+    readonly property int tabSpacing: 8
+
     readonly property real nonAnimWidth: 400 + viewWrapper.anchors.margins * 2
 
     implicitWidth: nonAnimWidth
@@ -34,9 +38,9 @@ NotchAnimationBehavior {
             // Background highlight que se desplaza
             Rectangle {
                 id: tabHighlight
-                width: (parent.width - tabs.spacing * 3) / 4
+                width: (parent.width - root.tabSpacing * (root.tabCount - 1)) / root.tabCount
                 height: parent.height
-                x: root.state.currentTab * (width + tabs.spacing)
+                x: root.state.currentTab * (width + root.tabSpacing)
                 y: 0
                 color: Qt.rgba(Colors.surfaceContainer.r, Colors.surfaceContainer.g, Colors.surfaceContainer.b, Config.opacity)
                 radius: Config.roundness > 0 ? Config.roundness + 4 : 0
@@ -53,10 +57,10 @@ NotchAnimationBehavior {
             Row {
                 id: tabs
                 anchors.fill: parent
-                spacing: 8
+                spacing: root.tabSpacing
 
                 Repeater {
-                    model: ["Widgets", "Pins", "Kanban", "Wallpapers"]
+                    model: root.tabModel
 
                     Button {
                         required property int index
@@ -64,7 +68,7 @@ NotchAnimationBehavior {
 
                         text: modelData
                         flat: true
-                        implicitWidth: (tabsContainer.width - tabs.spacing * 3) / 4
+                        implicitWidth: (tabsContainer.width - root.tabSpacing * (root.tabCount - 1)) / root.tabCount
                         height: tabsContainer.height
 
                         background: Rectangle {

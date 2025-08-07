@@ -258,7 +258,7 @@ Rectangle {
                 visible: root.selectedIndex >= 0
             }
 
-            highlightMoveDuration: 150
+            highlightMoveDuration: Config.animDuration / 2
             highlightMoveVelocity: -1
         }
     }
