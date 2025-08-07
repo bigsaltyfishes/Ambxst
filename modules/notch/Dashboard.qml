@@ -274,11 +274,10 @@ NotchAnimationBehavior {
         implicitHeight: 300
 
         property string searchText: ""
-        property int wallpaperSize: 96
-        property int wallpaperSpacing: 8
-        readonly property int wallpaperCellSize: wallpaperSize + wallpaperSpacing
         readonly property int gridColumns: 3
-        readonly property int gridWidth: wallpaperCellSize * gridColumns + wallpaperSpacing * 2
+        readonly property int wallpaperHeight: height / 3 // 1/3 de la altura del contenedor
+        readonly property int wallpaperWidth: wallpaperHeight  // Mantener cuadrados
+        readonly property int gridWidth: wallpaperWidth * gridColumns
 
         property var filteredWallpapers: {
             if (!GlobalStates.wallpaperManager)
@@ -310,7 +309,7 @@ NotchAnimationBehavior {
                     color: Colors.surfaceContainer
                     radius: Config.roundness > 0 ? Config.roundness : 0
                     border.color: searchInput.activeFocus ? Colors.adapter.primary : Colors.adapter.outline
-                    border.width: 1
+                    border.width: 2
 
                     Behavior on border.color {
                         ColorAnimation {
@@ -366,11 +365,11 @@ NotchAnimationBehavior {
                 }
             }
 
-            // Grid de wallpapers a la derecha con ancho fijo
+            // Grid de wallpapers a la derecha
             Column {
-                width: gridWidth  // Ancho calculado dinámicamente
+                width: gridWidth
                 height: parent.height
-                spacing: 8
+                spacing: 0
 
                 ScrollView {
                     width: parent.width
@@ -379,17 +378,17 @@ NotchAnimationBehavior {
                     GridView {
                         id: wallpaperGrid
                         width: parent.width
-                        cellWidth: wallpaperCellSize
-                        cellHeight: wallpaperCellSize
+                        cellWidth: wallpaperWidth
+                        cellHeight: wallpaperHeight
                         model: filteredWallpapers
 
                         delegate: Rectangle {
-                            width: wallpaperSize
-                            height: wallpaperSize
-                            radius: Config.roundness > 0 ? Config.roundness : 0
+                            width: wallpaperWidth
+                            height: wallpaperHeight
+                            // radius: Config.roundness > 0 ? Config.roundness : 0
                             color: Colors.surface
                             border.color: isCurrentWallpaper ? Colors.adapter.primary : Colors.adapter.outline
-                            border.width: isCurrentWallpaper ? 2 : 1
+                            border.width: isCurrentWallpaper ? 2 : 0
 
                             property bool isCurrentWallpaper: {
                                 if (!GlobalStates.wallpaperManager)
