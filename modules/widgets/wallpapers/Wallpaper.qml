@@ -30,7 +30,7 @@ PanelWindow {
     onCurrentWallpaperChanged: {
         if (currentWallpaper && initialLoadCompleted) {
             console.log("Wallpaper changed to:", currentWallpaper);
-            matugenProcess.command = ["matugen", "image", currentWallpaper, "-c", Qt.resolvedUrl("../../assets/matugen/config.toml").toString().replace("file://", "")];
+            matugenProcess.command = ["matugen", "image", currentWallpaper, "-c", Qt.resolvedUrl("../../../assets/matugen/config.toml").toString().replace("file://", "")];
             matugenProcess.running = true;
         }
     }
