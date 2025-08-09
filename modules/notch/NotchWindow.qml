@@ -10,7 +10,7 @@ import qs.modules.widgets.launcher
 import qs.modules.widgets.defaultview
 import qs.modules.widgets.overview
 import qs.modules.widgets.dashboard
-import qs.modules.notch
+import qs.modules.widgets.powermenu
 import qs.modules.services
 import qs.config
 
@@ -88,7 +88,7 @@ PanelWindow {
     // Power menu view component
     Component {
         id: powermenuViewComponent
-        PowerMenu {}
+        PowerMenuView {}
     }
 
     // Center notch
