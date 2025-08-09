@@ -7,9 +7,10 @@ import Quickshell.Hyprland
 import qs.modules.globals
 import qs.modules.theme
 import qs.modules.widgets.launcher
-import qs.modules.services
+import qs.modules.widgets.defaultview
 import qs.modules.widgets.overview
 import qs.modules.widgets.dashboard
+import qs.modules.services
 import qs.config
 
 PanelWindow {
@@ -60,158 +61,27 @@ PanelWindow {
     // Default view component - user@host text
     Component {
         id: defaultViewComponent
-        Item {
-            implicitWidth: userHostText.implicitWidth
-            implicitHeight: userHostText.implicitHeight
-            Process {
-                id: hostnameProcess
-                command: ["hostname"]
-                running: true
-
-                stdout: StdioCollector {
-                    id: hostnameCollector
-                    waitForEnd: true
-
-                    onStreamFinished: {}
-                }
-            }
-
-            MouseArea {
-                id: userHostArea
-                anchors.fill: parent
-                hoverEnabled: true
-                cursorShape: Qt.PointingHandCursor
-
-                onClicked: {
-                    // Cycle through views: default -> dashboard -> overview -> launcher -> default
-                    if (Visibilities.currentActiveModule === "dashboard") {
-                        Visibilities.setActiveModule("overview");
-                    } else if (Visibilities.currentActiveModule === "overview") {
-                        Visibilities.setActiveModule("launcher");
-                    } else if (Visibilities.currentActiveModule === "launcher") {
-                        Visibilities.setActiveModule("");
-                    } else {
-                        Visibilities.setActiveModule("dashboard");
-                    }
-                }
-
-                Rectangle {
-                    anchors.fill: parent
-                    radius: 14
-                    color: "transparent"
-
-                    Behavior on color {
-                        ColorAnimation {
-                            duration: Config.animDuration / 2
-                        }
-                    }
-                }
-            }
-
-            Text {
-                id: userHostText
-                anchors.centerIn: parent
-                text: `${Quickshell.env("USER")}@${hostnameCollector.text.trim()}`
-                color: userHostArea.pressed ? Colors.adapter.overBackground : (userHostArea.containsMouse ? Colors.adapter.primary : Colors.adapter.overBackground)
-                font.family: Styling.defaultFont
-                font.pixelSize: 14
-                font.weight: Font.Bold
-
-                Behavior on color {
-                    ColorAnimation {
-                        duration: Config.animDuration / 2
-                    }
-                }
-            }
-        }
+        DefaultView {}
     }
 
     // Launcher view component
     Component {
         id: launcherViewComponent
-        Item {
-            implicitWidth: 480
-            implicitHeight: Math.min(launcherSearch.implicitHeight, 368)
-
-            LauncherSearch {
-                id: launcherSearch
-                anchors.fill: parent
-
-                onItemSelected: {
-                    GlobalStates.clearLauncherState();
-                    Visibilities.setActiveModule("");
-                }
-
-                Keys.onPressed: event => {
-                    if (event.key === Qt.Key_Escape) {
-                        GlobalStates.clearLauncherState();
-                        Visibilities.setActiveModule("");
-                        event.accepted = true;
-                    }
-                }
-
-                Component.onCompleted: {
-                    Qt.callLater(() => {
-                        focusSearchInput();
-                    });
-                }
-            }
-        }
+        LauncherView {}
     }
 
     // Overview view component
     Component {
         id: overviewViewComponent
-        Item {
-            implicitWidth: overviewItem.implicitWidth
-            implicitHeight: overviewItem.implicitHeight
-
-            Overview {
-                id: overviewItem
-                anchors.centerIn: parent
-                currentScreen: notchPanel.screen
-
-                Keys.onPressed: event => {
-                    if (event.key === Qt.Key_Escape) {
-                        Visibilities.setActiveModule("");
-                        event.accepted = true;
-                    }
-                }
-
-                Component.onCompleted: {
-                    Qt.callLater(() => {
-                        forceActiveFocus();
-                    });
-                }
-            }
+        OverviewView {
+            currentScreen: notchPanel.screen
         }
     }
 
     // Dashboard view component
     Component {
         id: dashboardViewComponent
-        Item {
-            implicitWidth: 940
-            implicitHeight: 430
-
-            Dashboard {
-                id: dashboardItem
-                anchors.fill: parent
-
-                Keys.onPressed: event => {
-                    if (event.key === Qt.Key_Escape) {
-                        Visibilities.setActiveModule("");
-                        event.accepted = true;
-                    }
-                }
-
-                Component.onCompleted: {
-                    Qt.callLater(() => {
-                        forceActiveFocus();
-                    });
-                }
-            }
-        }
+        DashboardView {}
     }
 
     // Center notch
