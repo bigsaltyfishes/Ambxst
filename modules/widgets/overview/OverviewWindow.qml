@@ -113,12 +113,18 @@ Item {
             anchors.fill: parent
             radius: Math.max(0, Config.roundness - workspaceSpacing - 2)
             color: pressed ? Colors.surfaceContainerHighest : hovered ? Colors.surfaceContainer : Colors.surface
-            border.color: Colors.surfaceContainerHighest
+            border.color: hovered ? Colors.adapter.primary : Colors.surfaceContainerHighest
             border.width: 2
             visible: !windowPreview.hasContent
             clip: true
 
             Behavior on color {
+                ColorAnimation {
+                    duration: Config.animDuration / 2
+                }
+            }
+
+            Behavior on border.color {
                 ColorAnimation {
                     duration: Config.animDuration / 2
                 }
@@ -183,12 +189,18 @@ Item {
             anchors.fill: parent
             radius: Math.max(0, Config.roundness - workspaceSpacing - 2)
             color: pressed ? Qt.rgba(Colors.surfaceContainerHighest.r, Colors.surfaceContainerHighest.g, Colors.surfaceContainerHighest.b, 0.5) : hovered ? Qt.rgba(Colors.surfaceContainer.r, Colors.surfaceContainer.g, Colors.surfaceContainer.b, 0.2) : "transparent"
-            border.color: Colors.surfaceContainerHighest
+            border.color: hovered ? Colors.adapter.primary : Colors.surfaceContainerHighest
             border.width: 2
             visible: windowPreview.hasContent
             z: 5
 
             Behavior on color {
+                ColorAnimation {
+                    duration: Config.animDuration / 2
+                }
+            }
+
+            Behavior on border.color {
                 ColorAnimation {
                     duration: Config.animDuration / 2
                 }
@@ -233,9 +245,16 @@ Item {
 
         onEntered: {
             root.hovered = true;
-            // Focus window on hover (same pattern as double-click)
+            // Only focus window on hover if it's in the current workspace
             if (root.windowData) {
-                Hyprland.dispatch(`focuswindow address:${windowData.address}`);
+                // Get current active workspace from Hyprland
+                let currentWorkspace = Hyprland.focusedMonitor?.activeWorkspace?.id;
+                let windowWorkspace = root.windowData?.workspace?.id;
+                
+                // Only focus if the window is in the current workspace
+                if (currentWorkspace && windowWorkspace && currentWorkspace === windowWorkspace) {
+                    Hyprland.dispatch(`focuswindow address:${windowData.address}`);
+                }
             }
         }
         onExited: root.hovered = false
