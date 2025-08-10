@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import qs.modules.theme
+import qs.config
 
 Button {
     id: root

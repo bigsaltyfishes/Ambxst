@@ -5,6 +5,7 @@ import Quickshell
 import Quickshell.Widgets
 import Quickshell.Services.Notifications
 import qs.modules.theme
+import qs.config
 import "./notification_utils.js" as NotificationUtils
 
 Rectangle {

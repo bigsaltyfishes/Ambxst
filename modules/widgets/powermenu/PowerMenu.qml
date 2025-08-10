@@ -11,6 +11,11 @@ ActionGrid {
     layout: "row"
     buttonSize: 52
     spacing: 8
+    
+    // Forzar foco al abrir
+    Component.onCompleted: {
+        root.forceActiveFocus();
+    }
 
     actions: [
         {

@@ -28,6 +28,14 @@ FocusScope {
             repeater.itemAt(0).forceActiveFocus();
         }
     }
+    
+    onActiveFocusChanged: {
+        if (activeFocus && repeater.count > 0) {
+            Qt.callLater(() => {
+                repeater.itemAt(currentIndex).forceActiveFocus();
+            });
+        }
+    }
 
     Keys.onPressed: event => {
         let nextIndex = currentIndex;
@@ -98,7 +106,7 @@ FocusScope {
                     }
 
                     background: BgRect {
-                        color: actionButton.pressed ? Colors.adapter.primary : (actionButton.hovered || actionButton.activeFocus) ? Colors.adapter.surfaceContainerHighest : Colors.adapter.surfaceContainer
+                        color: actionButton.pressed ? Colors.adapter.primary : (actionButton.hovered || actionButton.activeFocus) ? Colors.adapter.surfaceContainerHighest : "transparent"
                         radius: Config.roundness > 0 ? Config.roundness + 4 : 0
 
                         border.width: actionButton.activeFocus ? 2 : 0

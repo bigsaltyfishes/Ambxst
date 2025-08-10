@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Controls
 import Quickshell.Services.Notifications
 import qs.modules.theme
+import qs.config
 
 Button {
     id: root
