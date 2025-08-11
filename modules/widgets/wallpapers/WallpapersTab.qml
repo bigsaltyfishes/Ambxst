@@ -390,7 +390,7 @@ Rectangle {
                                 fillMode: Image.PreserveAspectCrop
                                 asynchronous: true
                                 smooth: true
-                                playing: parent.parent.isHovered // Solo se anima al hacer hover
+                                playing: parent.parent.isSelected // Solo se anima cuando está seleccionado
                             }
                         }
 
