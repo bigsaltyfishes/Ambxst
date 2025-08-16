@@ -201,7 +201,7 @@ Rectangle {
             width: wallpaperWidth * gridColumns
             height: parent.height
             color: Colors.surfaceContainer
-            radius: Config.roundness > 0 ? Config.roundness : 0
+            radius: Config.roundness > 0 ? Config.roundness - 8 : 0
             border.color: Colors.adapter.outline
             border.width: 0
             clip: true
