@@ -198,7 +198,7 @@ Rectangle {
         // Contenedor para la cuadrícula de fondos de pantalla.
         Rectangle {
             id: wallpaperGridContainer
-            width: (wallpaperHeight + wallpaperMargin / 2) * gridColumns + wallpaperMargin
+            width: wallpaperHeight * gridColumns
             height: parent.height
             color: Colors.surfaceContainer
             radius: Config.roundness > 0 ? Config.roundness - 8 : 0
@@ -232,117 +232,10 @@ Rectangle {
                     }
 
                     // Elemento de realce para el wallpaper seleccionado.
-                    highlight: Rectangle {
-                        color: "transparent"
-                        border.color: Colors.adapter.primary
-                        border.width: 2
-                        visible: selectedIndex >= 0
-                        z: 10
-
-                        // Borde interior original
-                        Rectangle {
-                            anchors.fill: parent
-                            anchors.margins: 2  // Para crear espacio para el borde exterior
-                            color: "transparent"
-                            border.color: Colors.background
-                            border.width: 8
-                            z: 5
-
-                            // Etiqueta unificada que se anima con el highlight
-                            Rectangle {
-                                anchors.bottom: parent.bottom
-                                anchors.left: parent.left
-                                anchors.right: parent.right
-                                height: 24
-                                color: Colors.background
-                                z: 6
-                                clip: true
-
-                                property var currentItem: wallpaperGrid.currentItem
-                                property bool isCurrentWallpaper: {
-                                    if (!GlobalStates.wallpaperManager || wallpaperGrid.currentIndex < 0)
-                                        return false;
-                                    return GlobalStates.wallpaperManager.currentWallpaper === filteredWallpapers[wallpaperGrid.currentIndex];
-                                }
-                                property bool showHoveredItem: currentItem && currentItem.isHovered && !visible
-
-                                visible: selectedIndex >= 0 || showHoveredItem
-
-                                Text {
-                                    id: labelText
-                                    anchors.verticalCenter: parent.verticalCenter
-                                    anchors.horizontalCenter: needsScroll ? undefined : parent.horizontalCenter
-                                    x: needsScroll ? 4 : undefined
-                                    text: {
-                                        if (parent.isCurrentWallpaper) {
-                                            return "CURRENT";
-                                        } else if (wallpaperGrid.currentIndex >= 0 && wallpaperGrid.currentIndex < filteredWallpapers.length) {
-                                            return filteredWallpapers[wallpaperGrid.currentIndex].split('/').pop();
-                                        }
-                                        return "";
-                                    }
-                                    color: parent.isCurrentWallpaper ? Colors.adapter.primary : Colors.adapter.overBackground
-                                    font.family: Config.theme.font
-                                    font.pixelSize: 14
-                                    font.weight: Font.Bold
-                                    horizontalAlignment: Text.AlignHCenter
-
-                                    readonly property bool needsScroll: width > parent.width - 8
-
-                                    // Resetear posición cuando cambia el texto o cuando deja de necesitar scroll
-                                    onTextChanged: {
-                                        if (needsScroll) {
-                                            x = 4;
-                                        }
-                                    }
-
-                                    onNeedsScrollChanged: {
-                                        if (needsScroll) {
-                                            x = 4;
-                                            scrollAnimation.restart();
-                                        }
-                                    }
-
-                                    SequentialAnimation {
-                                        id: scrollAnimation
-                                        running: labelText.needsScroll && parent.visible && !parent.isCurrentWallpaper
-                                        loops: Animation.Infinite
-
-                                        PauseAnimation {
-                                            duration: 1000
-                                        }
-                                        NumberAnimation {
-                                            target: labelText
-                                            property: "x"
-                                            to: labelText.parent.width - labelText.width - 4
-                                            duration: 2000
-                                            easing.type: Easing.InOutQuad
-                                        }
-                                        PauseAnimation {
-                                            duration: 1000
-                                        }
-                                        NumberAnimation {
-                                            target: labelText
-                                            property: "x"
-                                            to: 4
-                                            duration: 2000
-                                            easing.type: Easing.InOutQuad
-                                        }
-                                    }
-                                }
-
-                                onVisibleChanged: {
-                                    if (visible) {
-                                        labelText.x = 4;
-                                        if (labelText.needsScroll && !isCurrentWallpaper) {
-                                            scrollAnimation.restart();
-                                        }
-                                    } else {
-                                        scrollAnimation.stop();
-                                    }
-                                }
-                            }
-                        }
+                    highlight: Item {
+                        width: wallpaperGridContainer.wallpaperWidth
+                        height: wallpaperGridContainer.wallpaperHeight
+                        z: 100
 
                         Behavior on x {
                             NumberAnimation {
@@ -355,6 +248,123 @@ Rectangle {
                             NumberAnimation {
                                 duration: Config.animDuration / 2
                                 easing.type: Easing.OutQuart
+                            }
+                        }
+
+                        Rectangle {
+                            id: highlightRectangle
+                            anchors.centerIn: parent
+                            width: parent.width - wallpaperGridContainer.wallpaperMargin * 2
+                            height: parent.height - wallpaperGridContainer.wallpaperMargin * 2
+                            color: "transparent"
+                            border.color: Colors.adapter.primary
+                            border.width: 2
+                            visible: selectedIndex >= 0
+                            z: 10
+
+                            // Borde interior original
+                            Rectangle {
+                                anchors.fill: parent
+                                anchors.margins: 2  // Para crear espacio para el borde exterior
+                                color: "transparent"
+                                border.color: Colors.background
+                                border.width: 8
+                                z: 5
+
+                                // Etiqueta unificada que se anima con el highlight
+                                Rectangle {
+                                    anchors.bottom: parent.bottom
+                                    anchors.left: parent.left
+                                    anchors.right: parent.right
+                                    height: 24
+                                    color: Colors.background
+                                    z: 6
+                                    clip: true
+
+                                    property var currentItem: wallpaperGrid.currentItem
+                                    property bool isCurrentWallpaper: {
+                                        if (!GlobalStates.wallpaperManager || wallpaperGrid.currentIndex < 0)
+                                            return false;
+                                        return GlobalStates.wallpaperManager.currentWallpaper === filteredWallpapers[wallpaperGrid.currentIndex];
+                                    }
+                                    property bool showHoveredItem: currentItem && currentItem.isHovered && !visible
+
+                                    visible: selectedIndex >= 0 || showHoveredItem
+
+                                    Text {
+                                        id: labelText
+                                        anchors.verticalCenter: parent.verticalCenter
+                                        anchors.horizontalCenter: needsScroll ? undefined : parent.horizontalCenter
+                                        x: needsScroll ? 4 : undefined
+                                        text: {
+                                            if (parent.isCurrentWallpaper) {
+                                                return "CURRENT";
+                                            } else if (wallpaperGrid.currentIndex >= 0 && wallpaperGrid.currentIndex < filteredWallpapers.length) {
+                                                return filteredWallpapers[wallpaperGrid.currentIndex].split('/').pop();
+                                            }
+                                            return "";
+                                        }
+                                        color: parent.isCurrentWallpaper ? Colors.adapter.primary : Colors.adapter.overBackground
+                                        font.family: Config.theme.font
+                                        font.pixelSize: 14
+                                        font.weight: Font.Bold
+                                        horizontalAlignment: Text.AlignHCenter
+
+                                        readonly property bool needsScroll: width > parent.width - 8
+
+                                        // Resetear posición cuando cambia el texto o cuando deja de necesitar scroll
+                                        onTextChanged: {
+                                            if (needsScroll) {
+                                                x = 4;
+                                            }
+                                        }
+
+                                        onNeedsScrollChanged: {
+                                            if (needsScroll) {
+                                                x = 4;
+                                                scrollAnimation.restart();
+                                            }
+                                        }
+
+                                        SequentialAnimation {
+                                            id: scrollAnimation
+                                            running: labelText.needsScroll && parent.visible && !parent.isCurrentWallpaper
+                                            loops: Animation.Infinite
+
+                                            PauseAnimation {
+                                                duration: 1000
+                                            }
+                                            NumberAnimation {
+                                                target: labelText
+                                                property: "x"
+                                                to: labelText.parent.width - labelText.width - 4
+                                                duration: 2000
+                                                easing.type: Easing.InOutQuad
+                                            }
+                                            PauseAnimation {
+                                                duration: 1000
+                                            }
+                                            NumberAnimation {
+                                                target: labelText
+                                                property: "x"
+                                                to: 4
+                                                duration: 2000
+                                                easing.type: Easing.InOutQuad
+                                            }
+                                        }
+                                    }
+
+                                    onVisibleChanged: {
+                                        if (visible) {
+                                            labelText.x = 4;
+                                            if (labelText.needsScroll && !isCurrentWallpaper) {
+                                                scrollAnimation.restart();
+                                            }
+                                        } else {
+                                            scrollAnimation.stop();
+                                        }
+                                    }
+                                }
                             }
                         }
                     }
