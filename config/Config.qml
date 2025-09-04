@@ -9,7 +9,7 @@ Singleton {
 
     FileView {
         id: loader
-        path: Qt.resolvedUrl("./config.json")
+        path: Qt.resolvedUrl("../config.json")
         preload: true
         watchChanges: true
         onFileChanged: reload()
