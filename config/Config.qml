@@ -17,6 +17,7 @@ Singleton {
         adapter: JsonAdapter {
             property JsonObject theme: JsonObject {
                 property bool oledMode: false
+                property bool lightMode: false
                 property real opacity: 1.0
                 property real shadowOpacity: 0.5
                 property int roundness: 16
@@ -53,7 +54,8 @@ Singleton {
 
     // Theme configuration
     property QtObject theme: loader.adapter.theme
-    property bool oledMode: theme.oledMode
+    property bool oledMode: lightMode ? false : theme.oledMode
+    property bool lightMode: theme.lightMode
     property real opacity: Math.min(Math.max(theme.opacity, 0.1), 1.0)
     property int roundness: theme.roundness
     property string defaultFont: theme.defaultFont

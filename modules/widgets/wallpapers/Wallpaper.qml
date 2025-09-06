@@ -71,7 +71,11 @@ PanelWindow {
             }
 
             // Ejecutar matugen con configuración específica
-            matugenProcessWithConfig.command = ["matugen", "image", matugenSource, "-c", Qt.resolvedUrl("../../../assets/matugen/config.toml").toString().replace("file://", "")];
+            var command = ["matugen", "image", matugenSource, "-c", Qt.resolvedUrl("../../../assets/matugen/config.toml").toString().replace("file://", "")];
+            if (Config.theme.lightMode) {
+                command.push("-m", "light");
+            }
+            matugenProcessWithConfig.command = command;
             matugenProcessWithConfig.running = true;
         }
     }
@@ -215,7 +219,11 @@ PanelWindow {
                 console.log("Using video thumbnail for normal matugen:", matugenSource);
             }
             
-            matugenProcessNormal.command = ["matugen", "image", matugenSource];
+            var command = ["matugen", "image", matugenSource];
+            if (Config.theme.lightMode) {
+                command.push("-m", "light");
+            }
+            matugenProcessNormal.command = command;
             matugenProcessNormal.running = true;
         }
     }

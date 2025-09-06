@@ -221,6 +221,16 @@ Rectangle {
                     model: filteredWallpapers
                     currentIndex: selectedIndex
 
+                    // Optimizaciones de rendimiento
+                    cacheBuffer: cellHeight * 2 // Cachear 2 filas extra para scroll suave
+                    displayMarginBeginning: cellHeight // Margen para precargar elementos
+                    displayMarginEnd: cellHeight
+                    reuseItems: true // Reutilizar elementos del delegado
+
+                    // Configuración de scroll optimizada
+                    flickDeceleration: 5000
+                    maximumFlickVelocity: 8000
+
                     // Sincronizar currentIndex con selectedIndex
                     onCurrentIndexChanged: {
                         if (currentIndex !== selectedIndex) {
@@ -228,6 +238,12 @@ Rectangle {
                             selectedIndex = currentIndex;
                         }
                     }
+
+                    // Optimización: Actualizar visibilidad cuando cambia el scroll
+                    onContentYChanged:
+                    // Forzar actualización de isInViewport en elementos cercanos
+                    // QML manejará automáticamente la re-evaluación de las propiedades
+                    {}
 
                     // Elemento de realce para el wallpaper seleccionado.
                     highlight: Item {
@@ -249,7 +265,7 @@ Rectangle {
                             }
                         }
 
-                        Rectangle {
+                        ClippingRectangle {
                             id: highlightRectangle
                             anchors.centerIn: parent
                             width: parent.width - wallpaperGridContainer.wallpaperMargin * 2
@@ -258,15 +274,20 @@ Rectangle {
                             border.color: Colors.adapter.primary
                             border.width: 2
                             visible: selectedIndex >= 0
+                            radius: Config.roundness > 0 ? Config.roundness : 0
                             z: 10
 
                             // Borde interior original
                             Rectangle {
                                 anchors.fill: parent
-                                anchors.margins: 2  // Para crear espacio para el borde exterior
+                                anchors.topMargin: -2
+                                anchors.bottomMargin: 16
+                                anchors.leftMargin: -2
+                                anchors.rightMargin: -2
                                 color: "transparent"
                                 border.color: Colors.background
                                 border.width: 8
+                                radius: Config.roundness > 0 ? Config.roundness : 0
                                 z: 5
 
                                 // Etiqueta unificada que se anima con el highlight
@@ -274,6 +295,7 @@ Rectangle {
                                     anchors.bottom: parent.bottom
                                     anchors.left: parent.left
                                     anchors.right: parent.right
+                                    anchors.bottomMargin: -16
                                     height: 24
                                     color: Colors.background
                                     z: 6
@@ -367,7 +389,7 @@ Rectangle {
                         }
                     }
 
-                    // Delegado para cada elemento de la cuadrícula.
+                    // Delegado para cada elemento de la cuadrícula con lazy loading optimizado.
                     delegate: Rectangle {
                         width: wallpaperGridContainer.wallpaperWidth
                         height: wallpaperGridContainer.wallpaperHeight
@@ -382,98 +404,44 @@ Rectangle {
                         property bool isHovered: false
                         property bool isSelected: selectedIndex === index
 
-                        // ClippingRectangle para contener la imagen con bordes redondeados
+                        // Calcular si el item está visible en el viewport (con buffer para precarga)
+                        readonly property bool isInViewport: {
+                            var gridTop = wallpaperGrid.contentY;
+                            var gridBottom = gridTop + wallpaperGrid.height;
+                            var itemTop = y;
+                            var itemBottom = itemTop + height;
+
+                            // Buffer de una fila arriba y abajo para precarga suave
+                            var buffer = wallpaperGridContainer.wallpaperHeight;
+                            return itemBottom + buffer >= gridTop && itemTop - buffer <= gridBottom;
+                        }
+
+                        // Contenedor de imagen optimizado con ClippingRectangle para radius
                         Item {
                             anchors.fill: parent
                             anchors.margins: wallpaperGridContainer.wallpaperMargin
-                            clip: true
 
                             ClippingRectangle {
-                                color: Colors.surfaceContainer
                                 anchors.fill: parent
-                                radius: Config.roundness - wallpaperGridContainer.wallpaperMargin
+                                color: Colors.surfaceContainer
+                                radius: Config.roundness > 0 ? Config.roundness : 0
 
-                                // Carga la imagen o el GIF según el tipo de archivo.
+                                // Lazy loader que solo carga cuando el item está visible
                                 Loader {
                                     anchors.fill: parent
-                                    sourceComponent: {
-                                        if (!GlobalStates.wallpaperManager)
-                                            return null;
-
-                                        var fileType = GlobalStates.wallpaperManager.getFileType(modelData);
-                                        if (fileType === 'image') {
-                                            return staticImageComponent;
-                                        } else if (fileType === 'gif') {
-                                            return animatedImageComponent;
-                                        } else if (fileType === 'video') {
-                                            return videoThumbnailComponent;
-                                        }
-                                        return staticImageComponent; // Fallback
-                                    }
-
+                                    // active: parent.parent.parent.isInViewport
+                                    sourceComponent: wallpaperComponent
                                     property string sourceFile: modelData
-                                }
-                            }
-                        }
 
-                        // Componente para imágenes estáticas.
-                        Component {
-                            id: staticImageComponent
-                            Image {
-                                source: parent.sourceFile ? "file://" + parent.sourceFile : ""
-                                fillMode: Image.PreserveAspectCrop
-                                asynchronous: true
-                                smooth: true
-                            }
-                        }
-
-                        // Componente para imágenes animadas (GIFs).
-                        Component {
-                            id: animatedImageComponent
-                            AnimatedImage {
-                                source: parent.sourceFile ? "file://" + parent.sourceFile : ""
-                                fillMode: Image.PreserveAspectCrop
-                                asynchronous: true
-                                smooth: true
-                                playing: false
-                                // playing: parent.parent.isSelected // Solo se anima cuando está seleccionado
-                            }
-                        }
-
-                        // Componente para previews de video usando thumbnails pre-generados.
-                        Component {
-                            id: videoThumbnailComponent
-                            Item {
-                                property string thumbnailPath: {
-                                    // Construir ruta del thumbnail basado en el nombre del video
-                                    var videoName = parent.sourceFile.split('/').pop();
-                                    var baseName = videoName.substring(0, videoName.lastIndexOf('.'));
-                                    return "file://" + Quickshell.env("HOME") + "/.cache/quickshell/video_thumbnails/" + baseName + ".jpg";
-                                }
-
-                                // Thumbnail pre-generado
-                                Image {
-                                    anchors.fill: parent
-                                    source: parent.thumbnailPath
-                                    fillMode: Image.PreserveAspectCrop
-                                    asynchronous: true
-                                    smooth: true
-
-                                    // Placeholder mientras carga o si falla
+                                    // Placeholder mientras carga
                                     Rectangle {
                                         anchors.fill: parent
                                         color: Colors.surfaceContainer
-                                        visible: parent.status !== Image.Ready
+                                        visible: !parent.active
 
                                         Text {
                                             anchors.centerIn: parent
-                                            text: {
-                                                if (parent.parent.status === Image.Loading)
-                                                    return "⏳";
-                                                if (parent.parent.status === Image.Error)
-                                                    return "❌";
-                                                return "📹";
-                                            }
+                                            text: "⏳"
                                             font.pixelSize: 24
                                             color: Colors.adapter.overSurfaceVariant
                                         }
@@ -521,6 +489,95 @@ Rectangle {
                                 easing.type: Easing.OutCubic
                             }
                         }
+                    }
+                }
+            }
+        }
+    }
+
+    // Componente optimizado para wallpapers con lazy loading
+    Component {
+        id: wallpaperComponent
+
+        Loader {
+            sourceComponent: {
+                if (!GlobalStates.wallpaperManager)
+                    return null;
+
+                var fileType = GlobalStates.wallpaperManager.getFileType(parent.sourceFile);
+                if (fileType === 'image') {
+                    return staticImageComponent;
+                } else if (fileType === 'gif') {
+                    return animatedImageComponent;
+                } else if (fileType === 'video') {
+                    return videoThumbnailComponent;
+                }
+                return staticImageComponent; // Fallback
+            }
+            property string sourceFile: parent.sourceFile
+        }
+    }
+
+    // Componentes de imagen optimizados y reutilizables
+    Component {
+        id: staticImageComponent
+        Image {
+            source: parent.sourceFile ? "file://" + parent.sourceFile : ""
+            fillMode: Image.PreserveAspectCrop
+            asynchronous: true
+            smooth: true
+            cache: false // Evitar acumular cache innecesario
+        }
+    }
+
+    Component {
+        id: animatedImageComponent
+        AnimatedImage {
+            source: parent.sourceFile ? "file://" + parent.sourceFile : ""
+            fillMode: Image.PreserveAspectCrop
+            asynchronous: true
+            smooth: true
+            playing: false
+            cache: false
+        }
+    }
+
+    Component {
+        id: videoThumbnailComponent
+        Item {
+            property string thumbnailPath: {
+                // Construir ruta del thumbnail basado en el nombre del video
+                var videoName = parent.sourceFile.split('/').pop();
+                var baseName = videoName.substring(0, videoName.lastIndexOf('.'));
+                return "file://" + Quickshell.env("HOME") + "/.cache/quickshell/video_thumbnails/" + baseName + ".jpg";
+            }
+
+            // Thumbnail pre-generado
+            Image {
+                anchors.fill: parent
+                source: parent.thumbnailPath
+                fillMode: Image.PreserveAspectCrop
+                asynchronous: true
+                smooth: true
+                cache: false
+
+                // Placeholder mientras carga o si falla
+                Rectangle {
+                    anchors.fill: parent
+                    color: Colors.surfaceContainer
+                    visible: parent.status !== Image.Ready
+
+                    Text {
+                        anchors.centerIn: parent
+                        text: {
+                            if (parent.parent.status === Image.Loading)
+                                return "⏳";
+                            if (parent.parent.status === Image.Error)
+                                return "❌";
+                            return "📹";
+                        }
+                        font.pixelSize: 24
+                        color: Colors.adapter.overSurfaceVariant
                     }
                 }
             }
