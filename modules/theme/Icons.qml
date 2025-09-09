@@ -29,4 +29,7 @@ QtObject {
     readonly property string apps: ""
     readonly property string terminal: ""
     readonly property string clipboard: ""
+    // Misc
+    readonly property string accept: ""
+    readonly property string cancel: ""
 }

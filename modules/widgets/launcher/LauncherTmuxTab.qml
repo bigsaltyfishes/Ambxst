@@ -23,6 +23,7 @@ Rectangle {
     property bool deleteMode: false
     property string sessionToDelete: ""
     property int originalSelectedIndex: -1
+    property int deleteButtonIndex: 0 // 0 = cancel, 1 = confirm
 
     // Rename mode state
     property bool renameMode: false
@@ -159,7 +160,8 @@ Rectangle {
         originalSelectedIndex = selectedIndex; // Store the current index
         deleteMode = true;
         sessionToDelete = sessionName;
-        // Quitar focus del SearchInput para que el componente root pueda capturar Y/N
+        deleteButtonIndex = 0; // Start with cancel button selected
+        // Quitar focus del SearchInput para que el componente root pueda capturar teclas
         root.forceActiveFocus();
     // No necesito llamar updateFilteredSessions porque el delegate se actualiza automáticamente
     }
@@ -168,6 +170,7 @@ Rectangle {
         console.log("DEBUG: Canceling delete mode");
         deleteMode = false;
         sessionToDelete = "";
+        deleteButtonIndex = 0;
         // Devolver focus al SearchInput
         searchInput.focusInput();
         updateFilteredSessions();
@@ -522,11 +525,15 @@ Rectangle {
                 height: 48
                 color: "transparent"
                 radius: 16
+                clip: true
+
+                property bool isInDeleteMode: root.deleteMode && modelData.name === root.sessionToDelete
 
                 MouseArea {
                     id: mouseArea
                     anchors.fill: parent
                     hoverEnabled: true
+                    enabled: !isInDeleteMode
 
                     onEntered: {
                         root.selectedIndex = index;
@@ -543,7 +550,9 @@ Rectangle {
                     }
                 }
 
+                // Contenido principal que permanece fijo
                 RowLayout {
+                    id: mainContent
                     anchors.fill: parent
                     anchors.margins: 8
                     spacing: 12
@@ -553,7 +562,7 @@ Rectangle {
                         Layout.preferredWidth: 32
                         Layout.preferredHeight: 32
                         color: {
-                            if (root.deleteMode && modelData.name === root.sessionToDelete) {
+                            if (isInDeleteMode) {
                                 return Colors.adapter.error;
                             } else if (modelData.isCreateButton) {
                                 return Colors.adapter.primary;
@@ -574,7 +583,7 @@ Rectangle {
                             anchors.centerIn: parent
                             text: ""  // Icono de terminal
                             color: {
-                                if (root.deleteMode && modelData.name === root.sessionToDelete) {
+                                if (isInDeleteMode) {
                                     return Colors.adapter.errorContainer;
                                 } else if (modelData.isCreateButton) {
                                     return Colors.background;
@@ -616,17 +625,16 @@ Rectangle {
                             id: normalText
                             Text {
                                 text: {
-                                    // Si estamos en modo eliminar y este es el item seleccionado
-                                    if (root.deleteMode && modelData.name === root.sessionToDelete) {
-                                        return `Exit "${root.sessionToDelete}"? (y/N)`;
+                                    if (isInDeleteMode && !modelData.isCreateButton && !modelData.isCreateSpecificButton) {
+                                        return `Quit "${root.sessionToDelete}"?`;
                                     } else {
                                         return modelData.name;
                                     }
                                 }
-                                color: (root.deleteMode && modelData.name === root.sessionToDelete) ? Colors.adapter.errorContainer : Colors.adapter.overBackground
+                                color: isInDeleteMode ? Colors.adapter.overError : Colors.adapter.overBackground
                                 font.family: Config.theme.font
                                 font.pixelSize: Config.theme.fontSize
-                                font.weight: modelData.isCreateButton ? Font.Medium : Font.Bold
+                                font.weight: isInDeleteMode ? Font.Bold : (modelData.isCreateButton ? Font.Medium : Font.Bold)
                                 elide: Text.ElideRight
 
                                 Behavior on color {
@@ -680,6 +688,162 @@ Rectangle {
                         }
                     }
                 }
+
+                // Botones de acción que aparecen desde la derecha
+                Rectangle {
+                    id: actionContainer
+                    anchors.right: parent.right
+                    anchors.verticalCenter: parent.verticalCenter
+                    anchors.margins: 8
+                    width: 72 // 32 + 8 + 32
+                    height: 32
+                    color: "transparent"
+                    opacity: isInDeleteMode ? 1.0 : 0.0
+                    visible: opacity > 0
+
+                    transform: Translate {
+                        x: isInDeleteMode ? 0 : 80
+
+                        Behavior on x {
+                            NumberAnimation {
+                                duration: Config.animDuration
+                                easing.type: Easing.OutQuart
+                            }
+                        }
+                    }
+
+                    Behavior on opacity {
+                        NumberAnimation {
+                            duration: Config.animDuration / 2
+                            easing.type: Easing.OutQuart
+                        }
+                    }
+
+                    // Highlight elástico que se estira entre botones
+                    Rectangle {
+                        id: deleteHighlight
+                        color: Colors.adapter.overError
+                        radius: Config.roundness > 0 ? Config.roundness : 0
+                        visible: isInDeleteMode
+                        z: 0
+
+                        property real activeButtonMargin: 2
+                        property real idx1X: root.deleteButtonIndex
+                        property real idx2X: root.deleteButtonIndex
+
+                        // Posición y tamaño con efecto elástico
+                        x: {
+                            let minX = Math.min(idx1X, idx2X) * 36 + activeButtonMargin;
+                            return minX;
+                        }
+
+                        y: activeButtonMargin
+
+                        width: {
+                            let stretchX = Math.abs(idx1X - idx2X) * 36 + 32 - activeButtonMargin * 2;
+                            return stretchX;
+                        }
+
+                        height: 32 - activeButtonMargin * 2
+
+                        Behavior on idx1X {
+                            NumberAnimation {
+                                duration: Config.animDuration / 3
+                                easing.type: Easing.OutSine
+                            }
+                        }
+                        Behavior on idx2X {
+                            NumberAnimation {
+                                duration: Config.animDuration
+                                easing.type: Easing.OutSine
+                            }
+                        }
+                    }
+
+                    Row {
+                        id: actionButtons
+                        anchors.fill: parent
+                        spacing: 4
+
+                        // Botón cancelar (cruz)
+                        Rectangle {
+                            id: cancelButton
+                            width: 32
+                            height: 32
+                            color: "transparent"
+                            radius: 6
+                            border.width: 0
+                            border.color: Colors.adapter.outline
+                            z: 1
+
+                            property bool isHighlighted: root.deleteButtonIndex === 0
+
+                            MouseArea {
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                onClicked: root.cancelDeleteMode()
+                                onEntered: {
+                                    root.deleteButtonIndex = 0;
+                                    parent.color = Colors.adapter.surfaceVariant;
+                                }
+                                onExited: parent.color = "transparent"
+                            }
+
+                            Text {
+                                anchors.centerIn: parent
+                                text: Icons.cancel
+                                color: cancelButton.isHighlighted ? Colors.adapter.error : Colors.adapter.overError
+                                font.pixelSize: 14
+                                font.family: Icons.font
+
+                                Behavior on color {
+                                    ColorAnimation {
+                                        duration: Config.animDuration / 2
+                                        easing.type: Easing.OutQuart
+                                    }
+                                }
+                            }
+                        }
+
+                        // Botón confirmar (check)
+                        Rectangle {
+                            id: confirmButton
+                            width: 32
+                            height: 32
+                            color: "transparent"
+                            radius: 6
+                            z: 1
+
+                            property bool isHighlighted: root.deleteButtonIndex === 1
+
+                            MouseArea {
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                onClicked: root.confirmDeleteSession()
+                                onEntered: {
+                                    root.deleteButtonIndex = 1;
+                                    parent.color = Qt.darker(Colors.adapter.error, 1.1);
+                                }
+                                onExited: parent.color = "transparent"
+                            }
+
+                            Text {
+                                anchors.centerIn: parent
+                                text: Icons.accept
+                                color: confirmButton.isHighlighted ? Colors.adapter.error : Colors.adapter.overError
+                                font.pixelSize: 14
+                                font.family: Icons.font
+
+                                Behavior on color {
+                                    ColorAnimation {
+                                        duration: Config.animDuration / 2
+                                        easing.type: Easing.OutQuart
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
             }
 
             highlight: Rectangle {
@@ -724,20 +888,24 @@ Rectangle {
         });
     }
 
-    // Handler de teclas global para manejar Y/N/Enter/Escape en modo eliminar y renombrar
+    // Handler de teclas global para manejar navegación en modo eliminar y renombrar
     Keys.onPressed: event => {
         if (root.deleteMode) {
-            if (event.key === Qt.Key_Y) {
-                console.log("DEBUG: Y pressed - confirming delete");
-                root.confirmDeleteSession();
+            if (event.key === Qt.Key_Left) {
+                root.deleteButtonIndex = 0; // Cancelar (cruz)
                 event.accepted = true;
-            } else if (event.key === Qt.Key_N) {
-                console.log("DEBUG: N pressed - canceling delete");
-                root.cancelDeleteMode();
+            } else if (event.key === Qt.Key_Right) {
+                root.deleteButtonIndex = 1; // Confirmar (check)
                 event.accepted = true;
-            } else if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
-                console.log("DEBUG: Enter pressed in delete mode - defaulting to N (cancel)");
-                root.cancelDeleteMode();
+            } else if (event.key === Qt.Key_Return || event.key === Qt.Key_Space) {
+                // Ejecutar acción del botón seleccionado
+                if (root.deleteButtonIndex === 0) {
+                    console.log("DEBUG: Enter/Space pressed - canceling delete");
+                    root.cancelDeleteMode();
+                } else {
+                    console.log("DEBUG: Enter/Space pressed - confirming delete");
+                    root.confirmDeleteSession();
+                }
                 event.accepted = true;
             } else if (event.key === Qt.Key_Escape) {
                 console.log("DEBUG: Escape pressed in delete mode - canceling without closing notch");
