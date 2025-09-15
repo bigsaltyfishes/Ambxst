@@ -138,7 +138,7 @@ Item {
                             text: parent.text
                             color: root.state.currentTab === index ? Colors.adapter.overPrimary : Colors.adapter.overBackground
                             font.family: Icons.font
-                            font.pixelSize: 24
+                            font.pixelSize: 20
                             font.weight: Font.Medium
                             horizontalAlignment: Text.AlignHCenter
                             verticalAlignment: Text.AlignVCenter

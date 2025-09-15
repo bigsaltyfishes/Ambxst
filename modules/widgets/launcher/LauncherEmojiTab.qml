@@ -501,7 +501,7 @@ Rectangle {
                         Layout.preferredWidth: 32
                         text: root.clearButtonConfirmState ? Icons.xeyes : Icons.broom
                         font.family: Icons.font
-                        font.pixelSize: 24
+                        font.pixelSize: 20
                         color: root.clearButtonConfirmState ? Colors.adapter.overError : Colors.adapter.primary
                         horizontalAlignment: Text.AlignHCenter
 

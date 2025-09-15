@@ -522,7 +522,7 @@ Rectangle {
                         Layout.preferredWidth: 32
                         text: root.clearButtonConfirmState ? Icons.alert : Icons.trash
                         font.family: Icons.font
-                        font.pixelSize: 24
+                        font.pixelSize: 20
                         color: root.clearButtonConfirmState ? Colors.adapter.overError : Colors.adapter.primary
                         horizontalAlignment: Text.AlignHCenter
 

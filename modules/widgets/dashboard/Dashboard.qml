@@ -154,7 +154,7 @@ NotchAnimationBehavior {
                             // font.family: Config.theme.font
                             font.family: Icons.font
                             // font.pixelSize: Config.theme.fontSize
-                            font.pixelSize: 24
+                            font.pixelSize: 20
                             font.weight: Font.Medium
                             horizontalAlignment: Text.AlignHCenter
                             verticalAlignment: Text.AlignVCenter
