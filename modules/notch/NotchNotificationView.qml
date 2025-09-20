@@ -78,26 +78,12 @@ Item {
         anchors.fill: parent
         spacing: hovered ? 8 : 0
 
-        Behavior on spacing {
-            NumberAnimation {
-                duration: Config.animDuration / 2
-                easing.type: Easing.OutQuart
-            }
-        }
-
         // FILA 1: Controles superiores (solo visible con hover)
         Item {
             id: topControlsRow
             width: parent.width
             height: hovered ? 24 : 0
             clip: true
-
-            Behavior on height {
-                NumberAnimation {
-                    duration: Config.animDuration / 2
-                    easing.type: Easing.OutQuart
-                }
-            }
 
             RowLayout {
                 anchors.fill: parent
@@ -248,13 +234,6 @@ Item {
             height: hovered ? 48 : 32
             spacing: 8
 
-            Behavior on height {
-                NumberAnimation {
-                    duration: Config.animDuration / 2
-                    easing.type: Easing.OutQuart
-                }
-            }
-
             // App icon
             NotificationAppIcon {
                 id: appIcon
@@ -268,12 +247,6 @@ Item {
                 summary: currentNotification ? currentNotification.summary : ""
                 urgency: currentNotification ? currentNotification.urgency : NotificationUrgency.Normal
 
-                Behavior on size {
-                    NumberAnimation {
-                        duration: Config.animDuration / 2
-                        easing.type: Easing.OutQuart
-                    }
-                }
             }
 
             // Textos de la notificación
@@ -283,18 +256,11 @@ Item {
                 Layout.preferredHeight: appIcon.Layout.preferredHeight
                 spacing: hovered ? 4 : 0
 
-                Behavior on spacing {
-                    NumberAnimation {
-                        duration: Config.animDuration / 2
-                        easing.type: Easing.OutQuart
-                    }
-                }
-
                 Text {
                     width: parent.width
                     text: currentNotification ? currentNotification.summary : ""
                     font.family: Config.theme.font
-                    font.pixelSize: hovered ? Config.theme.fontSize : Config.theme.fontSize - 1
+                    font.pixelSize: Config.theme.fontSize
                     font.weight: Font.Bold
                     color: Colors.adapter.primary
                     elide: Text.ElideRight
@@ -302,32 +268,20 @@ Item {
                     wrapMode: hovered ? Text.Wrap : Text.NoWrap
                     verticalAlignment: hovered ? Text.AlignTop : Text.AlignVCenter
 
-                    Behavior on font.pixelSize {
-                        NumberAnimation {
-                            duration: Config.animDuration / 2
-                            easing.type: Easing.OutQuart
-                        }
-                    }
                 }
 
                 Text {
                     width: parent.width
                     text: currentNotification ? processNotificationBody(currentNotification.body, currentNotification.appName) : ""
                     font.family: Config.theme.font
-                    font.pixelSize: hovered ? Config.theme.fontSize - 1 : Config.theme.fontSize - 2
+                    font.pixelSize: Config.theme.fontSize
+                    font.weight: Font.Bold
                     color: Colors.adapter.overBackground
                     wrapMode: hovered ? Text.Wrap : Text.NoWrap
                     maximumLineCount: hovered ? 2 : 1
                     elide: Text.ElideRight
                     visible: hovered || text !== ""
                     opacity: hovered ? 1.0 : 0.8
-
-                    Behavior on font.pixelSize {
-                        NumberAnimation {
-                            duration: Config.animDuration / 2
-                            easing.type: Easing.OutQuart
-                        }
-                    }
 
                     Behavior on opacity {
                         NumberAnimation {
@@ -345,13 +299,6 @@ Item {
             width: parent.width
             height: (hovered && currentNotification && currentNotification.actions.length > 0) ? 24 : 0
             clip: true
-
-            Behavior on height {
-                NumberAnimation {
-                    duration: Config.animDuration / 2
-                    easing.type: Easing.OutQuart
-                }
-            }
 
             RowLayout {
                 anchors.fill: parent
