@@ -159,7 +159,6 @@ Item {
                 image: currentNotification ? currentNotification.image : ""
                 summary: currentNotification ? currentNotification.summary : ""
                 urgency: currentNotification ? currentNotification.urgency : NotificationUrgency.Normal
-
             }
 
             // Textos de la notificación
@@ -168,18 +167,39 @@ Item {
                 Layout.alignment: Qt.AlignVCenter
                 spacing: hovered ? 4 : 0
 
-                Text {
+                // Fila del summary y app name
+                Row {
                     width: parent.width
-                    text: currentNotification ? currentNotification.summary : ""
-                    font.family: Config.theme.font
-                    font.pixelSize: Config.theme.fontSize
-                    font.weight: Font.Bold
-                    color: Colors.adapter.primary
-                    elide: Text.ElideRight
-                    maximumLineCount: hovered ? 2 : 1
-                    wrapMode: hovered ? Text.Wrap : Text.NoWrap
-                    verticalAlignment: hovered ? Text.AlignTop : Text.AlignVCenter
+                    spacing: 8
 
+                    Text {
+                        id: summaryText
+                        width: Math.min(implicitWidth, parent.width - (appNameText.visible ? appNameText.width + parent.spacing : 0))
+                        text: currentNotification ? currentNotification.summary : ""
+                        font.family: Config.theme.font
+                        font.pixelSize: Config.theme.fontSize
+                        font.weight: Font.Bold
+                        color: Colors.adapter.primary
+                        elide: Text.ElideRight
+                        maximumLineCount: 1
+                        wrapMode: Text.NoWrap
+                        verticalAlignment: Text.AlignVCenter
+                    }
+
+                    Text {
+                        id: appNameText
+                        width: Math.min(implicitWidth, Math.max(80, parent.width * 0.3))
+                        text: currentNotification ? currentNotification.appName : ""
+                        font.family: Config.theme.font
+                        font.pixelSize: Config.theme.fontSize - 1
+                        font.weight: Font.Normal
+                        color: Colors.adapter.surfaceBright
+                        elide: Text.ElideRight
+                        maximumLineCount: 1
+                        wrapMode: Text.NoWrap
+                        verticalAlignment: Text.AlignVCenter
+                        visible: text !== ""
+                    }
                 }
 
                 Text {
@@ -302,6 +322,7 @@ Item {
                             color: parent.pressed ? Colors.adapter.overPrimary : (parent.hovered ? Colors.adapter.primary : Colors.adapter.overBackground)
                             horizontalAlignment: Text.AlignHCenter
                             verticalAlignment: Text.AlignVCenter
+                            elide: Text.ElideRight
 
                             Behavior on color {
                                 ColorAnimation {
