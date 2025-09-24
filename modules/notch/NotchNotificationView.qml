@@ -23,7 +23,7 @@ Item {
     property bool notchHovered: false
     property bool hovered: notchHovered || mouseArea.containsMouse
 
-    // Índice actual para navegación  
+    // Índice actual para navegación
     property int currentIndex: 0
     // Contador para detectar cuando se añaden nuevas notificaciones
     property int lastNotificationCount: 0
@@ -171,28 +171,40 @@ Item {
             height: implicitHeight
             spacing: 8
 
-            // ScrollBar (solo visible con múltiples notificaciones)
-            Rectangle {
-                id: scrollBarContainer
+            // Indicadores de navegación (solo visible con múltiples notificaciones)
+            Item {
+                id: pageIndicators
                 Layout.preferredWidth: (Notifications.popupList.length > 1) ? 8 : 0
-                Layout.fillHeight: true
-                radius: Config.theme.roundness
-                color: Colors.surface
+                Layout.preferredHeight: 32 // Altura fija para 3 puntos + spacing
+                Layout.alignment: Qt.AlignVCenter
                 visible: Notifications.popupList.length > 1
+                clip: true
 
-                Rectangle {
-                    id: scrollBar
-                    width: 8
-                    height: parent.height / Math.max(1, Notifications.popupList.length) // altura proporcional al número de notificaciones
-                    color: Colors.adapter.primary
-                    radius: Config.theme.roundness
-
-                    // Posición del scroll basada en la notificación actual
+                Column {
+                    id: dotsColumn
+                    width: parent.width
+                    spacing: 4
+                    
+                    // Posición Y animada para el efecto de scroll
                     y: {
-                        if (Notifications.popupList.length <= 1)
-                            return 0;
-                        const maxY = parent.height - height;
-                        return (root.currentIndex / Math.max(1, Notifications.popupList.length - 1)) * maxY;
+                        if (Notifications.popupList.length <= 3) return 0;
+                        
+                        const totalNotifications = Notifications.popupList.length;
+                        const dotHeight = 8 + 4; // altura del punto + spacing
+                        const maxY = -(totalNotifications - 3) * dotHeight;
+                        const currentIndex = root.currentIndex;
+                        
+                        // Calcular posición basada en el índice actual
+                        let targetY = 0;
+                        if (currentIndex >= 1 && currentIndex < totalNotifications - 1) {
+                            // Centrar en el punto actual (mantener en posición media)
+                            targetY = -(currentIndex - 1) * dotHeight;
+                        } else if (currentIndex >= totalNotifications - 1) {
+                            // Al final, mostrar los últimos 3
+                            targetY = maxY;
+                        }
+                        
+                        return Math.max(maxY, Math.min(0, targetY));
                     }
 
                     Behavior on y {
@@ -202,9 +214,31 @@ Item {
                         }
                     }
 
-                    Behavior on height {
-                        NumberAnimation {
-                            duration: Config.animDuration
+                    Repeater {
+                        model: Notifications.popupList.length
+
+                        Rectangle {
+                            width: 8
+                            height: 8
+                            radius: 4
+                            color: index === root.currentIndex ? Colors.adapter.primary : Colors.adapter.outline
+                            
+                            Behavior on color {
+                                ColorAnimation {
+                                    duration: Config.animDuration
+                                    easing.type: Easing.OutCubic
+                                }
+                            }
+                            
+                            // Animación de escala para el punto activo
+                            scale: index === root.currentIndex ? 1.2 : 1.0
+                            
+                            Behavior on scale {
+                                NumberAnimation {
+                                    duration: Config.animDuration
+                                    easing.type: Easing.OutCubic
+                                }
+                            }
                         }
                     }
                 }
