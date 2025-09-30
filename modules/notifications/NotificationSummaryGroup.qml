@@ -64,12 +64,9 @@ Item {
         parentWidth: root.width
 
         onDestroyFinished: {
-            // Destruir todas las notificaciones en el grupo
-            root.notifications.forEach(notif => {
-                Qt.callLater(() => {
-                    Notifications.discardNotification(notif.id);
-                });
-            });
+            // Usar discard masivo para mejor rendimiento
+            const ids = root.notifications.map(notif => notif.id);
+            Notifications.discardNotifications(ids);
         }
     }
 

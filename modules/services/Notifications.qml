@@ -120,6 +120,7 @@ Singleton {
     property var popupList: list.filter(notif => notif.popup)
     property bool popupInhibited: silent
     property var latestTimeForApp: ({})
+    property var totalCounts: ({})  // Conteo total independiente del almacenamiento: {appName: {summary: count}}
 
     Component {
         id: notifComponent
@@ -159,7 +160,32 @@ Singleton {
     }
 
     function saveNotifications() {
-        notifFileView.setText(stringifyList(root.list));
+        // Limitar notificaciones almacenadas a 5 por summary para evitar almacenamiento excesivo
+        const limitedList = limitNotificationsPerSummary(root.list);
+        notifFileView.setText(stringifyList(limitedList));
+    }
+
+    function limitNotificationsPerSummary(notifications) {
+        const groups = {};
+        // Agrupar por appName y summary
+        notifications.forEach(notif => {
+            const key = notif.appName + '|' + (notif.summary || '');
+            if (!groups[key]) {
+                groups[key] = [];
+            }
+            groups[key].push(notif);
+        });
+
+        // Limitar cada grupo a 5 notificaciones, manteniendo las más recientes
+        const limitedNotifications = [];
+        Object.values(groups).forEach(group => {
+            // Ordenar por tiempo descendente (más recientes primero)
+            group.sort((a, b) => b.time - a.time);
+            // Tomar solo las primeras 5
+            limitedNotifications.push(...group.slice(0, 5));
+        });
+
+        return limitedNotifications;
     }
 
     function loadNotifications() {
@@ -208,16 +234,18 @@ Singleton {
             if (!notif || !notif.appName || (!notif.summary && !notif.body)) {
                 return;
             }
-            
+
             if (!groups[notif.appName]) {
                 groups[notif.appName] = {
                     appName: notif.appName,
                     appIcon: notif.appIcon,
                     notifications: [],
-                    time: 0
+                    time: 0,
+                    totalCount: 0  // Conteo independiente del almacenamiento
                 };
             }
             groups[notif.appName].notifications.push(notif);
+            groups[notif.appName].totalCount++;
             // Always set to the latest time in the group
             groups[notif.appName].time = latestTimeForApp[notif.appName] || notif.time;
         });
@@ -294,6 +322,30 @@ Singleton {
             notifServer.trackedNotifications.values[notifServerIndex].dismiss();
         }
         root.discard(id);
+    }
+
+    function discardNotifications(ids) {
+        if (!ids || ids.length === 0) return;
+
+        // Remover todas las notificaciones de la lista de una vez
+        const idsSet = new Set(ids);
+        const newList = root.list.filter(notif => !idsSet.has(notif.id));
+        const removedCount = root.list.length - newList.length;
+
+        if (removedCount > 0) {
+            root.list = newList;
+            triggerListChange();
+            saveNotifications();
+        }
+
+        // Dismiss en el servidor de notificaciones
+        ids.forEach(id => {
+            const notifServerIndex = notifServer.trackedNotifications.values.findIndex(notif => notif.id + root.idOffset === id);
+            if (notifServerIndex !== -1) {
+                notifServer.trackedNotifications.values[notifServerIndex].dismiss();
+            }
+            root.discard(id);
+        });
     }
 
     function discardAllNotifications() {
