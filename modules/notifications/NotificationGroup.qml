@@ -253,7 +253,7 @@ Item {
                     id: notificationsColumn
                     implicitHeight: contentHeight
                     Layout.fillWidth: true
-                    spacing: root.expanded ? 4 : 0
+                    spacing: root.expanded ? 16 : 0
                     interactive: false
 
                     Behavior on spacing {

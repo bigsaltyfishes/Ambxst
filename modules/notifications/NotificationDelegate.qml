@@ -34,7 +34,7 @@ Item {
 
     signal destroyRequested
 
-    implicitHeight: background.height
+    implicitHeight: mainNotificationColumn.implicitHeight
 
     function destroyWithAnimation() {
         notificationAnimation.startDestroy();
@@ -69,35 +69,48 @@ Item {
         }
     }
 
-    Rectangle {
-        id: background
+    Column {
+        id: mainNotificationColumn
         width: parent.width
-        height: contentColumn.implicitHeight
-        radius: 8
-        visible: root.isValid
-        color: "transparent"
+        spacing: onlyNotification ? 8 : (expanded ? 8 : 0)
 
-        Behavior on height {
-            NumberAnimation {
-                duration: Config.animDuration
-                easing.type: Easing.OutCubic
-            }
-        }
-
-        DiagonalStripePattern {
-            id: stripeContainer
-            anchors.fill: parent
-            visible: latestNotification && latestNotification.urgency == NotificationUrgency.Critical
-            radius: Config.roundness > 4 ? Config.roundness + 4 : 0
-            animationRunning: visible
-        }
-
-        ColumnLayout {
-            id: contentColumn
+        Item {
+            id: background
             width: parent.width
-            anchors.fill: parent
-            anchors.margins: 0
-            spacing: onlyNotification ? 8 : (expanded ? 8 : 0)
+            property int criticalMargins: (onlyNotification || expanded) && latestNotification && latestNotification.urgency == NotificationUrgency.Critical ? 16 : 0
+            implicitHeight: contentColumn.implicitHeight + (criticalMargins * 2)
+            height: implicitHeight
+            visible: root.isValid
+
+            Behavior on height {
+                NumberAnimation {
+                    duration: Config.animDuration
+                    easing.type: Easing.OutCubic
+                }
+            }
+
+            Rectangle {
+                anchors.fill: parent
+                radius: 8
+                color: "transparent"
+            }
+
+            DiagonalStripePattern {
+                id: stripeContainer
+                anchors.fill: parent
+                visible: latestNotification && latestNotification.urgency == NotificationUrgency.Critical
+                radius: Config.roundness > 4 ? Config.roundness + 4 : 0
+                animationRunning: visible
+            }
+
+            ColumnLayout {
+                id: contentColumn
+                anchors.fill: parent
+                anchors.topMargin: background.criticalMargins
+                anchors.bottomMargin: background.criticalMargins
+                anchors.leftMargin: background.criticalMargins > 0 ? 4 : 0
+                anchors.rightMargin: background.criticalMargins > 0 ? 4 : 0
+                spacing: onlyNotification || expanded ? 8 : 0
 
             // Individual notification layout (like expanded popup)
             RowLayout {
@@ -363,13 +376,67 @@ Item {
                     }
                 }
             }
+            }
+        }
 
-            // Botones de acción (para notificaciones individuales o expandidas)
-            NotificationActionButtons {
-                showWhen: (onlyNotification || expanded) && latestNotification && latestNotification.actions.length > 0 && !latestNotification.isCached
-                actions: latestNotification ? latestNotification.actions : []
-                notificationObject: latestNotification
-                urgency: latestNotification ? latestNotification.urgency : NotificationUrgency.Normal
+        // Botones de acción (para notificaciones individuales o expandidas)
+        Item {
+            id: actionButtonsContainer
+            width: parent.width
+            implicitHeight: (onlyNotification || expanded) && latestNotification && latestNotification.actions.length > 0 && !latestNotification.isCached ? 32 : 0
+            height: implicitHeight
+            clip: true
+
+            RowLayout {
+                anchors.fill: parent
+                spacing: 4
+
+                Repeater {
+                    model: latestNotification && latestNotification.actions ? latestNotification.actions : []
+
+                    Button {
+                        Layout.fillWidth: true
+                        Layout.preferredHeight: 32
+
+                        text: modelData.text
+                        font.family: Config.theme.font
+                        font.pixelSize: Config.theme.fontSize
+                        font.weight: Font.Bold
+                        hoverEnabled: true
+
+                        background: Rectangle {
+                            color: latestNotification && latestNotification.urgency == NotificationUrgency.Critical ? Colors.redSource : (parent.pressed ? Colors.primary : (parent.hovered ? Colors.surfaceBright : Colors.surface))
+                            radius: Config.roundness > 0 ? Config.roundness + 4 : 0
+
+                            Behavior on color {
+                                ColorAnimation {
+                                    duration: Config.animDuration
+                                }
+                            }
+                        }
+
+                        contentItem: Text {
+                            text: parent.text
+                            font: parent.font
+                            color: latestNotification && latestNotification.urgency == NotificationUrgency.Critical ? Colors.shadow : (parent.pressed ? Colors.overPrimary : (parent.hovered ? Colors.primary : Colors.overBackground))
+                            horizontalAlignment: Text.AlignHCenter
+                            verticalAlignment: Text.AlignVCenter
+                            elide: Text.ElideRight
+
+                            Behavior on color {
+                                ColorAnimation {
+                                    duration: Config.animDuration
+                                }
+                            }
+                        }
+
+                        onClicked: {
+                            if (latestNotification) {
+                                Notifications.attemptInvokeAction(latestNotification.id, modelData.identifier);
+                            }
+                        }
+                    }
+                }
             }
         }
     }

@@ -376,7 +376,8 @@ Item {
                             // Contenido principal de la notificación
                             Item {
                                 width: parent.width
-                                implicitHeight: mainContentRow.implicitHeight
+                                property int criticalMargins: hovered && notification && notification.urgency == NotificationUrgency.Critical ? 16 : 0
+                                implicitHeight: mainContentRow.implicitHeight + (criticalMargins * 2)
 
                                 DiagonalStripePattern {
                                     id: notchStripeContainer
@@ -388,9 +389,12 @@ Item {
 
                                 RowLayout {
                                     id: mainContentRow
-                                    width: parent.width
+                                    anchors.fill: parent
+                                    anchors.topMargin: parent.criticalMargins
+                                    anchors.bottomMargin: parent.criticalMargins
+                                    anchors.leftMargin: parent.criticalMargins > 0 ? 4 : 0
+                                    anchors.rightMargin: parent.criticalMargins > 0 ? 4 : 0
                                     implicitHeight: Math.max(hovered ? 48 : 32, textColumn.implicitHeight)
-                                    height: implicitHeight
                                     spacing: 8
 
                                     // Contenido principal
