@@ -12,7 +12,7 @@ ClippingRectangle {
     property int animationDuration: 1000
     property bool animationRunning: true
 
-    color: "transparent"
+    color: Colors.shadow
 
     Repeater {
         model: Math.ceil((parent.width + parent.height) / root.stripeWidth)
@@ -35,5 +35,14 @@ ClippingRectangle {
                 running: root.animationRunning
             }
         }
+    }
+
+    Rectangle {
+        anchors.fill: parent
+        anchors.topMargin: 4
+        anchors.bottomMargin: 4
+        color: Colors.redSource
+        border.width: 4
+        border.color: Colors.shadow
     }
 }
