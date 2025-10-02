@@ -152,8 +152,17 @@ PanelWindow {
                     }
                 });
             } else {
+                // Al cerrar, restaurar la vista correcta según si hay notificaciones
                 if (notchContainer.stackView.depth > 1) {
-                    notchContainer.stackView.pop();
+                    if (Notifications.popupList.length > 0) {
+                        notchContainer.stackView.replace(notificationViewComponent);
+                        notchContainer.isShowingNotifications = true;
+                        notchContainer.isShowingDefault = false;
+                    } else {
+                        notchContainer.stackView.replace(defaultViewComponent);
+                        notchContainer.isShowingDefault = true;
+                        notchContainer.isShowingNotifications = false;
+                    }
                 }
             }
         }
@@ -162,8 +171,17 @@ PanelWindow {
             if (screenVisibilities.dashboard) {
                 notchContainer.stackView.push(dashboardViewComponent);
             } else {
+                // Al cerrar, restaurar la vista correcta según si hay notificaciones
                 if (notchContainer.stackView.depth > 1) {
-                    notchContainer.stackView.pop();
+                    if (Notifications.popupList.length > 0) {
+                        notchContainer.stackView.replace(notificationViewComponent);
+                        notchContainer.isShowingNotifications = true;
+                        notchContainer.isShowingDefault = false;
+                    } else {
+                        notchContainer.stackView.replace(defaultViewComponent);
+                        notchContainer.isShowingDefault = true;
+                        notchContainer.isShowingNotifications = false;
+                    }
                 }
             }
         }
@@ -172,8 +190,17 @@ PanelWindow {
             if (screenVisibilities.overview) {
                 notchContainer.stackView.push(overviewViewComponent);
             } else {
+                // Al cerrar, restaurar la vista correcta según si hay notificaciones
                 if (notchContainer.stackView.depth > 1) {
-                    notchContainer.stackView.pop();
+                    if (Notifications.popupList.length > 0) {
+                        notchContainer.stackView.replace(notificationViewComponent);
+                        notchContainer.isShowingNotifications = true;
+                        notchContainer.isShowingDefault = false;
+                    } else {
+                        notchContainer.stackView.replace(defaultViewComponent);
+                        notchContainer.isShowingDefault = true;
+                        notchContainer.isShowingNotifications = false;
+                    }
                 }
             }
         }
@@ -182,8 +209,17 @@ PanelWindow {
             if (screenVisibilities.powermenu) {
                 notchContainer.stackView.push(powermenuViewComponent);
             } else {
+                // Al cerrar, restaurar la vista correcta según si hay notificaciones
                 if (notchContainer.stackView.depth > 1) {
-                    notchContainer.stackView.pop();
+                    if (Notifications.popupList.length > 0) {
+                        notchContainer.stackView.replace(notificationViewComponent);
+                        notchContainer.isShowingNotifications = true;
+                        notchContainer.isShowingDefault = false;
+                    } else {
+                        notchContainer.stackView.replace(defaultViewComponent);
+                        notchContainer.isShowingDefault = true;
+                        notchContainer.isShowingNotifications = false;
+                    }
                 }
             }
         }
