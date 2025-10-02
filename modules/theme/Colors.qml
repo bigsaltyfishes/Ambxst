@@ -206,4 +206,6 @@ FileView {
     property color yellowSource: adapter.yellowSource
     property color yellowValue: adapter.yellowValue
     property color sourceColor: adapter.sourceColor
+
+    property color criticalText: "#FF6B08"
 }

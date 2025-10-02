@@ -153,7 +153,7 @@ Item {
                                     font.family: Config.theme.font
                                     font.pixelSize: Config.theme.fontSize
                                     font.weight: Font.Bold
-                                    color: latestNotification && latestNotification.urgency == NotificationUrgency.Critical ? Colors.shadow : Colors.primary
+                                    color: latestNotification && latestNotification.urgency == NotificationUrgency.Critical ? Colors.criticalText : Colors.primary
                                     elide: Text.ElideRight
                                     maximumLineCount: 1
                                     wrapMode: Text.NoWrap
@@ -167,7 +167,7 @@ Item {
                                     font.family: Config.theme.font
                                     font.pixelSize: Config.theme.fontSize
                                     font.weight: Font.Bold
-                                    color: latestNotification && latestNotification.urgency == NotificationUrgency.Critical ? Colors.shadow : Colors.outline
+                                    color: latestNotification && latestNotification.urgency == NotificationUrgency.Critical ? Colors.criticalText : Colors.outline
                                     elide: Text.ElideRight
                                     maximumLineCount: 1
                                     wrapMode: Text.NoWrap
@@ -183,7 +183,7 @@ Item {
                                 font.family: Config.theme.font
                                 font.pixelSize: Config.theme.fontSize
                                 font.weight: Font.Bold
-                                color: latestNotification && latestNotification.urgency == NotificationUrgency.Critical ? Colors.shadow : Colors.outline
+                                color: latestNotification && latestNotification.urgency == NotificationUrgency.Critical ? Colors.criticalText : Colors.outline
                                 verticalAlignment: Text.AlignVCenter
                                 visible: text !== ""
                                 Layout.alignment: Qt.AlignVCenter
@@ -196,7 +196,7 @@ Item {
                             font.family: Config.theme.font
                             font.pixelSize: Config.theme.fontSize
                             font.weight: latestNotification && latestNotification.urgency == NotificationUrgency.Critical ? Font.Bold : Font.Normal
-                            color: latestNotification && latestNotification.urgency == NotificationUrgency.Critical ? Colors.shadow : Colors.overBackground
+                            color: latestNotification && latestNotification.urgency == NotificationUrgency.Critical ? Colors.criticalText : Colors.overBackground
                             wrapMode: onlyNotification ? Text.Wrap : Text.NoWrap
                             maximumLineCount: onlyNotification ? 3 : 1
                             elide: Text.ElideRight
@@ -269,7 +269,7 @@ Item {
                                         font.family: Config.theme.font
                                         font.pixelSize: Config.theme.fontSize
                                         font.weight: Font.Bold
-                                        color: latestNotification && latestNotification.urgency == NotificationUrgency.Critical ? Colors.shadow : Colors.primary
+                                        color: latestNotification && latestNotification.urgency == NotificationUrgency.Critical ? Colors.criticalText : Colors.primary
                                         elide: Text.ElideRight
                                     }
 
@@ -278,7 +278,7 @@ Item {
                                         font.family: Config.theme.font
                                         font.pixelSize: Config.theme.fontSize
                                         font.weight: Font.Bold
-                                        color: latestNotification && latestNotification.urgency == NotificationUrgency.Critical ? Colors.shadow : Colors.outline
+                                        color: latestNotification && latestNotification.urgency == NotificationUrgency.Critical ? Colors.criticalText : Colors.outline
                                         visible: text !== ""
                                         Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
                                     }
@@ -298,7 +298,7 @@ Item {
                                             font.family: Config.theme.font
                                             font.pixelSize: root.fontSize
                                             font.weight: modelData.urgency == NotificationUrgency.Critical ? Font.Bold : Font.Normal
-                                            color: modelData.urgency == NotificationUrgency.Critical ? Colors.shadow : Colors.overBackground
+                                            color: modelData.urgency == NotificationUrgency.Critical ? Colors.criticalText : Colors.overBackground
                                             wrapMode: Text.Wrap
                                             maximumLineCount: 3
                                             elide: Text.ElideRight
@@ -321,7 +321,7 @@ Item {
                                 font.family: Config.theme.font
                                 font.pixelSize: Config.theme.fontSize
                                 font.weight: Font.Bold
-                                color: latestNotification && latestNotification.urgency == NotificationUrgency.Critical ? Colors.shadow : Colors.primary
+                                color: latestNotification && latestNotification.urgency == NotificationUrgency.Critical ? Colors.criticalText : Colors.primary
                                 elide: Text.ElideRight
                             }
 
@@ -330,7 +330,7 @@ Item {
                                 font.family: Config.theme.font
                                 font.pixelSize: Config.theme.fontSize
                                 font.weight: Font.Bold
-                                color: latestNotification && latestNotification.urgency == NotificationUrgency.Critical ? Colors.shadow : Colors.outline
+                                color: latestNotification && latestNotification.urgency == NotificationUrgency.Critical ? Colors.criticalText : Colors.outline
                                 visible: latestNotification && latestNotification.body && latestNotification.body.length > 0
                             }
 
@@ -339,7 +339,7 @@ Item {
                                 font.family: Config.theme.font
                                 font.pixelSize: root.fontSize
                                 font.weight: latestNotification && latestNotification.urgency == NotificationUrgency.Critical ? Font.Bold : Font.Normal
-                                color: latestNotification && latestNotification.urgency == NotificationUrgency.Critical ? Colors.shadow : Colors.overBackground
+                                color: latestNotification && latestNotification.urgency == NotificationUrgency.Critical ? Colors.criticalText : Colors.overBackground
                                 wrapMode: Text.NoWrap
                                 elide: Text.ElideRight
                                 Layout.fillWidth: true

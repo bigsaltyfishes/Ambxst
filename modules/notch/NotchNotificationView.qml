@@ -441,7 +441,7 @@ Item {
                                                         font.family: Config.theme.font
                                                         font.pixelSize: Config.theme.fontSize
                                                         font.weight: Font.Bold
-                                                        color: notification && notification.urgency == NotificationUrgency.Critical ? Colors.shadow : Colors.primary
+                                                        color: notification && notification.urgency == NotificationUrgency.Critical ? Colors.criticalText : Colors.primary
                                                         elide: Text.ElideRight
                                                         maximumLineCount: 1
                                                         wrapMode: Text.NoWrap
@@ -455,7 +455,7 @@ Item {
                                                         font.family: Config.theme.font
                                                         font.pixelSize: Config.theme.fontSize
                                                         font.weight: Font.Bold
-                                                        color: notification && notification.urgency == NotificationUrgency.Critical ? Colors.shadow : Colors.outline
+                                                        color: notification && notification.urgency == NotificationUrgency.Critical ? Colors.criticalText : Colors.outline
                                                         elide: Text.ElideRight
                                                         maximumLineCount: 1
                                                         wrapMode: Text.NoWrap
@@ -471,7 +471,7 @@ Item {
                                                     font.family: Config.theme.font
                                                     font.pixelSize: Config.theme.fontSize
                                                     font.weight: Font.Bold
-                                                    color: notification && notification.urgency == NotificationUrgency.Critical ? Colors.shadow : Colors.outline
+                                                    color: notification && notification.urgency == NotificationUrgency.Critical ? Colors.criticalText : Colors.outline
                                                     verticalAlignment: Text.AlignVCenter
                                                     visible: text !== ""
                                                     anchors.verticalCenter: parent.verticalCenter
@@ -484,7 +484,7 @@ Item {
                                                 font.family: Config.theme.font
                                                 font.pixelSize: Config.theme.fontSize
                                                 font.weight: notification && notification.urgency == NotificationUrgency.Critical ? Font.Bold : Font.Normal
-                                                color: notification && notification.urgency == NotificationUrgency.Critical ? Colors.shadow : Colors.overBackground
+                                                color: notification && notification.urgency == NotificationUrgency.Critical ? Colors.criticalText : Colors.overBackground
                                                 wrapMode: Text.Wrap
                                                 maximumLineCount: 3
                                                 elide: Text.ElideRight
@@ -504,7 +504,7 @@ Item {
                                                 font.family: Config.theme.font
                                                 font.pixelSize: Config.theme.fontSize
                                                 font.weight: Font.Bold
-                                                color: notification && notification.urgency == NotificationUrgency.Critical ? Colors.shadow : Colors.primary
+                                                color: notification && notification.urgency == NotificationUrgency.Critical ? Colors.criticalText : Colors.primary
                                                 elide: Text.ElideRight
                                             }
 
@@ -513,7 +513,7 @@ Item {
                                                 font.family: Config.theme.font
                                                 font.pixelSize: Config.theme.fontSize
                                                 font.weight: Font.Bold
-                                                color: notification && notification.urgency == NotificationUrgency.Critical ? Colors.shadow : Colors.outline
+                                                color: notification && notification.urgency == NotificationUrgency.Critical ? Colors.criticalText : Colors.outline
                                                 visible: notification && notification.body && notification.body.length > 0
                                             }
 
@@ -522,7 +522,7 @@ Item {
                                                 font.family: Config.theme.font
                                                 font.pixelSize: Config.theme.fontSize
                                                 font.weight: notification && notification.urgency == NotificationUrgency.Critical ? Font.Bold : Font.Normal
-                                                color: notification && notification.urgency == NotificationUrgency.Critical ? Colors.shadow : Colors.overBackground
+                                                color: notification && notification.urgency == NotificationUrgency.Critical ? Colors.criticalText : Colors.overBackground
                                                 wrapMode: Text.NoWrap
                                                 elide: Text.ElideRight
                                                 Layout.fillWidth: true

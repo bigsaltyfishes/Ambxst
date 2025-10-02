@@ -41,8 +41,20 @@ ClippingRectangle {
         anchors.fill: parent
         anchors.topMargin: 4
         anchors.bottomMargin: 4
+        color: Colors.shadow
+    }
+
+    Rectangle {
+        anchors.fill: parent
+        anchors.topMargin: 6
+        anchors.bottomMargin: 6
         color: Colors.redSource
-        border.width: 4
-        border.color: Colors.shadow
+    }
+
+    Rectangle {
+        anchors.fill: parent
+        anchors.topMargin: 8
+        anchors.bottomMargin: 8
+        color: Colors.shadow
     }
 }
