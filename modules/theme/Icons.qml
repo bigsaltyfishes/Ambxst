@@ -47,6 +47,18 @@ QtObject {
     readonly property string bellRinging: ""
     readonly property string bellSlash: ""
     readonly property string bellZ: ""
+    // Player
+    readonly property string player: ""
+    readonly property string play: ""
+    readonly property string pause: ""
+    readonly property string stop: ""
+    readonly property string next: ""
+    readonly property string previous: ""
+    readonly property string forward: ""
+    readonly property string rewind: ""
+    readonly property string shuffle: ""
+    readonly property string repeat: ""
+    readonly property string repeatOnce: ""
     // Misc
     readonly property string accept: ""
     readonly property string cancel: ""
