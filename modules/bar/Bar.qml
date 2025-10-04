@@ -217,7 +217,8 @@ PanelWindow {
             RowLayout {
                 spacing: 4
                 SysTray { bar: panel }
-                Clock { id: clockComponent }
+                Weather { id: weatherComponent; bar: panel }
+                Clock { id: clockComponent; bar: panel }
                 PowerButton { id: powerButton }
             }
         }
@@ -248,7 +249,9 @@ PanelWindow {
                 }
             }
 
-            Item { Layout.fillHeight: true }
+            Item {
+                Layout.fillHeight: true
+            }
 
             ColumnLayout {
                 Layout.fillWidth: true
@@ -256,11 +259,15 @@ PanelWindow {
                 SysTray {
                     bar: panel
                 }
-                Clock { 
-                    id: clockComponentVert
-                    Layout.preferredHeight: 36
+                Weather {
+                    id: weatherComponentVert
+                    bar: panel
                 }
-                PowerButton { 
+                Clock {
+                    id: clockComponentVert
+                    bar: panel
+                }
+                PowerButton {
                     id: powerButtonVert
                     Layout.preferredHeight: 36
                 }
