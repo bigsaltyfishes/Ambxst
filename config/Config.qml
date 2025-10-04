@@ -87,8 +87,10 @@ Singleton {
             }
 
             property JsonObject hyprland: JsonObject {
-                property string activeBorderColor: "primary"
-                property string inactiveBorderColor: "surface"
+                property list<string> activeBorderColor: ["primary"]
+                property int borderAngle: 45
+                property list<string> inactiveBorderColor: ["surface"]
+                property int inactiveBorderAngle: 45
                 property int borderSize: 2
                 property int rounding: 16
                 property bool syncRoundness: true
@@ -180,7 +182,7 @@ Singleton {
     property QtObject hyprland: loader.adapter.hyprland
     property int hyprlandRounding: hyprland.syncRoundness ? Math.max(0, roundness - hyprlandBorderSize) : Math.max(0, hyprland.rounding - hyprland.borderSize)
     property int hyprlandBorderSize: hyprland.syncBorderWidth ? theme.borderSize : hyprland.borderSize
-    property string hyprlandBorderColor: hyprland.syncBorderColor ? theme.borderColor : hyprland.activeBorderColor
+    property string hyprlandBorderColor: hyprland.syncBorderColor ? theme.borderColor : (hyprland.activeBorderColor.length > 0 ? hyprland.activeBorderColor[0] : "primary")
     property real hyprlandShadowOpacity: hyprland.syncShadowOpacity ? theme.shadowOpacity : hyprland.shadowOpacity
     property string hyprlandShadowColor: hyprland.syncShadowColor ? theme.shadowColor : hyprland.shadowColor
 

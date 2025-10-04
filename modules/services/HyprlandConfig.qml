@@ -44,14 +44,47 @@ QtObject {
             return;
         }
 
-        const activeColor = getColorValue(Config.theme.currentTheme === "sticker" ? "overBackground" : Config.hyprlandBorderColor);
-        const inactiveColor = getColorValue(Config.hyprland.inactiveBorderColor);
+        // Determinar colores activos
+        let activeColorFormatted = "";
+        const borderColors = Config.hyprland.activeBorderColor;
+        
+        if (borderColors && borderColors.length > 1) {
+            // Gradiente con múltiples colores
+            const formattedColors = borderColors.map(colorName => {
+                const color = getColorValue(colorName);
+                return formatColorForHyprland(color);
+            }).join(" ");
+            activeColorFormatted = `${formattedColors} ${Config.hyprland.borderAngle}deg`;
+        } else {
+            // Color único
+            const singleColorName = (borderColors && borderColors.length === 1) 
+                ? borderColors[0] 
+                : (Config.theme.currentTheme === "sticker" ? "overBackground" : Config.hyprlandBorderColor);
+            const activeColor = getColorValue(singleColorName);
+            activeColorFormatted = formatColorForHyprland(activeColor);
+        }
 
-        // Para el color inactivo, usar con opacidad completa como especificaste
-        const inactiveColorWithFullOpacity = Qt.rgba(inactiveColor.r, inactiveColor.g, inactiveColor.b, 1.0);
-
-        const activeColorFormatted = formatColorForHyprland(activeColor);
-        const inactiveColorFormatted = formatColorForHyprland(inactiveColorWithFullOpacity);
+        // Determinar colores inactivos
+        let inactiveColorFormatted = "";
+        const inactiveBorderColors = Config.hyprland.inactiveBorderColor;
+        
+        if (inactiveBorderColors && inactiveBorderColors.length > 1) {
+            // Gradiente con múltiples colores
+            const formattedColors = inactiveBorderColors.map(colorName => {
+                const color = getColorValue(colorName);
+                const colorWithFullOpacity = Qt.rgba(color.r, color.g, color.b, 1.0);
+                return formatColorForHyprland(colorWithFullOpacity);
+            }).join(" ");
+            inactiveColorFormatted = `${formattedColors} ${Config.hyprland.inactiveBorderAngle}deg`;
+        } else {
+            // Color único
+            const singleColorName = (inactiveBorderColors && inactiveBorderColors.length === 1) 
+                ? inactiveBorderColors[0] 
+                : "surface";
+            const inactiveColor = getColorValue(singleColorName);
+            const inactiveColorWithFullOpacity = Qt.rgba(inactiveColor.r, inactiveColor.g, inactiveColor.b, 1.0);
+            inactiveColorFormatted = formatColorForHyprland(inactiveColorWithFullOpacity);
+        }
 
         // Colores para sombras
         const shadowColor = getColorValue(Config.hyprlandShadowColor);
