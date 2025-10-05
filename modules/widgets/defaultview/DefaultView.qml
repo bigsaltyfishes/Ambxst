@@ -13,7 +13,7 @@ Item {
     readonly property real mainRowContentWidth: 200 + userInfo.width + separator1.width + separator2.width + notifIndicator.width + (mainRow.spacing * 4) + 32
 
     implicitWidth: Math.round(hasActiveNotifications ? Math.max(expandedState ? 420 + 32 : 320 + 32, mainRowContentWidth) : (expandedState ? 420 + 32 : mainRowContentWidth))
-    implicitHeight: hasActiveNotifications ? (mainRow.height + (expandedState ? notificationView.implicitHeight + (Config.notchTheme === "island" ? 56 : 32) : notificationView.implicitHeight + (Config.notchTheme === "island" ? 40 : 16))) : mainRow.height
+    implicitHeight: hasActiveNotifications ? (mainRow.height + (expandedState ? notificationView.implicitHeight + (Config.notchTheme === "island" ? 56 : 52) : notificationView.implicitHeight + (Config.notchTheme === "island" ? 40 : 36))) : mainRow.height
 
     Behavior on implicitHeight {
         NumberAnimation {
@@ -44,7 +44,8 @@ Item {
     Column {
         anchors.fill: parent
         // anchors.topMargin: hasActiveNotifications ? 0 : ((parent.height - mainRow.height) / 2)
-        spacing: hasActiveNotifications ? 4 : 0
+        // spacing: hasActiveNotifications ? 4 : 0
+        spacing: 16
 
         Behavior on spacing {
             NumberAnimation {
@@ -109,8 +110,8 @@ Item {
                 anchors.left: parent.left
                 anchors.right: parent.right
                 anchors.top: parent.top
-                anchors.leftMargin: Config.notchTheme === "island" && hasActiveNotifications ? 8 : 20
-                anchors.rightMargin: Config.notchTheme === "island" && hasActiveNotifications ? 8 : 20
+                anchors.leftMargin: Config.notchTheme === "island" && hasActiveNotifications ? 8 : 24
+                anchors.rightMargin: Config.notchTheme === "island" && hasActiveNotifications ? 8 : 24
                 anchors.bottomMargin: 8
                 opacity: hasActiveNotifications ? 1 : 0
                 notchHovered: expandedState

@@ -137,7 +137,7 @@ Item {
     Column {
         id: mainColumn
         anchors.fill: parent
-        spacing: hovered ? 8 : 0
+        spacing: 0
 
         // ÁREA DE CONTENIDO CON SCROLL: Combina contenido y botones de acción
         RowLayout {
