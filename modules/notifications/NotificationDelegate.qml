@@ -147,47 +147,60 @@ Item {
                             Layout.alignment: Qt.AlignVCenter
                             spacing: onlyNotification ? 4 : 0
 
-                            // Fila del summary, app name y timestamp
-                            RowLayout {
-                                width: parent.width
-                                spacing: 4
+                                            // Fila del summary, app name y timestamp
+                                            RowLayout {
+                                                width: parent.width
+                                                spacing: 4
 
-                                // Contenedor izquierdo para summary y app name
-                                Row {
-                                    Layout.fillWidth: true
-                                    Layout.minimumWidth: 0
-                                    spacing: 4
+                                                // Contenedor izquierdo para summary y app name
+                                                Row {
+                                                    id: leftTextsContainer
+                                                    Layout.fillWidth: true
+                                                    Layout.minimumWidth: 0
+                                                    spacing: 4
 
-                                    Text {
-                                        id: summaryText
-                                        width: Math.min(implicitWidth, parent.width - (appNameText.visible ? appNameText.width + parent.spacing : 0))
-                                        text: latestNotification ? latestNotification.summary : ""
-                                        font.family: Config.theme.font
-                                        font.pixelSize: Config.theme.fontSize
-                                        font.weight: Font.Bold
-                                        font.underline: latestNotification && latestNotification.urgency == NotificationUrgency.Critical && onlyNotification
-                                        color: latestNotification && latestNotification.urgency == NotificationUrgency.Critical ? Colors.criticalText : Colors.primary
-                                        elide: Text.ElideRight
-                                        maximumLineCount: 1
-                                        wrapMode: Text.NoWrap
-                                        verticalAlignment: Text.AlignVCenter
-                                    }
+                                                    Text {
+                                                        id: summaryText
+                                                        property real combinedImplicitWidth: implicitWidth + (appNameText.visible ? appNameText.implicitWidth + parent.spacing : 0)
+                                                        width: {
+                                                            if (combinedImplicitWidth <= leftTextsContainer.width) {
+                                                                return implicitWidth;
+                                                            }
+                                                            return leftTextsContainer.width - (appNameText.visible ? appNameText.width + parent.spacing : 0);
+                                                        }
+                                                        text: latestNotification ? latestNotification.summary : ""
+                                                        font.family: Config.theme.font
+                                                        font.pixelSize: Config.theme.fontSize
+                                                        font.weight: Font.Bold
+                                                        font.underline: latestNotification && latestNotification.urgency == NotificationUrgency.Critical && onlyNotification
+                                                        color: latestNotification && latestNotification.urgency == NotificationUrgency.Critical ? Colors.criticalText : Colors.primary
+                                                        elide: Text.ElideRight
+                                                        maximumLineCount: 1
+                                                        wrapMode: Text.NoWrap
+                                                        verticalAlignment: Text.AlignVCenter
+                                                    }
 
-                                    Text {
-                                        id: appNameText
-                                        width: Math.min(implicitWidth, Math.max(60, parent.width * 0.3))
-                                        text: latestNotification ? "• " + latestNotification.appName : ""
-                                        font.family: Config.theme.font
-                                        font.pixelSize: Config.theme.fontSize
-                                        font.weight: Font.Bold
-                                        color: latestNotification && latestNotification.urgency == NotificationUrgency.Critical ? Colors.criticalText : Colors.outline
-                                        elide: Text.ElideRight
-                                        maximumLineCount: 1
-                                        wrapMode: Text.NoWrap
-                                        verticalAlignment: Text.AlignVCenter
-                                        visible: text !== "" && !root.appNameAlreadyShown
-                                    }
-                                }
+                                                    Text {
+                                                        id: appNameText
+                                                        property real availableWidth: leftTextsContainer.width - summaryText.implicitWidth - (visible ? parent.spacing : 0)
+                                                        width: {
+                                                            if (summaryText.combinedImplicitWidth <= leftTextsContainer.width) {
+                                                                return implicitWidth;
+                                                            }
+                                                            return Math.min(implicitWidth, Math.max(60, availableWidth, leftTextsContainer.width * 0.3));
+                                                        }
+                                                        text: latestNotification ? "• " + latestNotification.appName : ""
+                                                        font.family: Config.theme.font
+                                                        font.pixelSize: Config.theme.fontSize
+                                                        font.weight: Font.Bold
+                                                        color: latestNotification && latestNotification.urgency == NotificationUrgency.Critical ? Colors.criticalText : Colors.outline
+                                                        elide: Text.ElideRight
+                                                        maximumLineCount: 1
+                                                        wrapMode: Text.NoWrap
+                                                        verticalAlignment: Text.AlignVCenter
+                                                        visible: text !== "" && !root.appNameAlreadyShown
+                                                    }
+                                                }
 
                                 // Timestamp a la derecha
                                 Text {

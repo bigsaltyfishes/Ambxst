@@ -446,12 +446,19 @@ Item {
 
                                                     // Contenedor izquierdo para summary y app name
                                                     Row {
+                                                        id: leftTextsContainer
                                                         width: parent.width - (timestampText.visible ? timestampText.implicitWidth + parent.spacing : 0)
                                                         spacing: 4
 
                                                         Text {
                                                             id: summaryText
-                                                            width: Math.min(implicitWidth, parent.width - (appNameText.visible ? appNameText.width + parent.spacing : 0))
+                                                            property real combinedImplicitWidth: implicitWidth + (appNameText.visible ? appNameText.implicitWidth + parent.spacing : 0)
+                                                            width: {
+                                                                if (combinedImplicitWidth <= leftTextsContainer.width) {
+                                                                    return implicitWidth;
+                                                                }
+                                                                return leftTextsContainer.width - (appNameText.visible ? appNameText.width + parent.spacing : 0);
+                                                            }
                                                             text: notification ? notification.summary : ""
                                                             font.family: Config.theme.font
                                                             font.pixelSize: Config.theme.fontSize
@@ -466,7 +473,13 @@ Item {
 
                                                         Text {
                                                             id: appNameText
-                                                            width: Math.min(implicitWidth, Math.max(60, parent.width * 0.3))
+                                                            property real availableWidth: leftTextsContainer.width - summaryText.implicitWidth - (visible ? parent.spacing : 0)
+                                                            width: {
+                                                                if (summaryText.combinedImplicitWidth <= leftTextsContainer.width) {
+                                                                    return implicitWidth;
+                                                                }
+                                                                return Math.min(implicitWidth, Math.max(60, availableWidth, leftTextsContainer.width * 0.3));
+                                                            }
                                                             text: notification ? "• " + notification.appName : ""
                                                             font.family: Config.theme.font
                                                             font.pixelSize: Config.theme.fontSize
