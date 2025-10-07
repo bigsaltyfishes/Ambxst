@@ -180,7 +180,7 @@ NotchAnimationBehavior {
         }
 
         // Content area
-        PaneRect {
+        Rectangle {
             id: viewWrapper
 
             color: "transparent"
@@ -188,7 +188,6 @@ NotchAnimationBehavior {
             width: parent.width - root.tabWidth - 8 // Resto del ancho disponible
             height: parent.height
 
-            radius: Config.roundness > 0 ? Config.roundness + 4 : 0
             clip: true
 
             StackView {

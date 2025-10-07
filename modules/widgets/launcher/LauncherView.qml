@@ -166,13 +166,12 @@ Item {
         }
 
         // Content area
-        PaneRect {
+        Rectangle {
             id: viewWrapper
 
             color: "transparent"
             width: parent.width - root.tabWidth - 8
             height: parent.height
-            radius: Config.roundness > 0 ? Config.roundness + 4 : 0
             clip: true
 
             StackView {

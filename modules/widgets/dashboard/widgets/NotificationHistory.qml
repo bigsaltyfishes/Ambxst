@@ -2,11 +2,12 @@ import QtQuick
 import QtQuick.Layouts
 import Quickshell.Widgets
 import qs.modules.theme
+import qs.modules.components
 import qs.modules.services
 import qs.modules.notifications
 import qs.config
 
-ClippingRectangle {
+PaneRect {
     color: Colors.surface
     radius: Config.roundness > 0 ? Config.roundness + 4 : 0
     clip: true

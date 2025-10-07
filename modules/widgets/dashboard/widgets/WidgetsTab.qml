@@ -61,7 +61,7 @@ Rectangle {
             }
         }
 
-        Rectangle {
+        PaneRect {
             Layout.fillWidth: true
             Layout.fillHeight: true
             color: Colors.surface
