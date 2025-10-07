@@ -61,7 +61,7 @@ PaneRect {
             id: layout
             anchors.fill: parent
             anchors.margins: 16
-            // spacing: 16
+            spacing: 16
 
             RowLayout {
                 Layout.fillWidth: true
@@ -97,20 +97,29 @@ PaneRect {
                     }
                 }
 
-                Text {
-                    id: playPauseBtn
-                    text: player.isPlaying ? Icons.pause : Icons.play
-                    textFormat: Text.RichText
-                    color: playPauseHover.hovered ? Colors.primaryFixed : Colors.whiteSource
-                    font.pixelSize: 20
-                    font.family: Icons.font
+                Rectangle {
+                    Layout.preferredWidth: 40
+                    Layout.preferredHeight: 40
+                    color: Colors.primaryFixed
+                    radius: player.isPlaying ? Math.max(0, Config.roundness - 4) : Config.roundness > 0 ? Config.roundness + 4 : 0
                     opacity: MprisController.canTogglePlaying ? 1.0 : 0.3
 
-                    Behavior on color {
-                        ColorAnimation {
+                    Behavior on radius {
+                        NumberAnimation {
                             duration: Config.animDuration
-                            easing.type: Easing.OutQuart
+                            easing.type: Easing.OutBack
+                            easing.overshoot: 1.5
                         }
+                    }
+
+                    Text {
+                        id: playPauseBtn
+                        anchors.centerIn: parent
+                        text: player.isPlaying ? Icons.pause : Icons.play
+                        textFormat: Text.RichText
+                        color: Colors.shadow
+                        font.pixelSize: 20
+                        font.family: Icons.font
                     }
 
                     HoverHandler {
@@ -129,7 +138,7 @@ PaneRect {
             RowLayout {
                 Layout.fillWidth: true
                 // Layout.preferredHeight: 40
-                spacing: 16
+                spacing: 8
 
                 Text {
                     id: previousBtn
