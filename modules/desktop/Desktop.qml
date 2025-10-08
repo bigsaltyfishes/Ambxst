@@ -9,9 +9,8 @@ import qs.config
 PanelWindow {
     id: desktop
 
-    property int barHeight: Config.bar.showBackground ? 44 : 40
-    property int barMargin: 32
-    property int bottomTextMargin: 48
+    property int barSize: Config.bar.showBackground ? 44 : 40
+    property int bottomTextMargin: 32
     property string barPosition: ["top", "bottom", "left", "right"].includes(Config.bar.position) ? Config.bar.position : "top"
 
     anchors {
@@ -37,10 +36,11 @@ PanelWindow {
     Flow {
         id: iconContainer
         anchors.fill: parent
-        anchors.topMargin: barPosition === "top" ? barHeight + barMargin : 0
-        anchors.bottomMargin: barPosition === "bottom" ? barHeight + barMargin : bottomTextMargin
-        anchors.leftMargin: barPosition === "left" ? barHeight + barMargin : Config.desktop.spacing
-        anchors.rightMargin: barPosition === "right" ? barHeight + barMargin : Config.desktop.spacing
+        anchors.margins: 16
+        anchors.bottomMargin: desktop.barPosition === "bottom" ? desktop.barSize + 16 : 16
+        anchors.topMargin: desktop.barPosition === "top" ? desktop.barSize + 16 : 16
+        anchors.leftMargin: desktop.barPosition === "left" ? desktop.barSize + 16 : 16
+        anchors.rightMargin: desktop.barPosition === "right" ? desktop.barSize + 16 : 16
 
         flow: Flow.TopToBottom
         spacing: Config.desktop.spacing

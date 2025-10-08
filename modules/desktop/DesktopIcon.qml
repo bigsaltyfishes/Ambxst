@@ -15,8 +15,8 @@ Item {
     required property string itemIcon
     property bool isDesktopFile: false
 
-    signal activated()
-    signal contextMenuRequested()
+    signal activated
+    signal contextMenuRequested
 
     width: Config.desktop.iconSize + Config.desktop.spacing
     height: Config.desktop.iconSize + 40
@@ -27,7 +27,7 @@ Item {
         anchors.margins: 4
         color: mouseArea.containsMouse || mouseArea.pressed ? Qt.rgba(Colors.primary.r, Colors.primary.g, Colors.primary.b, 0.3) : "transparent"
         radius: Config.roundness / 2
-        
+
         Behavior on color {
             ColorAnimation {
                 duration: Config.animDuration / 2
@@ -45,7 +45,7 @@ Item {
         onDoubleClicked: mouse => {
             if (mouse.button === Qt.LeftButton) {
                 root.activated();
-                
+
                 if (root.isDesktopFile) {
                     console.log("Executing desktop file:", root.itemPath);
                     DesktopService.executeDesktopFile(root.itemPath);
@@ -90,7 +90,7 @@ Item {
             text: root.itemName
             color: Colors[Config.desktop.textColor] || Colors.overBackground
             font.family: Config.defaultFont
-            font.pixelSize: Config.theme.fontSize - 2
+            font.pixelSize: Config.theme.fontSize
             horizontalAlignment: Text.AlignHCenter
             wrapMode: Text.Wrap
             maximumLineCount: 2
