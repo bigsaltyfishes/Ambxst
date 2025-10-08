@@ -1,5 +1,8 @@
 //@ pragma UseQApplication
 //@ pragma ShellId Ambxst
+//@ pragma DataDir $BASE/Ambxst
+//@ pragma CacheDir $BASE/Ambxst
+
 import QtQuick
 import Quickshell
 import qs.modules.bar
