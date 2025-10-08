@@ -140,6 +140,14 @@ Singleton {
                 property string location: ""
                 property string unit: "C"
             }
+
+            property JsonObject desktop: JsonObject {
+                property bool enabled: true
+                property int iconSize: 64
+                property int spacing: 16
+                property int columns: 8
+                property string textColor: "overBackground"
+            }
         }
     }
 
@@ -195,4 +203,7 @@ Singleton {
 
     // Weather configuration
     property QtObject weather: loader.adapter.weather
+
+    // Desktop configuration
+    property QtObject desktop: loader.adapter.desktop
 }

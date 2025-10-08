@@ -12,6 +12,7 @@ import qs.modules.notch
 import qs.modules.services
 import qs.modules.corners
 import qs.modules.components
+import qs.modules.desktop
 import qs.config
 
 ShellRoot {
@@ -32,6 +33,19 @@ ShellRoot {
             required property ShellScreen modelData
             sourceComponent: Wallpaper {
                 screen: wallpaperLoader.modelData
+            }
+        }
+    }
+
+    Variants {
+        model: Quickshell.screens
+
+        Loader {
+            id: desktopLoader
+            active: Config.desktop.enabled
+            required property ShellScreen modelData
+            sourceComponent: Desktop {
+                screen: desktopLoader.modelData
             }
         }
     }
