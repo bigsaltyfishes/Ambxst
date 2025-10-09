@@ -178,6 +178,40 @@ Singleton {
         ', root);
     }
 
+    function trashFile(filePath) {
+        var escapedPath = filePath.replace(/'/g, "'\\''");
+        var processComponent = Qt.createQmlObject('
+            import Quickshell
+            import Quickshell.Io
+            Process {
+                running: true
+                command: ["bash", "-c", "gio trash \'' + escapedPath + '\'"]
+                
+                stdout: StdioCollector {
+                    onStreamFinished: {
+                        if (text.length > 0) {
+                            console.log("File moved to trash:", text);
+                        }
+                    }
+                }
+                
+                stderr: StdioCollector {
+                    onStreamFinished: {
+                        if (text.length > 0) {
+                            console.warn("Error moving file to trash:", text);
+                        }
+                    }
+                }
+                
+                onRunningChanged: {
+                    if (!running) {
+                        destroy();
+                    }
+                }
+            }
+        ', root);
+    }
+
     function saveAllPositions() {
         iconPositions = {};
         

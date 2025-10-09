@@ -67,7 +67,7 @@ PanelWindow {
 
                 x: Math.floor(index / iconContainer.maxRows) * iconContainer.cellWidth
                 y: (index % iconContainer.maxRows) * iconContainer.cellHeight
-                
+
                 visible: !isPlaceholder
 
                 Behavior on x {
@@ -105,9 +105,9 @@ PanelWindow {
                         Visibilities.contextMenu.openCustomMenu([
                             {
                                 text: "Open",
-                                icon: "📂",
+                                icon: Icons.launch,
                                 isSeparator: false,
-                                onTriggered: function() {
+                                onTriggered: function () {
                                     if (delegateRoot.isDesktopFile) {
                                         DesktopService.executeDesktopFile(delegateRoot.path);
                                     } else {
@@ -116,24 +116,17 @@ PanelWindow {
                                 }
                             },
                             {
-                                text: "Properties",
-                                icon: "ℹ️",
-                                isSeparator: false,
-                                onTriggered: function() {
-                                    console.log("Properties for:", delegateRoot.path);
-                                }
-                            },
-                            { 
                                 isSeparator: true,
                                 text: ""
                             },
                             {
                                 text: "Delete",
-                                icon: "🗑️",
-                                textColor: Colors.error,
+                                icon: Icons.trash,
+                                textColor: Colors.overError,
+                                highlightColor: Colors.error,
                                 isSeparator: false,
-                                onTriggered: function() {
-                                    console.log("Delete:", delegateRoot.path);
+                                onTriggered: function () {
+                                    DesktopService.trashFile(delegateRoot.path);
                                 }
                             }
                         ], 160, 32, "desktop");
@@ -154,9 +147,9 @@ PanelWindow {
                         onActiveChanged: {
                             if (!active) {
                                 var targetIndex = delegateRoot.index;
-                                
+
                                 console.log("Drop - Drag.target:", dragPreview.Drag.target);
-                                
+
                                 if (dragPreview.Drag.target && dragPreview.Drag.target.visualIndex !== undefined) {
                                     targetIndex = dragPreview.Drag.target.visualIndex;
                                     console.log("Using Drag.target visualIndex:", targetIndex);
@@ -164,25 +157,24 @@ PanelWindow {
                                     var gridPos = iconContainer.mapFromItem(dragPreview.parent, dragPreview.x, dragPreview.y);
                                     var dropX = gridPos.x + dragPreview.width / 2;
                                     var dropY = gridPos.y + dragPreview.height / 2;
-                                    
-                                    if (dropX >= 0 && dropY >= 0 && 
-                                        dropX < iconContainer.width && dropY < iconContainer.height) {
+
+                                    if (dropX >= 0 && dropY >= 0 && dropX < iconContainer.width && dropY < iconContainer.height) {
                                         var col = Math.floor(dropX / iconContainer.cellWidth);
                                         var row = Math.floor(dropY / iconContainer.cellHeight);
-                                        
+
                                         col = Math.max(0, Math.min(col, iconContainer.maxColumns - 1));
                                         row = Math.max(0, Math.min(row, iconContainer.maxRows - 1));
-                                        
+
                                         targetIndex = col * iconContainer.maxRows + row;
                                         console.log("Calculated targetIndex:", targetIndex, "col:", col, "row:", row);
                                     }
                                 }
-                                
+
                                 if (targetIndex !== delegateRoot.index) {
                                     console.log("Moving from", delegateRoot.index, "to", targetIndex);
                                     DesktopService.moveItem(delegateRoot.index, targetIndex);
                                 }
-                                
+
                                 dragPreview.Drag.drop();
                             }
                         }
