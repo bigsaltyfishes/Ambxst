@@ -21,19 +21,19 @@ Item {
         const ext = itemPath.substring(itemPath.lastIndexOf('.') + 1).toLowerCase();
         const videoExts = ['mp4', 'webm', 'mov', 'avi', 'mkv', 'gif'];
         const imageExts = ['jpg', 'jpeg', 'png', 'webp', 'tif', 'tiff', 'bmp'];
-        
+
         if (itemType === 'folder' || isDesktopFile) {
             return '';
         }
-        
+
         if (videoExts.includes(ext) || imageExts.includes(ext)) {
             const fileName = itemPath.substring(itemPath.lastIndexOf('/') + 1);
-            return Quickshell.cacheDir + "/desktop_thumbnails/" + fileName + ".jpg";
+            return Quickshell.dataDir + "/desktop_thumbnails/" + fileName + ".jpg";
         }
-        
+
         return '';
     }
-    
+
     readonly property bool hasThumbnail: thumbnailPath !== '' && Qt.platform.os !== "windows"
     property int thumbnailRefresh: 0
 
@@ -152,7 +152,7 @@ Item {
             asynchronous: true
             smooth: true
             cache: false
-            
+
             onStatusChanged: {
                 if (status === Image.Ready && root.hasThumbnail) {
                     thumbnailExists = true;
@@ -195,7 +195,7 @@ Item {
                 asynchronous: true
                 smooth: true
                 cache: false
-                
+
                 onStatusChanged: {
                     if (status === Image.Ready && root.hasThumbnail) {
                         thumbnailExists = true;

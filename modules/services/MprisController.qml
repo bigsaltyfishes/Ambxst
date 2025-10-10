@@ -23,7 +23,7 @@ Singleton {
     }
     property MprisPlayer activePlayer: trackedPlayer ?? filteredPlayers[0] ?? null
 
-    property string cacheFilePath: Quickshell.cachePath("lastPlayer.json")
+    property string cacheFilePath: Quickshell.dataPath("lastPlayer.json")
     property bool isInitializing: true
     property string cachedDbusName: ""
 

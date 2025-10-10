@@ -47,7 +47,10 @@ Singleton {
     }
 
     function updateIconPosition(path, gridX, gridY) {
-        iconPositions[path] = { x: gridX, y: gridY };
+        iconPositions[path] = {
+            x: gridX,
+            y: gridY
+        };
         savePositions();
     }
 
@@ -57,21 +60,24 @@ Singleton {
 
     function calculateAutoPosition(index) {
         var usedPositions = {};
-        
+
         for (var key in iconPositions) {
             var pos = iconPositions[key];
             usedPositions[pos.x + "," + pos.y] = true;
         }
-        
+
         var gridX = 0;
         var gridY = 0;
         var checked = 0;
-        
+
         while (checked <= index) {
             var posKey = gridX + "," + gridY;
             if (!usedPositions[posKey]) {
                 if (checked === index) {
-                    return { x: gridX, y: gridY };
+                    return {
+                        x: gridX,
+                        y: gridY
+                    };
                 }
                 checked++;
             }
@@ -81,8 +87,11 @@ Singleton {
                 gridX++;
             }
         }
-        
-        return { x: gridX, y: gridY };
+
+        return {
+            x: gridX,
+            y: gridY
+        };
     }
 
     function getDesktopDir() {
@@ -118,7 +127,7 @@ Singleton {
             Process {
                 running: true
                 command: ["bash", "-c", "cd ~ && setsid gio launch \'' + escapedPath + '\' < /dev/null > /dev/null 2>&1 &"]
-                
+
                 stdout: StdioCollector {
                     onStreamFinished: {
                         if (text.length > 0) {
@@ -126,7 +135,7 @@ Singleton {
                         }
                     }
                 }
-                
+
                 stderr: StdioCollector {
                     onStreamFinished: {
                         if (text.length > 0) {
@@ -134,7 +143,7 @@ Singleton {
                         }
                     }
                 }
-                
+
                 onRunningChanged: {
                     if (!running) {
                         destroy();
@@ -152,7 +161,7 @@ Singleton {
             Process {
                 running: true
                 command: ["bash", "-c", "setsid xdg-open \'' + escapedPath + '\' < /dev/null > /dev/null 2>&1 &"]
-                
+
                 stdout: StdioCollector {
                     onStreamFinished: {
                         if (text.length > 0) {
@@ -160,7 +169,7 @@ Singleton {
                         }
                     }
                 }
-                
+
                 stderr: StdioCollector {
                     onStreamFinished: {
                         if (text.length > 0) {
@@ -168,7 +177,7 @@ Singleton {
                         }
                     }
                 }
-                
+
                 onRunningChanged: {
                     if (!running) {
                         destroy();
@@ -186,7 +195,7 @@ Singleton {
             Process {
                 running: true
                 command: ["bash", "-c", "gio trash \'' + escapedPath + '\'"]
-                
+
                 stdout: StdioCollector {
                     onStreamFinished: {
                         if (text.length > 0) {
@@ -194,7 +203,7 @@ Singleton {
                         }
                     }
                 }
-                
+
                 stderr: StdioCollector {
                     onStreamFinished: {
                         if (text.length > 0) {
@@ -202,7 +211,7 @@ Singleton {
                         }
                     }
                 }
-                
+
                 onRunningChanged: {
                     if (!running) {
                         destroy();
@@ -214,16 +223,19 @@ Singleton {
 
     function saveAllPositions() {
         iconPositions = {};
-        
+
         for (var i = 0; i < items.count; i++) {
             var item = items.get(i);
             if (!item.isPlaceholder && item.path) {
                 var col = Math.floor(i / maxRowsHint);
                 var row = i % maxRowsHint;
-                iconPositions[item.path] = { x: col, y: row };
+                iconPositions[item.path] = {
+                    x: col,
+                    y: row
+                };
             }
         }
-        
+
         savePositions();
     }
 
@@ -231,13 +243,13 @@ Singleton {
         if (fromIndex === toIndex || fromIndex < 0 || toIndex < 0 || fromIndex >= items.count) {
             return;
         }
-        
+
         if (toIndex >= items.count) {
             toIndex = items.count - 1;
         }
-        
+
         var targetIsPlaceholder = items.get(toIndex).isPlaceholder === true;
-        
+
         if (targetIsPlaceholder) {
             var item = items.get(fromIndex);
             items.setProperty(toIndex, "name", item.name);
@@ -246,38 +258,38 @@ Singleton {
             items.setProperty(toIndex, "icon", item.icon);
             items.setProperty(toIndex, "isDesktopFile", item.isDesktopFile);
             items.setProperty(toIndex, "isPlaceholder", false);
-            
+
             items.setProperty(fromIndex, "name", "");
             items.setProperty(fromIndex, "path", "");
             items.setProperty(fromIndex, "type", "placeholder");
             items.setProperty(fromIndex, "icon", "");
             items.setProperty(fromIndex, "isDesktopFile", false);
             items.setProperty(fromIndex, "isPlaceholder", true);
-            
+
             var col = Math.floor(toIndex / maxRowsHint);
             var row = toIndex % maxRowsHint;
             items.setProperty(toIndex, "gridX", col);
             items.setProperty(toIndex, "gridY", row);
         } else {
             items.move(fromIndex, toIndex, 1);
-            
+
             var sourceCol = Math.floor(toIndex / maxRowsHint);
             var sourceRow = toIndex % maxRowsHint;
             items.setProperty(toIndex, "gridX", sourceCol);
             items.setProperty(toIndex, "gridY", sourceRow);
-            
+
             var targetCol = Math.floor(fromIndex / maxRowsHint);
             var targetRow = fromIndex % maxRowsHint;
             items.setProperty(fromIndex, "gridX", targetCol);
             items.setProperty(fromIndex, "gridY", targetRow);
         }
-        
+
         saveAllPositions();
     }
 
     function getFileType(fileName) {
         var ext = fileName.toLowerCase().split('.').pop();
-        
+
         if (['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'bmp'].includes(ext)) {
             return 'image';
         } else if (['mp4', 'webm', 'mov', 'avi', 'mkv', 'mp3', 'wav', 'ogg', 'flac'].includes(ext)) {
@@ -295,15 +307,23 @@ Singleton {
     }
 
     function getIconForType(type) {
-        switch(type) {
-            case 'folder': return 'folder';
-            case 'image': return 'image-x-generic';
-            case 'media': return 'video-x-generic';
-            case 'pdf': return 'application-pdf';
-            case 'text': return 'text-x-generic';
-            case 'archive': return 'package-x-generic';
-            case 'document': return 'x-office-document';
-            default: return 'text-x-generic';
+        switch (type) {
+        case 'folder':
+            return 'folder';
+        case 'image':
+            return 'image-x-generic';
+        case 'media':
+            return 'video-x-generic';
+        case 'pdf':
+            return 'application-pdf';
+        case 'text':
+            return 'text-x-generic';
+        case 'archive':
+            return 'package-x-generic';
+        case 'document':
+            return 'x-office-document';
+        default:
+            return 'text-x-generic';
         }
     }
 
@@ -335,18 +355,18 @@ Singleton {
                 if (text.trim().length > 0) {
                     try {
                         var parsed = JSON.parse(text);
-                        
+
                         for (var key in root.iconPositions) {
                             delete root.iconPositions[key];
                         }
-                        
+
                         for (var k in parsed) {
                             root.iconPositions[k] = {
                                 x: parsed[k].x,
                                 y: parsed[k].y
                             };
                         }
-                        
+
                         console.log("Loaded", Object.keys(root.iconPositions).length, "icon positions");
                     } catch (e) {
                         console.warn("Error parsing positions file:", e);
@@ -449,7 +469,7 @@ Singleton {
                 if (!parsingInProgress) {
                     tempDesktopFiles = pendingDesktopFiles;
                     tempItems = newItems;
-                    
+
                     if (pendingDesktopFiles.length > 0) {
                         parsingInProgress = true;
                         currentDesktopFileIndex = 0;
@@ -499,7 +519,7 @@ Singleton {
 
     function finalizeItems() {
         var allItems = tempItems.concat(tempDesktopFiles);
-        
+
         allItems.sort((a, b) => {
             if (a.sortOrder !== b.sortOrder) {
                 return a.sortOrder - b.sortOrder;
@@ -508,9 +528,9 @@ Singleton {
         });
 
         items.clear();
-        
+
         var gridSize = maxRowsHint * maxColumnsHint;
-        
+
         for (var i = 0; i < gridSize; i++) {
             items.append({
                 name: "",
@@ -523,22 +543,22 @@ Singleton {
                 gridY: i % maxRowsHint
             });
         }
-        
+
         var usedIndices = {};
-        
+
         for (var i = 0; i < allItems.length; i++) {
             var item = allItems[i];
             var savedPos = getIconPosition(item.path);
             var gridIndex = -1;
-            
+
             if (savedPos && savedPos.x < maxColumnsHint && savedPos.y < maxRowsHint) {
                 gridIndex = savedPos.x * maxRowsHint + savedPos.y;
-                
+
                 if (usedIndices[gridIndex]) {
                     gridIndex = -1;
                 }
             }
-            
+
             if (gridIndex === -1) {
                 for (var j = 0; j < gridSize; j++) {
                     if (!usedIndices[j]) {
@@ -547,12 +567,12 @@ Singleton {
                     }
                 }
             }
-            
+
             if (gridIndex !== -1 && gridIndex < items.count) {
                 usedIndices[gridIndex] = true;
                 var col = Math.floor(gridIndex / maxRowsHint);
                 var row = gridIndex % maxRowsHint;
-                
+
                 items.setProperty(gridIndex, "name", item.name);
                 items.setProperty(gridIndex, "path", item.path);
                 items.setProperty(gridIndex, "type", item.type);
@@ -563,7 +583,7 @@ Singleton {
                 items.setProperty(gridIndex, "gridY", row);
             }
         }
-        
+
         root.initialLoadComplete = true;
     }
 
@@ -596,12 +616,12 @@ Singleton {
                 if (currentDesktopFileIndex >= tempDesktopFiles.length) {
                     return;
                 }
-                
+
                 var item = tempDesktopFiles[currentDesktopFileIndex];
                 var lines = text.split("\n");
                 var name = "";
                 var icon = "application-x-executable";
-                
+
                 for (var i = 0; i < lines.length; i++) {
                     var line = lines[i].trim();
                     if (line.startsWith("Name=")) {
@@ -640,7 +660,7 @@ Singleton {
     Process {
         id: thumbnailProcess
         running: false
-        command: ["python3", Qt.resolvedUrl("../../scripts/desktop_thumbgen.py").toString().replace("file://", ""), desktopDir, Quickshell.cacheDir + "/desktop_thumbnails"]
+        command: ["python3", Qt.resolvedUrl("../../scripts/desktop_thumbgen.py").toString().replace("file://", ""), desktopDir, Quickshell.dataDir + "/desktop_thumbnails"]
 
         stdout: StdioCollector {
             onStreamFinished: {

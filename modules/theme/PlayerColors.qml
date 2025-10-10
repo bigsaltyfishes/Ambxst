@@ -12,7 +12,7 @@ Item {
 
     FileView {
         id: spotifyColors
-        path: Quickshell.cachePath("spotify_colors.json")
+        path: Quickshell.dataPath("spotify_colors.json")
         watchChanges: true
         onFileChanged: reload()
 
@@ -28,7 +28,7 @@ Item {
 
     FileView {
         id: firefoxColors
-        path: Quickshell.cachePath("firefox_colors.json")
+        path: Quickshell.dataPath("firefox_colors.json")
         watchChanges: true
         onFileChanged: reload()
 
@@ -44,7 +44,7 @@ Item {
 
     FileView {
         id: chromiumColors
-        path: Quickshell.cachePath("chromium_colors.json")
+        path: Quickshell.dataPath("chromium_colors.json")
         watchChanges: true
         onFileChanged: reload()
 
@@ -60,7 +60,7 @@ Item {
 
     FileView {
         id: genericColors
-        path: Quickshell.cachePath("generic_colors.json")
+        path: Quickshell.dataPath("generic_colors.json")
         watchChanges: true
         onFileChanged: reload()
 
@@ -177,7 +177,7 @@ Item {
         const configPath = assetsPath.replace("file://", "") + playerType + ".toml";
 
         if (artworkUrl.startsWith("http://") || artworkUrl.startsWith("https://")) {
-            const cachePath = Quickshell.cachePath(`${playerType}_artwork.jpg`);
+            const cachePath = Quickshell.dataPath(`${playerType}_artwork.jpg`);
             downloadProcess.command = ["curl", "-sL", "-o", cachePath, artworkUrl];
             downloadProcess.running = true;
         } else {
@@ -190,10 +190,10 @@ Item {
     Process {
         id: downloadProcess
         running: false
-        
-        onExited: function(code) {
+
+        onExited: function (code) {
             if (code === 0) {
-                const cachePath = Quickshell.cachePath(`${lastProcessedPlayerType}_artwork.jpg`);
+                const cachePath = Quickshell.dataPath(`${lastProcessedPlayerType}_artwork.jpg`);
                 const configPath = assetsPath.replace("file://", "") + lastProcessedPlayerType + ".toml";
                 matugenProcess.command = ["matugen", "image", cachePath, "-c", configPath];
                 matugenProcess.running = true;

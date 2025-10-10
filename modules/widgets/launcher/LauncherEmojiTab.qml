@@ -109,14 +109,14 @@ Rectangle {
 
     function loadRecentEmojis() {
         // Load recent emojis from JSON
-        recentProcess.command = ["bash", "-c", "cat " + Quickshell.cacheDir + "/emojis.json 2>/dev/null || echo '[]'"];
+        recentProcess.command = ["bash", "-c", "cat " + Quickshell.dataDir + "/emojis.json 2>/dev/null || echo '[]'"];
         recentProcess.running = true;
     }
 
     function saveRecentEmojis() {
         // Save recent emojis to JSON
         var jsonData = JSON.stringify(recentEmojis, null, 2);
-        saveProcess.command = ["bash", "-c", "echo '" + jsonData.replace(/'/g, "'\\''") + "' > " + Quickshell.cacheDir + "/emojis.json"];
+        saveProcess.command = ["bash", "-c", "echo '" + jsonData.replace(/'/g, "'\\''") + "' > " + Quickshell.dataDir + "/emojis.json"];
         saveProcess.running = true;
     }
 

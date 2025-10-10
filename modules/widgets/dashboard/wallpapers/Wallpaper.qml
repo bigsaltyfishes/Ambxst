@@ -61,7 +61,7 @@ PanelWindow {
         // Include original extension in thumbnail name to avoid collisions
         // Format: originalname.ext.jpg (e.g., fire-skull.png.jpg)
         var thumbnailName = fileName + ".jpg";
-        return Quickshell.cacheDir + "/" + cacheDir + "/" + thumbnailName;
+        return Quickshell.dataDir + "/" + cacheDir + "/" + thumbnailName;
     }
 
     function getDisplaySource(filePath) {
@@ -193,7 +193,7 @@ PanelWindow {
 
     FileView {
         id: wallpaperConfig
-        path: Quickshell.cachePath("wallpapers.json")
+        path: Quickshell.dataPath("wallpapers.json")
         watchChanges: true
 
         onFileChanged: reload()
@@ -250,7 +250,7 @@ PanelWindow {
     Process {
         id: checkWallpapersJson
         running: false
-        command: ["test", "-f", Quickshell.cachePath("wallpapers.json")]
+        command: ["test", "-f", Quickshell.dataPath("wallpapers.json")]
 
         onExited: function (exitCode) {
             if (exitCode !== 0) {
@@ -318,7 +318,7 @@ PanelWindow {
     Process {
         id: thumbnailGeneratorScript
         running: false
-        command: ["python3", Qt.resolvedUrl("../../../../scripts").toString().replace("file://", "") + "/thumbgen.py", Quickshell.cacheDir + "/wallpapers.json", Quickshell.cacheDir]
+        command: ["python3", Qt.resolvedUrl("../../../../scripts").toString().replace("file://", "") + "/thumbgen.py", Quickshell.dataDir + "/wallpapers.json", Quickshell.dataDir]
 
         stdout: StdioCollector {
             onStreamFinished: {

@@ -149,7 +149,7 @@ Singleton {
 
     FileView {
         id: notifFileView
-        path: Quickshell.cachePath("notifications.json")
+        path: Quickshell.dataPath("notifications.json")
         onLoaded: loadNotifications()
     }
 
@@ -186,7 +186,7 @@ Singleton {
 
     function limitNotificationsPerSummary(notifications) {
         var groups = {};
-        
+
         notifications.forEach(notif => {
             const key = notif.appName + '|' + (notif.summary || '');
             if (!groups[key]) {
@@ -350,7 +350,7 @@ Singleton {
         ids.forEach(id => {
             idsMap[id] = true;
         });
-        
+
         const newList = root.list.filter(notif => !idsMap[notif.id]);
         const removedCount = root.list.length - newList.length;
 
@@ -388,7 +388,7 @@ Singleton {
         repeat: false
         property int notificationId: -1
         onTriggered: {
-            const index = root.list.findIndex((notif) => notif.id === notificationId);
+            const index = root.list.findIndex(notif => notif.id === notificationId);
             if (index !== -1 && root.list[index] != null)
                 root.list[index].popup = false;
             root.timeout(notificationId);
@@ -499,7 +499,7 @@ Singleton {
         xhr.responseType = "arraybuffer";
         xhr.timeout = 5000;
 
-        var cleanupXhr = function() {
+        var cleanupXhr = function () {
             activeXhrCount--;
             xhr = null;
         };
