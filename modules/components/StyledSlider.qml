@@ -31,6 +31,20 @@ RowLayout {
     property real wavyAmplitude: 0.8
     property real wavyFrequency: 8
 
+    Behavior on wavyAmplitude {
+        NumberAnimation {
+            duration: Config.animDuration
+            easing.type: Easing.OutQuart
+        }
+    }
+
+    Behavior on wavyFrequency {
+        NumberAnimation {
+            duration: Config.animDuration
+            easing.type: Easing.OutQuart
+        }
+    }
+
     Text {
         id: iconText
         visible: root.icon !== ""
