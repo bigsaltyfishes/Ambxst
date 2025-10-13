@@ -32,12 +32,17 @@ PaneRect {
         }
     }
 
-    Timer {
-        running: player.isPlaying
-        interval: 1000
-        repeat: true
-        onTriggered: MprisController.activePlayer?.positionChanged()
-    }
+     Timer {
+         running: player.isPlaying
+         interval: 1000
+         repeat: true
+         onTriggered: {
+             if (!positionSlider.isDragging) {
+                 positionSlider.value = player.length > 0 ? Math.min(1.0, player.position / player.length) : 0;
+             }
+             MprisController.activePlayer?.positionChanged();
+         }
+     }
 
     ClippingRectangle {
         anchors.fill: parent
@@ -255,128 +260,27 @@ PaneRect {
                     }
                 }
 
-                Item {
-                    id: positionControl
-                    Layout.fillWidth: true
-                    Layout.preferredHeight: 4
+                 StyledSlider {
+                     id: positionSlider
+                     Layout.fillWidth: true
+                     Layout.preferredHeight: 4
 
-                    property bool isDragging: false
-                    property real dragPosition: 0.0
-                    property int dragSeparation: 4
+                     value: player.length > 0 ? Math.min(1.0, player.position / player.length) : 0
+                     progressColor: player.hasArtwork && player.playerColors ? player.playerColors.primary : Colors.primaryFixed
+                     backgroundColor: player.hasArtwork && player.playerColors ? player.playerColors.shadow : Colors.shadow
+                     wavy: player.isPlaying
+                     wavyAmplitude: player.isPlaying ? 0.5 : 0.0
+                     wavyFrequency: player.isPlaying ? 4 : 0
+                     heightMultiplier: MprisController.activePlayer ? 8 : 4
+                     resizeAnim: false
+                     scroll: false
 
-                    property real progressRatio: isDragging ? dragPosition : (player.length > 0 ? Math.min(1.0, player.position / player.length) : 0)
-
-                    Rectangle {
-                        anchors.right: parent.right
-                        width: (1 - positionControl.progressRatio) * parent.width - positionControl.dragSeparation
-                        height: parent.height
-                        radius: height / 2
-                        color: player.hasArtwork && player.playerColors ? player.playerColors.shadow : Colors.shadow
-                        visible: MprisController.activePlayer !== null
-                    }
-
-                    WavyLine {
-                        id: wavyFill
-                        anchors.left: parent.left
-                        anchors.verticalCenter: parent.verticalCenter
-                        frequency: 8
-                        color: MprisController.activePlayer ? (player.hasArtwork && player.playerColors ? player.playerColors.primary : Colors.primaryFixed) : Colors.outline
-                        amplitudeMultiplier: 0.8
-                        height: MprisController.activePlayer ? positionControl.height * 8 : positionControl.height * 4
-                        width: MprisController.activePlayer ? Math.max(0, positionControl.width * positionControl.progressRatio - positionControl.dragSeparation) : positionControl.width
-                        lineWidth: positionControl.height
-                        fullLength: positionControl.width
-                        visible: player.isPlaying || !MprisController.activePlayer
-                        opacity: visible ? 1.0 : 0.0
-
-                        Behavior on color {
-                            ColorAnimation {
-                                duration: Config.animDuration
-                                easing.type: Easing.OutQuart
-                            }
-                        }
-
-                        Behavior on height {
-                            NumberAnimation {
-                                duration: Config.animDuration
-                                easing.type: Easing.OutQuart
-                            }
-                        }
-
-                        Behavior on opacity {
-                            NumberAnimation {
-                                duration: Config.animDuration
-                                easing.type: Easing.OutQuart
-                            }
-                        }
-
-                        FrameAnimation {
-                            running: wavyFill.visible && wavyFill.opacity > 0
-                            onTriggered: wavyFill.requestPaint()
-                        }
-                    }
-
-                    Rectangle {
-                        anchors.left: parent.left
-                        width: Math.max(0, positionControl.width * positionControl.progressRatio - positionControl.dragSeparation)
-                        height: positionControl.height
-                        radius: height / 2
-                        color: player.hasArtwork && player.playerColors ? player.playerColors.primary : Colors.primaryFixed
-                        visible: !player.isPlaying && MprisController.activePlayer
-                        opacity: visible ? 1.0 : 0.0
-
-                        Behavior on opacity {
-                            NumberAnimation {
-                                duration: Config.animDuration
-                                easing.type: Easing.OutQuart
-                            }
-                        }
-                    }
-
-                    Rectangle {
-                        id: dragHandle
-                        anchors.verticalCenter: parent.verticalCenter
-                        x: Math.max(0, Math.min(positionControl.width - width, positionControl.width * positionControl.progressRatio - width / 2))
-                        width: 4
-                        height: positionControl.isDragging ? 20 : 16
-                        radius: width / 2
-                        color: player.hasArtwork && player.playerColors ? player.playerColors.overBackground : Colors.whiteSource
-                        visible: MprisController.activePlayer !== null
-
-                        Behavior on height {
-                            NumberAnimation {
-                                duration: Config.animDuration
-                                easing.type: Easing.OutQuart
-                            }
-                        }
-                    }
-
-                    MouseArea {
-                        anchors.fill: parent
-                        cursorShape: MprisController.activePlayer?.canSeek ?? false ? Qt.PointingHandCursor : Qt.ArrowCursor
-                        enabled: MprisController.activePlayer?.canSeek ?? false
-                        onClicked: mouse => {
-                            if (MprisController.activePlayer && MprisController.activePlayer.canSeek) {
-                                MprisController.activePlayer.position = (mouse.x / width) * player.length;
-                            }
-                        }
-                        onPressed: {
-                            positionControl.isDragging = true;
-                            positionControl.dragPosition = Math.min(Math.max(0, mouseX / width), 1);
-                        }
-                        onReleased: {
-                            if (MprisController.activePlayer && MprisController.activePlayer.canSeek) {
-                                MprisController.activePlayer.position = positionControl.dragPosition * player.length;
-                            }
-                            positionControl.isDragging = false;
-                        }
-                        onPositionChanged: {
-                            if (positionControl.isDragging) {
-                                positionControl.dragPosition = Math.min(Math.max(0, mouseX / width), 1);
-                            }
-                        }
-                    }
-                }
+                     onValueChanged: {
+                         if (isDragging && MprisController.activePlayer && MprisController.activePlayer.canSeek) {
+                             MprisController.activePlayer.position = value * player.length;
+                         }
+                     }
+                 }
 
                 Text {
                     id: nextBtn
