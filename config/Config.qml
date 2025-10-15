@@ -40,29 +40,30 @@ Singleton {
         }
 
         adapter: JsonAdapter {
-            property JsonObject theme: JsonObject {
-                property bool oledMode: false
-                property bool lightMode: false
-                property real opacity: 1.0
-                property int roundness: 16
-                property int borderSize: 0
-                property string borderColor: "surfaceBright"
-                property string font: "Roboto Condensed"
-                property int fontSize: 14
-                property bool tintIcons: false
-                property string currentTheme: "default"
-                property bool enableCorners: true
-                property int animDuration: 300
-                property real shadowOpacity: 0.5
-                property string shadowColor: "shadow"
-                property int shadowXOffset: 0
-                property int shadowYOffset: 0
-                property real shadowBlur: 1
-                property list<var> bgColor: [["background", 0.0]]
-                property string bgOrientation: "vertical"
-                property list<var> paneColor: [["surface", 0.0]]
-                property string paneOrientation: "vertical"
-            }
+             property JsonObject theme: JsonObject {
+                 property bool oledMode: false
+                 property bool lightMode: false
+                 property real opacity: 1.0
+                 property int roundness: 16
+                 property int borderSize: 0
+                 property string borderColor: "surfaceBright"
+                 property string font: "Roboto Condensed"
+                 property int fontSize: 14
+                 property bool tintIcons: false
+                 property string currentTheme: "default"
+                 property bool enableCorners: true
+                 property int animDuration: 300
+                 property real shadowOpacity: 0.5
+                 property string shadowColor: "shadow"
+                 property int shadowXOffset: 0
+                 property int shadowYOffset: 0
+                 property real shadowBlur: 1
+                 property list<var> bgColor: [["background", 0.0]]
+                 property string bgOrientation: "vertical"
+                 property list<var> paneColor: [["surface", 0.0]]
+                 property string paneOrientation: "vertical"
+                 property string matugenScheme: "scheme-tonal-spot"
+             }
 
             property JsonObject bar: JsonObject {
                 property string position: "top"

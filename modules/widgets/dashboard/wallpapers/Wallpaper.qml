@@ -154,21 +154,21 @@ PanelWindow {
 
             console.log("Using source for matugen:", matugenSource, "(type:", fileType + ")");
 
-            // Ejecutar matugen con configuración específica
-            var commandWithConfig = ["matugen", "image", matugenSource, "-c", Qt.resolvedUrl("../../../../assets/matugen/config.toml").toString().replace("file://", "")];
-            if (Config.theme.lightMode) {
-                commandWithConfig.push("-m", "light");
-            }
-            matugenProcessWithConfig.command = commandWithConfig;
-            matugenProcessWithConfig.running = true;
+             // Ejecutar matugen con configuración específica
+             var commandWithConfig = ["matugen", "image", matugenSource, "-c", Qt.resolvedUrl("../../../../assets/matugen/config.toml").toString().replace("file://", ""), "-t", Config.theme.matugenScheme];
+             if (Config.theme.lightMode) {
+                 commandWithConfig.push("-m", "light");
+             }
+             matugenProcessWithConfig.command = commandWithConfig;
+             matugenProcessWithConfig.running = true;
 
-            // Ejecutar matugen normal en paralelo
-            var commandNormal = ["matugen", "image", matugenSource];
-            if (Config.theme.lightMode) {
-                commandNormal.push("-m", "light");
-            }
-            matugenProcessNormal.command = commandNormal;
-            matugenProcessNormal.running = true;
+             // Ejecutar matugen normal en paralelo
+             var commandNormal = ["matugen", "image", matugenSource, "-t", Config.theme.matugenScheme];
+             if (Config.theme.lightMode) {
+                 commandNormal.push("-m", "light");
+             }
+             matugenProcessNormal.command = commandNormal;
+             matugenProcessNormal.running = true;
         }
     }
 

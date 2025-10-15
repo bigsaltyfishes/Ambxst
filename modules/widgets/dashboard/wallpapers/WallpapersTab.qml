@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Controls
+import QtQuick.Layouts
 import Quickshell
 import Quickshell.Widgets
 import qs.modules.theme
@@ -66,21 +67,21 @@ Rectangle {
     }
 
     // Layout principal con una fila para la barra lateral y la cuadrícula.
-    Row {
+    RowLayout {
         anchors.fill: parent
         spacing: 8
 
         // Columna para el buscador y las opciones.
-        Column {
-            // El ancho se calcula dinámicamente para llenar el espacio.
-            width: parent.width - wallpaperGridContainer.width - 8
-            height: parent.height + 4
+        ColumnLayout {
+            Layout.preferredWidth: parent.width - wallpaperGridContainer.width - 8
+            Layout.fillWidth: false
+            Layout.fillHeight: true
             spacing: 8
 
             // Barra de búsqueda.
             SearchInput {
                 id: wallpaperSearchInput
-                width: parent.width
+                Layout.fillWidth: true
                 text: searchText
                 placeholderText: "Search wallpapers..."
                 iconText: ""
@@ -173,23 +174,94 @@ Rectangle {
                 }
             }
 
-            // Área placeholder para opciones futuras.
-            Rectangle {
-                width: parent.width
-                height: parent.height - wallpaperSearchInput.height - 12
+            // Área para opciones de Matugen y modo de tema.
+            ClippingRectangle {
+                Layout.fillWidth: true
+                Layout.fillHeight: true
                 color: Colors.surface
                 radius: Config.roundness > 0 ? Config.roundness + 4 : 0
-                border.color: Colors.outline
-                border.width: 0
 
-                Text {
-                    anchors.centerIn: parent
-                    text: "Placeholder\nfor future\noptions"
-                    color: Colors.overSurfaceVariant
-                    font.family: Config.theme.font
-                    font.pixelSize: Config.theme.fontSize
-                    horizontalAlignment: Text.AlignHCenter
-                    lineHeight: 1.2
+                RowLayout {
+                    anchors.fill: parent
+                    spacing: 8
+
+                    // Dropdown para seleccionar el esquema de Matugen.
+                    ComboBox {
+                        Layout.fillWidth: true
+                        Layout.preferredHeight: 40
+                        model: ["scheme-content", "scheme-expressive", "scheme-fidelity", "scheme-fruit-salad", "scheme-monochrome", "scheme-neutral", "scheme-rainbow", "scheme-tonal-spot"]
+                        currentIndex: model.indexOf(Config.theme.matugenScheme)
+                        displayText: currentText || "Selecciona esquema"
+
+                        onCurrentTextChanged: {
+                            if (currentText && currentText !== Config.theme.matugenScheme) {
+                                Config.theme.matugenScheme = currentText;
+                                if (GlobalStates.wallpaperManager) {
+                                    GlobalStates.wallpaperManager.runMatugenForCurrentWallpaper();
+                                }
+                            }
+                        }
+
+                        background: Rectangle {
+                            color: Colors.surface
+                            radius: Config.roundness > 0 ? Config.roundness + 4 : 0
+                            border.color: Colors.outline
+                            border.width: 1
+                        }
+
+                        contentItem: Text {
+                            text: parent.displayText
+                            color: Colors.overSurface
+                            font.family: Config.theme.font
+                            font.pixelSize: Config.theme.fontSize
+                            verticalAlignment: Text.AlignVCenter
+                            leftPadding: 8
+                        }
+
+                        delegate: ItemDelegate {
+                            width: parent.width
+                            height: 40
+                            contentItem: Text {
+                                text: modelData
+                                color: Colors.overSurface
+                                font.family: Config.theme.font
+                                font.pixelSize: Config.theme.fontSize
+                                verticalAlignment: Text.AlignVCenter
+                                leftPadding: 8
+                            }
+                            background: Rectangle {
+                                color: highlighted ? Colors.primary : "transparent"
+                            }
+                        }
+                    }
+
+                    // Botón para alternar entre modo claro y oscuro.
+                    Button {
+                        Layout.preferredWidth: 48
+                        Layout.preferredHeight: 40
+                        font.family: Config.theme.font
+                        font.pixelSize: 20
+
+                        onClicked: {
+                            Config.theme.lightMode = !Config.theme.lightMode;  // Directly set the JsonObject property to ensure write
+                        }
+
+                        background: Rectangle {
+                            color: Colors.surface
+                            radius: Config.roundness > 0 ? Config.roundness + 4 : 0
+                            border.color: Colors.outline
+                            border.width: 1
+                        }
+
+                        contentItem: Text {
+                            text: Config.theme.lightMode ? "🌙" : "☀️"  // Use Unicode for reliable icons
+                            color: Config.theme.lightMode ? Colors.primary : Colors.overSurface
+                            font.family: Config.theme.font
+                            font.pixelSize: 20
+                            horizontalAlignment: Text.AlignHCenter
+                            verticalAlignment: Text.AlignVCenter
+                        }
+                    }
                 }
             }
         }
@@ -204,6 +276,10 @@ Rectangle {
             border.color: Colors.outline
             border.width: 0
             clip: true
+
+            Layout.preferredWidth: width
+            Layout.fillWidth: false
+            Layout.fillHeight: true
 
             readonly property int wallpaperMargin: 4
             readonly property int wallpaperHeight: (height + wallpaperMargin * 2) / gridRows
@@ -383,6 +459,11 @@ Rectangle {
                                                     easing.type: Easing.InOutQuad
                                                 }
                                             }
+                                        }
+
+                                        // Dummy item to fill remaining height and keep items top-aligned
+                                        Item {
+                                            Layout.fillHeight: true
                                         }
                                     }
 
