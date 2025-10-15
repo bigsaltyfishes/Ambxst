@@ -45,7 +45,7 @@ Rectangle {
             type: "image"
         }
         ListElement {
-            label: "GIFs"
+            label: "GIF"
             type: "gif"
         }
         ListElement {
@@ -225,7 +225,7 @@ Rectangle {
                             property alias filterText: filterText
 
                             // Ancho dinámico: incluye icono solo cuando está activo
-                            width: filterText.width + 16 + (isActive ? filterIcon.width + 4 : 0)
+                            width: filterText.width + 24 + (isActive ? filterIcon.width + 4 : 0)
                             height: 32
                             color: isActive ? Colors.surfaceBright : Colors.surface
                             radius: Math.max(0, Config.roundness - 8)
@@ -236,7 +236,7 @@ Rectangle {
 
                                 Row {
                                     anchors.centerIn: parent
-                                    spacing: 4
+                                    spacing: isActive ? 4 : 0
 
                                     // Icono con animación de revelación
                                     Item {
