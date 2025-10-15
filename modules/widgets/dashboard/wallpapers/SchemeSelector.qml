@@ -86,85 +86,91 @@ Item {
                     }
                 }
             }
-
-                
-            Flickable {
-                id: schemeFlickable
-                Layout.fillWidth: true
-                Layout.preferredHeight: schemeListExpanded ? 40 * 3 : 0
-                Layout.topMargin: schemeListExpanded ? 4 : 0
-                contentHeight: schemeColumn.height
-                clip: true
-                Column {
-                    id: schemeColumn
-                    width: parent.width
-                    spacing: 0
-                    
-                    Repeater {
-                        model: ["scheme-content", "scheme-expressive", "scheme-fidelity", "scheme-fruit-salad", "scheme-monochrome", "scheme-neutral", "scheme-rainbow", "scheme-tonal-spot"]
-                        
-                        Button {
-                            width: parent.width
-                            height: 40
-                            text: schemeDisplayNames[index]
-                            onClicked: {
-                                Config.theme.matugenScheme = modelData;
-                                schemeListExpanded = false;
-                                if (GlobalStates.wallpaperManager) {
-                                    GlobalStates.wallpaperManager.runMatugenForCurrentWallpaper();
-                                }
-                            }
-                            
-                            background: Rectangle {
-                                color: "transparent"
-                            }
-                            
-                            contentItem: Text {
-                                text: parent.text
-                                color: Colors.overSurface
-                                font.family: Config.theme.font
-                                font.pixelSize: Config.theme.fontSize
-                                verticalAlignment: Text.AlignVCenter
-                                leftPadding: 8
-                            }
-                        }
-                    }
-                }
-
-                // Animate topMargin for Flickable
-                Behavior on Layout.topMargin {
-                    NumberAnimation {
-                        duration: 200
-                        easing.type: Easing.OutCubic
-                    }
-                }
-                
-                ScrollBar.vertical: ScrollBar {
-                    parent: schemeFlickable
-                    anchors.right: parent.right
-                    anchors.rightMargin: 2
-                    height: parent.height
-                    width: 8
-                    policy: ScrollBar.AlwaysOn
-                    
-                    background: Rectangle {
-                        color: Colors.background
-                        radius: Config.roundness
-                    }
-                    
-                    contentItem: Rectangle {
-                        color: Colors.primary
-                        radius: Config.roundness
-                    }
-                }
-                
-                Behavior on Layout.preferredHeight {
-                    NumberAnimation {
-                        duration: 200
-                        easing.type: Easing.OutCubic
-                    }
-                }
-            }
+                 
+             ClippingRectangle {
+                 Layout.fillWidth: true
+                 Layout.preferredHeight: schemeListExpanded ? 40 * 3 : 0
+                 Layout.topMargin: schemeListExpanded ? 4 : 0
+                 color: Colors.background
+                 radius: Config.roundness
+                 
+                 Flickable {
+                     id: schemeFlickable
+                     anchors.fill: parent
+                     contentHeight: schemeColumn.height
+                     clip: true
+                     
+                     Column {
+                         id: schemeColumn
+                         width: parent.width
+                         spacing: 0
+                         
+                         Repeater {
+                             model: ["scheme-content", "scheme-expressive", "scheme-fidelity", "scheme-fruit-salad", "scheme-monochrome", "scheme-neutral", "scheme-rainbow", "scheme-tonal-spot"]
+                             
+                             Button {
+                                 width: parent.width
+                                 height: 40
+                                 text: schemeDisplayNames[index]
+                                 onClicked: {
+                                     Config.theme.matugenScheme = modelData;
+                                     schemeListExpanded = false;
+                                     if (GlobalStates.wallpaperManager) {
+                                         GlobalStates.wallpaperManager.runMatugenForCurrentWallpaper();
+                                     }
+                                 }
+                                 
+                                 background: Rectangle {
+                                     color: "transparent"
+                                 }
+                                 
+                                 contentItem: Text {
+                                     text: parent.text
+                                     color: Colors.overSurface
+                                     font.family: Config.theme.font
+                                     font.pixelSize: Config.theme.fontSize
+                                     verticalAlignment: Text.AlignVCenter
+                                     leftPadding: 8
+                                 }
+                             }
+                         }
+                     }
+                     
+                     ScrollBar.vertical: ScrollBar {
+                         parent: schemeFlickable
+                         anchors.right: parent.right
+                         anchors.rightMargin: 2
+                         height: parent.height
+                         width: 8
+                         policy: ScrollBar.AlwaysOn
+                         
+                         background: Rectangle {
+                             color: Colors.background
+                             radius: Config.roundness
+                         }
+                         
+                         contentItem: Rectangle {
+                             color: Colors.primary
+                             radius: Config.roundness
+                         }
+                     }
+                 }
+                 
+                 // Animate topMargin for ClippingRectangle
+                 Behavior on Layout.topMargin {
+                     NumberAnimation {
+                         duration: 200
+                         easing.type: Easing.OutCubic
+                     }
+                 }
+                 
+                 Behavior on Layout.preferredHeight {
+                     NumberAnimation {
+                         duration: 200
+                         easing.type: Easing.OutCubic
+                     }
+                 }
+              }
         }
     }
 }
