@@ -61,7 +61,6 @@ Item {
 
             FrameAnimation {
                 running: noPlayerWavyLine.visible
-                onTriggered: noPlayerWavyLine.requestPaint()
             }
         }
 

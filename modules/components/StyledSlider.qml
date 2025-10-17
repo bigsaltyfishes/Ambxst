@@ -150,8 +150,7 @@ Item {
                 z: 1
                 FrameAnimation {
                     running: visible
-                    onTriggered: hWavyFill.requestPaint()
-                } // <-- CORRECTED
+                }
             }
             Rectangle {
                 anchors.left: parent.left
@@ -243,7 +242,6 @@ Item {
                     z: 1
                     FrameAnimation {
                         running: visible
-                        onTriggered: vWavyFill.requestPaint()
                     }
                 }
             }

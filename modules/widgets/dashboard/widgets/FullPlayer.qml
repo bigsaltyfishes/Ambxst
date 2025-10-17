@@ -79,7 +79,6 @@ PaneRect {
 
                 FrameAnimation {
                     running: noPlayerWavyLine.visible
-                    onTriggered: noPlayerWavyLine.requestPaint()
                 }
             }
         }
