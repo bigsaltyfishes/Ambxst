@@ -63,7 +63,7 @@ Item {
             anchors.margins: 8
             vertical: root.vertical
             size: (root.isHovered || volumeSlider.isDragging) ? 128 : 80
-            resizeAnim: true
+            smoothDrag: true
             value: 0
             wavy: true
             wavyAmplitude: (root.isHovered || volumeSlider.isDragging) ? (Audio.sink?.audio?.muted ? 0.5 : 1.5 * value / (root.vertical ? 1.5 : 1)) : 0

@@ -5,12 +5,12 @@ import qs.modules.theme
 import qs.modules.components
 import qs.config
 
- Item {
-     id: root
+Item {
+    id: root
 
-     Layout.fillHeight: true
+    Layout.fillHeight: true
 
-     required property MprisPlayer player
+    required property MprisPlayer player
 
     property bool isPlaying: player?.playbackState === MprisPlaybackState.Playing
     property real position: player?.position ?? 0.0
@@ -32,7 +32,7 @@ import qs.config
         wavyAmplitude: root.isPlaying ? 1 : 0.0
         wavyFrequency: root.isPlaying ? 4 : 0
         heightMultiplier: root.player ? 8 : 4
-        resizeAnim: false
+        smoothDrag: false
         scroll: false
         tooltip: false
         updateOnRelease: true
