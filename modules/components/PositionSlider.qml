@@ -32,7 +32,7 @@ Item {
         wavyAmplitude: root.isPlaying ? 1 : 0.0
         wavyFrequency: root.isPlaying ? 4 : 0
         heightMultiplier: root.player ? 8 : 4
-        smoothDrag: false
+        smoothDrag: true
         scroll: false
         tooltip: false
         updateOnRelease: true

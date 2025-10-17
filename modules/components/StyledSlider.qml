@@ -6,17 +6,6 @@ import qs.config
 import qs.modules.theme
 import qs.modules.components
 
-/**
- * Simplified slider inspired by CompactPlayer position control.
- * Supports both horizontal and vertical orientations.
- *
- * FINAL DEFINITIVE VERSION:
- * - A single "animatedProgress" property with a Behavior drives all visual changes.
- * - The handle's position and the bars' sizes are bound directly to this animated property.
- * - This creates a perfectly synchronized animation for all elements, eliminating any cascading effect.
- * - Correctly references requestPaint() to remove warnings.
- */
-
 Item {
     id: root
 
@@ -49,8 +38,8 @@ Item {
     property real size: 100
     property real thickness: 4
     property color iconColor: Colors.overBackground
+    property real handleSpacing: 4
 
-    // This is the SINGLE source of animation. It smoothly follows progressRatio.
     property real animatedProgress: progressRatio
     Behavior on animatedProgress {
         enabled: root.smoothDrag
@@ -126,7 +115,9 @@ Item {
             }
 
             Rectangle {
+                // Background (derecha del handle)
                 anchors.left: hDragHandle.right
+                anchors.leftMargin: root.handleSpacing // <-- CAMBIO APLICADO
                 anchors.right: parent.right
                 anchors.verticalCenter: parent.verticalCenter
                 height: root.thickness
@@ -136,9 +127,11 @@ Item {
             }
 
             WavyLine {
-                id: hWavyFill // <-- Added ID
+                id: hWavyFill
+                // Progress (izquierda del handle)
                 anchors.left: parent.left
                 anchors.right: hDragHandle.left
+                anchors.rightMargin: root.handleSpacing // <-- CAMBIO APLICADO
                 anchors.verticalCenter: parent.verticalCenter
                 frequency: root.wavyFrequency
                 color: root.progressColor
@@ -153,8 +146,10 @@ Item {
                 }
             }
             Rectangle {
+                // Progress (izquierda del handle)
                 anchors.left: parent.left
                 anchors.right: hDragHandle.left
+                anchors.rightMargin: root.handleSpacing // <-- CAMBIO APLICADO
                 anchors.verticalCenter: parent.verticalCenter
                 height: root.thickness
                 radius: Config.roundness / 4
@@ -213,8 +208,10 @@ Item {
             }
 
             Rectangle {
+                // Background (encima del handle)
                 anchors.top: parent.top
                 anchors.bottom: vDragHandle.top
+                anchors.bottomMargin: root.handleSpacing // <-- CAMBIO APLICADO
                 anchors.horizontalCenter: parent.horizontalCenter
                 width: root.thickness
                 radius: Config.roundness / 4
@@ -223,7 +220,9 @@ Item {
             }
 
             Item {
+                // Progress (debajo del handle) - Wavy
                 anchors.top: vDragHandle.bottom
+                anchors.topMargin: root.handleSpacing // <-- CAMBIO APLICADO
                 anchors.bottom: parent.bottom
                 anchors.horizontalCenter: parent.horizontalCenter
                 width: parent.width * heightMultiplier
@@ -246,7 +245,9 @@ Item {
                 }
             }
             Rectangle {
+                // Progress (debajo del handle) - Rect
                 anchors.top: vDragHandle.bottom
+                anchors.topMargin: root.handleSpacing // <-- CAMBIO APLICADO
                 anchors.bottom: parent.bottom
                 anchors.horizontalCenter: parent.horizontalCenter
                 width: root.thickness

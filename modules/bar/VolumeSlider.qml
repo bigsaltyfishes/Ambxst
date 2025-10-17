@@ -61,6 +61,8 @@ Item {
             id: volumeSlider
             anchors.fill: parent
             anchors.margins: 8
+            anchors.rightMargin: root.vertical ? 8 : 16
+            anchors.topMargin: root.vertical ? 16 : 8
             vertical: root.vertical
             size: (root.isHovered || volumeSlider.isDragging) ? 128 : 80
             smoothDrag: true
