@@ -59,12 +59,19 @@ Item {
         }
     }
 
-    Behavior on heightMultiplier {
-        NumberAnimation {
-            duration: Config.animDuration
-            easing.type: Easing.OutQuart
-        }
-    }
+     Behavior on heightMultiplier {
+         NumberAnimation {
+             duration: Config.animDuration
+             easing.type: Easing.OutQuart
+         }
+     }
+
+     Behavior on size {
+         NumberAnimation {
+             duration: Config.animDuration
+             easing.type: Easing.OutQuart
+         }
+     }
 
     // Horizontal Layout
     RowLayout {
