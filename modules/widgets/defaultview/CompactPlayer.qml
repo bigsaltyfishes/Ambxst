@@ -19,11 +19,6 @@ Item {
     property real length: player?.length ?? 1.0
     property bool hasArtwork: (player?.trackArtUrl ?? "") !== ""
 
-    // --- CAMBIO 1: ELIMINADO ---
-    // Se ha eliminado la siguiente línea porque PlayerColors ahora es un singleton
-    // que se actualiza automáticamente. No necesitamos una propiedad local para los colores.
-    // property var playerColors: hasArtwork ? PlayerColors.getColorsForPlayer(player) : null
-
     Timer {
         running: compactPlayer.isPlaying
         interval: 1000
@@ -48,7 +43,7 @@ Item {
     ClippingRectangle {
         anchors.fill: parent
         radius: Config.roundness > 0 ? Math.max(Config.roundness - 4, 0) : 0
-        color: hasArtwork ? PlayerColors.surface : Colors.surface // Usamos el color dinámico si hay carátula
+        color: hasArtwork ? PlayerColors.background : Colors.surface
 
         WavyLine {
             id: noPlayerWavyLine
