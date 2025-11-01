@@ -142,6 +142,9 @@ PanelWindow {
             anchors.margins: 4
             spacing: 4
 
+            // Obtener referencia al notch de esta pantalla
+            readonly property var notchContainer: Visibilities.getNotchForScreen(panel.screen.name)
+
             LauncherButton {
                 id: launcherButton
             }
@@ -195,6 +198,12 @@ PanelWindow {
                         }
                     }
                 }
+            }
+
+            // Espaciador sincronizado con el ancho del notch
+            Item {
+                Layout.preferredWidth: horizontalLayout.notchContainer ? horizontalLayout.notchContainer.implicitWidth - 40 : 0
+                Layout.fillHeight: true
             }
 
             RowLayout {
@@ -284,6 +293,9 @@ PanelWindow {
             anchors.margins: 4
             spacing: 4
 
+            // Obtener referencia al notch de esta pantalla
+            readonly property var notchContainer: Visibilities.getNotchForScreen(panel.screen.name)
+
             LauncherButton {
                 id: launcherButtonVert
                 Layout.preferredHeight: 36
@@ -339,6 +351,12 @@ PanelWindow {
                         }
                     }
                 }
+            }
+
+            // Espaciador sincronizado con el alto del notch
+            Item {
+                Layout.preferredHeight: verticalLayout.notchContainer ? verticalLayout.notchContainer.implicitHeight : 0
+                Layout.fillWidth: true
             }
 
             ColumnLayout {

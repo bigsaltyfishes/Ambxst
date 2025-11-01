@@ -76,10 +76,12 @@ PanelWindow {
 
     Component.onCompleted: {
         Visibilities.registerPanel(screen.name, notchPanel);
+        Visibilities.registerNotch(screen.name, notchContainer);
     }
 
     Component.onDestruction: {
         Visibilities.unregisterPanel(screen.name);
+        Visibilities.unregisterNotch(screen.name);
     }
 
     // Default view component - user@host text

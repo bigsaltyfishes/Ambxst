@@ -12,6 +12,7 @@ Singleton {
     property var screens: ({})
     property var panels: ({})
     property var bars: ({})
+    property var notches: ({})
     property string currentActiveModule: ""
     property string lastFocusedScreen: ""
     property var contextMenu: null
@@ -56,6 +57,18 @@ Singleton {
 
     function getBarForScreen(screenName) {
         return bars[screenName] || null;
+    }
+
+    function registerNotch(screenName, notchContainer) {
+        notches[screenName] = notchContainer;
+    }
+
+    function unregisterNotch(screenName) {
+        delete notches[screenName];
+    }
+
+    function getNotchForScreen(screenName) {
+        return notches[screenName] || null;
     }
 
     function setActiveModule(moduleName, skipFocusRestore) {
