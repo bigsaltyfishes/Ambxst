@@ -58,22 +58,22 @@ WlSessionLockSurface {
 
         Behavior on blur {
             NumberAnimation {
-                duration: Config.animDuration
-                easing.type: Easing.OutCubic
+                duration: Config.animDuration * 1.2
+                easing.type: Easing.OutExpo
             }
         }
 
         Behavior on opacity {
             NumberAnimation {
                 duration: Config.animDuration
-                easing.type: Easing.OutCubic
+                easing.type: Easing.OutQuint
             }
         }
 
         Behavior on zoomScale {
             NumberAnimation {
-                duration: Config.animDuration * 1.5
-                easing.type: Easing.OutCubic
+                duration: Config.animDuration * 1.8
+                easing.type: Easing.OutExpo
             }
         }
     }
@@ -97,14 +97,14 @@ WlSessionLockSurface {
         Behavior on opacity {
             NumberAnimation {
                 duration: Config.animDuration
-                easing.type: Easing.OutCubic
+                easing.type: Easing.OutQuint
             }
         }
 
         Behavior on zoomScale {
             NumberAnimation {
-                duration: Config.animDuration * 1.5
-                easing.type: Easing.OutCubic
+                duration: Config.animDuration * 1.8
+                easing.type: Easing.OutExpo
             }
         }
     }
@@ -125,15 +125,15 @@ WlSessionLockSurface {
 
         Behavior on anchors.leftMargin {
             NumberAnimation {
-                duration: Config.animDuration
-                easing.type: Easing.OutCubic
+                duration: Config.animDuration * 1.1
+                easing.type: Easing.OutExpo
             }
         }
 
         Behavior on opacity {
             NumberAnimation {
-                duration: Config.animDuration
-                easing.type: Easing.OutCubic
+                duration: Config.animDuration * 0.8
+                easing.type: Easing.OutQuad
             }
         }
 
@@ -155,26 +155,27 @@ WlSessionLockSurface {
         height: 96
 
         opacity: startAnim ? 1 : 0
-        scale: startAnim ? 1 : 0.9
+        scale: startAnim ? 1 : 0.92
 
         Behavior on anchors.bottomMargin {
             NumberAnimation {
-                duration: Config.animDuration
-                easing.type: Easing.OutCubic
+                duration: Config.animDuration * 1.2
+                easing.type: Easing.OutExpo
             }
         }
 
         Behavior on opacity {
             NumberAnimation {
-                duration: Config.animDuration
-                easing.type: Easing.OutCubic
+                duration: Config.animDuration * 0.9
+                easing.type: Easing.OutQuad
             }
         }
 
         Behavior on scale {
             NumberAnimation {
-                duration: Config.animDuration
-                easing.type: Easing.OutCubic
+                duration: Config.animDuration * 1.2
+                easing.type: Easing.OutBack
+                easing.overshoot: 1.2
             }
         }
 
@@ -267,12 +268,12 @@ WlSessionLockSurface {
                     color: passwordInputBox.showError ? Colors.errorContainer : Colors.surface
                     radius: Config.roundness > 0 ? (height / 2) * (Config.roundness / 16) : 0
                     
-                    Behavior on color {
-                        ColorAnimation {
-                            duration: Config.animDuration
-                            easing.type: Easing.OutCubic
-                        }
-                    }
+                            Behavior on color {
+                                ColorAnimation {
+                                    duration: Config.animDuration
+                                    easing.type: Easing.OutQuad
+                                }
+                            }
 
                     RowLayout {
                         anchors.fill: parent
@@ -342,7 +343,7 @@ WlSessionLockSurface {
                             Behavior on placeholderTextColor {
                                 ColorAnimation {
                                     duration: Config.animDuration
-                                    easing.type: Easing.OutCubic
+                                    easing.type: Easing.OutQuad
                                 }
                             }
 

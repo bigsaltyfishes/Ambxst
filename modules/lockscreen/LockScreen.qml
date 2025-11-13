@@ -70,22 +70,22 @@ PanelWindow {
 
         Behavior on blur {
             NumberAnimation {
-                duration: Config.animDuration
-                easing.type: Easing.OutCubic
+                duration: Config.animDuration * 1.2
+                easing.type: Easing.OutExpo
             }
         }
 
         Behavior on opacity {
             NumberAnimation {
                 duration: Config.animDuration
-                easing.type: Easing.OutCubic
+                easing.type: Easing.OutQuint
             }
         }
 
         Behavior on zoomScale {
             NumberAnimation {
-                duration: Config.animDuration * 1.5
-                easing.type: Easing.OutCubic
+                duration: Config.animDuration * 1.8
+                easing.type: Easing.OutExpo
             }
         }
     }
@@ -108,14 +108,14 @@ PanelWindow {
         Behavior on opacity {
             NumberAnimation {
                 duration: Config.animDuration
-                easing.type: Easing.OutCubic
+                easing.type: Easing.OutQuint
             }
         }
 
         Behavior on zoomScale {
             NumberAnimation {
-                duration: Config.animDuration * 1.5
-                easing.type: Easing.OutCubic
+                duration: Config.animDuration * 1.8
+                easing.type: Easing.OutExpo
             }
         }
     }
@@ -132,14 +132,23 @@ PanelWindow {
         width: 350
         height: playerContent.height
 
+        opacity: (GlobalStates.lockscreenVisible && !unlocking) ? 1 : 0
+
         transform: Translate {
             x: (GlobalStates.lockscreenVisible && !unlocking) ? 0 : -(playerContainer.width + 32)
 
             Behavior on x {
                 NumberAnimation {
-                    duration: Config.animDuration
-                    easing.type: Easing.OutCubic
+                    duration: Config.animDuration * 1.1
+                    easing.type: Easing.OutExpo
                 }
+            }
+        }
+
+        Behavior on opacity {
+            NumberAnimation {
+                duration: Config.animDuration * 0.8
+                easing.type: Easing.OutQuad
             }
         }
 
@@ -199,7 +208,7 @@ PanelWindow {
                 Behavior on opacity {
                     NumberAnimation {
                         duration: Config.animDuration / 2
-                        easing.type: Easing.OutCubic
+                        easing.type: Easing.OutQuad
                     }
                 }
             }
@@ -260,12 +269,12 @@ PanelWindow {
                     color: passwordInputBox.showError ? Colors.errorContainer : Colors.surface
                     radius: Config.roundness > 0 ? (height / 2) * (Config.roundness / 16) : 0
 
-                    Behavior on color {
-                        ColorAnimation {
-                            duration: Config.animDuration
-                            easing.type: Easing.OutCubic
-                        }
-                    }
+                            Behavior on color {
+                                ColorAnimation {
+                                    duration: Config.animDuration
+                                    easing.type: Easing.OutQuad
+                                }
+                            }
 
                     RowLayout {
                         anchors.fill: parent
@@ -335,7 +344,7 @@ PanelWindow {
                             Behavior on placeholderTextColor {
                                 ColorAnimation {
                                     duration: Config.animDuration
-                                    easing.type: Easing.OutCubic
+                                    easing.type: Easing.OutQuad
                                 }
                             }
 
