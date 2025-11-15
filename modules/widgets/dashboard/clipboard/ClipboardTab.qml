@@ -247,10 +247,10 @@ Item {
         running: false
 
         onExited: function (code) {
-            // No cerrar el dashboard después de copiar
-            // if (code === 0) {
-            //     root.itemSelected();
-            // }
+        // No cerrar el dashboard después de copiar
+        // if (code === 0) {
+        //     root.itemSelected();
+        // }
         }
     }
 

@@ -27,47 +27,7 @@ Rectangle {
         anchors.fill: parent
         spacing: 8
 
-        NotificationHistory {
-            Layout.fillWidth: true
-            Layout.fillHeight: true
-        }
-
-        ClippingRectangle {
-            Layout.fillWidth: true
-            Layout.fillHeight: true
-            radius: Config.roundness > 0 ? Config.roundness + 4 : 0
-
-            color: "transparent"
-
-            Flickable {
-                anchors.fill: parent
-                contentWidth: width
-                contentHeight: columnLayout.implicitHeight
-                clip: true
-
-                ColumnLayout {
-                    id: columnLayout
-                    width: parent.width
-                    spacing: 8
-
-                    FullPlayer {
-                        Layout.fillWidth: true
-                    }
-
-                    Calendar {
-                        Layout.fillWidth: true
-                        Layout.preferredHeight: width
-                    }
-
-                    PaneRect {
-                        Layout.fillWidth: true
-                        Layout.preferredHeight: 150
-                    }
-                }
-            }
-        }
-
-        // App Launcher (tercera columna) - Inline desde LauncherAppsTab
+        // App Launcher (primera columna) - Inline desde LauncherAppsTab
         Rectangle {
             id: appLauncherItem
             Layout.preferredWidth: parent.width / 3 - 16
@@ -425,6 +385,46 @@ Rectangle {
                     // No cerrar el dashboard después de crear shortcut
                 }
             }
+        }
+
+        ClippingRectangle {
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+            radius: Config.roundness > 0 ? Config.roundness + 4 : 0
+
+            color: "transparent"
+
+            Flickable {
+                anchors.fill: parent
+                contentWidth: width
+                contentHeight: columnLayout.implicitHeight
+                clip: true
+
+                ColumnLayout {
+                    id: columnLayout
+                    width: parent.width
+                    spacing: 8
+
+                    FullPlayer {
+                        Layout.fillWidth: true
+                    }
+
+                    Calendar {
+                        Layout.fillWidth: true
+                        Layout.preferredHeight: width
+                    }
+
+                    PaneRect {
+                        Layout.fillWidth: true
+                        Layout.preferredHeight: 150
+                    }
+                }
+            }
+        }
+
+        NotificationHistory {
+            Layout.fillWidth: true
+            Layout.fillHeight: true
         }
     }
 
