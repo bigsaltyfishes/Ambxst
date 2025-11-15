@@ -13,7 +13,6 @@ import qs.config
 Rectangle {
     id: root
     focus: true
-    activeFocusOnTab: true
 
     property string searchText: ""
     property bool showResults: searchText.length > 0
@@ -64,10 +63,7 @@ Rectangle {
     }
 
     function focusSearchInput() {
-        Qt.callLater(() => {
-            searchInput.focusInput();
-            root.forceActiveFocus();
-        });
+        searchInput.focusInput();
     }
 
     function updateFilteredEmojis() {
@@ -451,7 +447,6 @@ Rectangle {
                     }
                 }
                 focus: root.clearButtonFocused
-                activeFocusOnTab: true
 
                 Behavior on color {
                     enabled: Config.animDuration > 0
