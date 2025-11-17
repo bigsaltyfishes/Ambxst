@@ -254,211 +254,211 @@ Item {
         }
     }
 
-    Column {
+    Row {
         id: mainLayout
         anchors.fill: parent
         spacing: 8
 
-        // Barra de búsqueda con botón de limpiar
-        Row {
-            width: parent.width
-            height: 48
-            spacing: 8
+        // Columna izquierda: Search + Lista
+        Column {
+            width: parent.width * 0.35
+            height: parent.height
+            spacing: 10
 
-            SearchInput {
-                id: searchInput
-                width: parent.width - clearButton.width - parent.spacing
-                height: parent.height
-                text: root.searchText
-                placeholderText: "Search clipboard history..."
-
-                onSearchTextChanged: text => {
-                    root.searchText = text;
-                }
-
-                onAccepted: {
-                    if (root.deleteMode) {
-                        console.log("DEBUG: Enter in delete mode - canceling");
-                        root.cancelDeleteMode();
-                    } else {
-                        if (root.selectedIndex >= 0 && root.selectedIndex < root.allItems.length) {
-                            let selectedItem = root.allItems[root.selectedIndex];
-                            console.log("DEBUG: Selected item:", selectedItem);
-                            if (selectedItem && !root.deleteMode) {
-                                root.copyToClipboard(selectedItem.id);
-                                Visibilities.setActiveModule("");
-                            }
-                        } else {
-                            console.log("DEBUG: No action taken - selectedIndex:", root.selectedIndex, "count:", root.allItems.length);
-                        }
-                    }
-                }
-
-                onShiftAccepted: {
-                    if (!root.deleteMode) {
-                        if (root.selectedIndex >= 0 && root.selectedIndex < root.allItems.length) {
-                            let selectedItem = root.allItems[root.selectedIndex];
-                            console.log("DEBUG: Selected item for deletion:", selectedItem);
-                            if (selectedItem) {
-                                root.enterDeleteMode(selectedItem.id);
-                            }
-                        }
-                    }
-                }
-
-                onEscapePressed: {
-                    if (!root.deleteMode) {
-                        Visibilities.setActiveModule("");
-                    }
-                }
-
-                onDownPressed: {
-                    root.onDownPressed();
-                }
-
-                onUpPressed: {
-                    root.onUpPressed();
-                }
-            }
-
-            // Botón de limpiar historial
-            Rectangle {
-                id: clearButton
-                width: root.clearButtonConfirmState ? 120 : 48
+            // Barra de búsqueda con botón de limpiar
+            Row {
+                width: parent.width
                 height: 48
-                radius: searchInput.radius
-                color: {
-                    if (root.clearButtonConfirmState) {
-                        return Colors.error;
-                    } else if (root.clearButtonFocused || clearButtonMouseArea.containsMouse) {
-                        return Colors.surfaceBright;
-                    } else {
-                        return Colors.surface;
+                spacing: 8
+
+                SearchInput {
+                    id: searchInput
+                    width: parent.width - clearButton.width - parent.spacing
+                    height: parent.height
+                    text: root.searchText
+                    placeholderText: "Search clipboard history..."
+
+                    onSearchTextChanged: text => {
+                        root.searchText = text;
                     }
-                }
-                focus: root.clearButtonFocused
-                activeFocusOnTab: true
 
-                Behavior on color {
-                    enabled: Config.animDuration > 0
-                    ColorAnimation {
-                        duration: Config.animDuration / 2
-                        easing.type: Easing.OutQuart
-                    }
-                }
-
-                Behavior on width {
-                    enabled: Config.animDuration > 0
-                    NumberAnimation {
-                        duration: Config.animDuration
-                        easing.type: Easing.OutQuart
-                    }
-                }
-
-                onActiveFocusChanged: {
-                    if (activeFocus) {
-                        root.clearButtonFocused = true;
-                    } else {
-                        root.clearButtonFocused = false;
-                        root.resetClearButton();
-                    }
-                }
-
-                MouseArea {
-                    id: clearButtonMouseArea
-                    anchors.fill: parent
-                    hoverEnabled: true
-
-                    onClicked: {
-                        if (root.clearButtonConfirmState) {
-                            root.clearClipboardHistory();
+                    onAccepted: {
+                        if (root.deleteMode) {
+                            console.log("DEBUG: Enter in delete mode - canceling");
+                            root.cancelDeleteMode();
                         } else {
-                            root.clearButtonConfirmState = true;
-                        }
-                    }
-                }
-
-                Row {
-                    id: clearButtonContent
-                    anchors.fill: parent
-                    anchors.margins: 8
-                    spacing: 8
-
-                    Text {
-                        width: 32
-                        height: parent.height
-                        text: root.clearButtonConfirmState ? Icons.alert : Icons.trash
-                        textFormat: Text.RichText
-                        font.family: Icons.font
-                        font.pixelSize: 20
-                        color: root.clearButtonConfirmState ? Colors.overError : Colors.primary
-                        horizontalAlignment: Text.AlignHCenter
-                        verticalAlignment: Text.AlignVCenter
-
-                        Behavior on color {
-                            enabled: Config.animDuration > 0
-                            ColorAnimation {
-                                duration: Config.animDuration / 2
-                                easing.type: Easing.OutQuart
+                            if (root.selectedIndex >= 0 && root.selectedIndex < root.allItems.length) {
+                                let selectedItem = root.allItems[root.selectedIndex];
+                                console.log("DEBUG: Selected item:", selectedItem);
+                                if (selectedItem && !root.deleteMode) {
+                                    root.copyToClipboard(selectedItem.id);
+                                    Visibilities.setActiveModule("");
+                                }
+                            } else {
+                                console.log("DEBUG: No action taken - selectedIndex:", root.selectedIndex, "count:", root.allItems.length);
                             }
                         }
                     }
 
-                    Text {
-                        width: parent.width - 32 - parent.spacing
-                        height: parent.height
-                        text: "Clear all?"
-                        font.family: Config.theme.font
-                        font.weight: Font.Bold
-                        font.pixelSize: Config.theme.fontSize
-                        color: Colors.overError
-                        opacity: root.clearButtonConfirmState ? 1.0 : 0.0
-                        visible: opacity > 0
-                        verticalAlignment: Text.AlignVCenter
-
-                        Behavior on opacity {
-                            enabled: Config.animDuration > 0
-                            NumberAnimation {
-                                duration: Config.animDuration / 2
-                                easing.type: Easing.OutQuart
+                    onShiftAccepted: {
+                        if (!root.deleteMode) {
+                            if (root.selectedIndex >= 0 && root.selectedIndex < root.allItems.length) {
+                                let selectedItem = root.allItems[root.selectedIndex];
+                                console.log("DEBUG: Selected item for deletion:", selectedItem);
+                                if (selectedItem) {
+                                    root.enterDeleteMode(selectedItem.id);
+                                }
                             }
                         }
                     }
+
+                    onEscapePressed: {
+                        if (!root.deleteMode) {
+                            Visibilities.setActiveModule("");
+                        }
+                    }
+
+                    onDownPressed: {
+                        root.onDownPressed();
+                    }
+
+                    onUpPressed: {
+                        root.onUpPressed();
+                    }
                 }
 
-                Keys.onPressed: event => {
-                    if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
+                // Botón de limpiar historial
+                Rectangle {
+                    id: clearButton
+                    width: root.clearButtonConfirmState ? 120 : 48
+                    height: 48
+                    radius: searchInput.radius
+                    color: {
                         if (root.clearButtonConfirmState) {
-                            root.clearClipboardHistory();
+                            return Colors.error;
+                        } else if (root.clearButtonFocused || clearButtonMouseArea.containsMouse) {
+                            return Colors.surfaceBright;
                         } else {
-                            root.clearButtonConfirmState = true;
+                            return Colors.surface;
                         }
-                        event.accepted = true;
-                    } else if (event.key === Qt.Key_Escape) {
-                        root.resetClearButton();
-                        root.clearButtonFocused = false;
-                        searchInput.focusInput();
-                        event.accepted = true;
-                    } else if (event.key === Qt.Key_Tab && (event.modifiers & Qt.ShiftModifier)) {
-                        root.resetClearButton();
-                        root.clearButtonFocused = false;
-                        searchInput.focusInput();
-                        event.accepted = true;
+                    }
+                    focus: root.clearButtonFocused
+                    activeFocusOnTab: true
+
+                    Behavior on color {
+                        enabled: Config.animDuration > 0
+                        ColorAnimation {
+                            duration: Config.animDuration / 2
+                            easing.type: Easing.OutQuart
+                        }
+                    }
+
+                    Behavior on width {
+                        enabled: Config.animDuration > 0
+                        NumberAnimation {
+                            duration: Config.animDuration
+                            easing.type: Easing.OutQuart
+                        }
+                    }
+
+                    onActiveFocusChanged: {
+                        if (activeFocus) {
+                            root.clearButtonFocused = true;
+                        } else {
+                            root.clearButtonFocused = false;
+                            root.resetClearButton();
+                        }
+                    }
+
+                    MouseArea {
+                        id: clearButtonMouseArea
+                        anchors.fill: parent
+                        hoverEnabled: true
+
+                        onClicked: {
+                            if (root.clearButtonConfirmState) {
+                                root.clearClipboardHistory();
+                            } else {
+                                root.clearButtonConfirmState = true;
+                            }
+                        }
+                    }
+
+                    Row {
+                        id: clearButtonContent
+                        anchors.fill: parent
+                        anchors.margins: 8
+                        spacing: 8
+
+                        Text {
+                            width: 32
+                            height: parent.height
+                            text: root.clearButtonConfirmState ? Icons.alert : Icons.trash
+                            textFormat: Text.RichText
+                            font.family: Icons.font
+                            font.pixelSize: 20
+                            color: root.clearButtonConfirmState ? Colors.overError : Colors.primary
+                            horizontalAlignment: Text.AlignHCenter
+                            verticalAlignment: Text.AlignVCenter
+
+                            Behavior on color {
+                                enabled: Config.animDuration > 0
+                                ColorAnimation {
+                                    duration: Config.animDuration / 2
+                                    easing.type: Easing.OutQuart
+                                }
+                            }
+                        }
+
+                        Text {
+                            width: parent.width - 32 - parent.spacing
+                            height: parent.height
+                            text: "Clear all?"
+                            font.family: Config.theme.font
+                            font.weight: Font.Bold
+                            font.pixelSize: Config.theme.fontSize
+                            color: Colors.overError
+                            opacity: root.clearButtonConfirmState ? 1.0 : 0.0
+                            visible: opacity > 0
+                            verticalAlignment: Text.AlignVCenter
+
+                            Behavior on opacity {
+                                enabled: Config.animDuration > 0
+                                NumberAnimation {
+                                    duration: Config.animDuration / 2
+                                    easing.type: Easing.OutQuart
+                                }
+                            }
+                        }
+                    }
+
+                    Keys.onPressed: event => {
+                        if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
+                            if (root.clearButtonConfirmState) {
+                                root.clearClipboardHistory();
+                            } else {
+                                root.clearButtonConfirmState = true;
+                            }
+                            event.accepted = true;
+                        } else if (event.key === Qt.Key_Escape) {
+                            root.resetClearButton();
+                            root.clearButtonFocused = false;
+                            searchInput.focusInput();
+                            event.accepted = true;
+                        } else if (event.key === Qt.Key_Tab && (event.modifiers & Qt.ShiftModifier)) {
+                            root.resetClearButton();
+                            root.clearButtonFocused = false;
+                            searchInput.focusInput();
+                            event.accepted = true;
+                        }
                     }
                 }
             }
-        }
 
-        // Contenedor de resultados del clipboard con lista y preview
-        Row {
-            width: parent.width
-            height: parent.height - 58
-            spacing: 8
-
-            // Lista vertical (35% del ancho)
+            // Lista del clipboard
             Item {
-                width: ClipboardService.items.length > 0 ? parent.width * 0.35 : parent.width
-                height: parent.height
+                width: parent.width
+                height: parent.height - 58
 
                 ListView {
                     id: resultsList
@@ -472,10 +472,6 @@ Item {
 
                     model: root.allItems
                     currentIndex: root.selectedIndex
-
-                    ScrollBar.vertical: ScrollBar {
-                        id: mainScrollBar
-                    }
 
                     onCurrentIndexChanged: {
                         if (currentIndex !== root.selectedIndex) {
@@ -529,18 +525,18 @@ Item {
                                     return;
                                 }
 
-                        if (mouse.button === Qt.LeftButton && !isInDeleteMode) {
-                            if (root.deleteMode && modelData.id !== root.itemToDelete) {
-                                console.log("DEBUG: Clicking item outside delete mode - canceling");
-                                root.cancelDeleteMode();
-                                return;
-                            }
+                                if (mouse.button === Qt.LeftButton && !isInDeleteMode) {
+                                    if (root.deleteMode && modelData.id !== root.itemToDelete) {
+                                        console.log("DEBUG: Clicking item outside delete mode - canceling");
+                                        root.cancelDeleteMode();
+                                        return;
+                                    }
 
-                            if (!root.deleteMode) {
-                                root.copyToClipboard(modelData.id);
-                                Visibilities.setActiveModule("");
-                            }
-                        } else if (mouse.button === Qt.RightButton) {
+                                    if (!root.deleteMode) {
+                                        root.copyToClipboard(modelData.id);
+                                        Visibilities.setActiveModule("");
+                                    }
+                                } else if (mouse.button === Qt.RightButton) {
                                     if (root.deleteMode) {
                                         console.log("DEBUG: Right click while in delete mode - canceling");
                                         root.cancelDeleteMode();
@@ -967,132 +963,104 @@ Item {
                     }
                 }
             }
+        }
 
-            // ScrollBar visual entre lista y preview
-            ScrollBar {
-                id: visualScrollBar
-                width: 8
-                height: parent.height
-                orientation: Qt.Vertical
-                visible: ClipboardService.items.length > 0 && resultsList.contentHeight > resultsList.height
+        // Separator
+        Rectangle {
+            width: 2
+            height: parent.height
+            radius: Config.roundness
+            color: Colors.surface
+        }
 
-                position: resultsList.contentY / resultsList.contentHeight
-                size: resultsList.height / resultsList.contentHeight
+        // Preview panel (toda la altura, resto del ancho)
+        Item {
+            id: previewPanel
+            width: parent.width - parent.spacing * 2 - 2 - (parent.width * 0.35)
+            height: parent.height
+            visible: ClipboardService.items.length > 0
 
-                background: Rectangle {
-                    implicitWidth: 8
-                    color: Colors.surface
-                    radius: Config.roundness
-                }
+            property var currentItem: root.selectedIndex >= 0 && root.selectedIndex < root.allItems.length ? root.allItems[root.selectedIndex] : null
 
-                contentItem: Rectangle {
-                    implicitWidth: 8
-                    color: Colors.primary
-                    radius: Config.roundness
-                }
-
-                onPressedChanged: {
-                    if (pressed && resultsList.contentHeight > resultsList.height) {
-                        resultsList.contentY = position * resultsList.contentHeight;
-                    }
-                }
-
-                onPositionChanged: {
-                    if (pressed && resultsList.contentHeight > resultsList.height) {
-                        resultsList.contentY = position * resultsList.contentHeight;
-                    }
-                }
-            }
-
-            // Preview panel (65% del ancho)
             Item {
-                id: previewPanel
-                width: parent.width * 0.65 - 12
-                height: parent.height
-                visible: ClipboardService.items.length > 0
+                anchors.fill: parent
+                anchors.margins: 8
 
-                property var currentItem: root.selectedIndex >= 0 && root.selectedIndex < root.allItems.length ? root.allItems[root.selectedIndex] : null
-
-                Item {
+                // Preview para imagen
+                Image {
+                    id: previewImage
                     anchors.fill: parent
-                    anchors.margins: 8
-
-                    // Preview para imagen
-                    Image {
-                        id: previewImage
-                        anchors.fill: parent
-                        fillMode: Image.PreserveAspectFit
-                        visible: previewPanel.currentItem && previewPanel.currentItem.isImage
-                        source: {
-                            if (previewPanel.currentItem && previewPanel.currentItem.isImage) {
-                                ClipboardService.revision;
-                                return ClipboardService.getImageData(previewPanel.currentItem.id);
-                            }
-                            return "";
+                    fillMode: Image.PreserveAspectFit
+                    visible: previewPanel.currentItem && previewPanel.currentItem.isImage
+                    source: {
+                        if (previewPanel.currentItem && previewPanel.currentItem.isImage) {
+                            ClipboardService.revision;
+                            return ClipboardService.getImageData(previewPanel.currentItem.id);
                         }
-                        clip: true
-                        cache: false
-                        asynchronous: true
+                        return "";
+                    }
+                    clip: true
+                    cache: false
+                    asynchronous: true
+                }
+
+                // Placeholder cuando la imagen no está lista
+                Rectangle {
+                    anchors.centerIn: parent
+                    width: 120
+                    height: 120
+                    color: Colors.surfaceBright
+                    radius: Config.roundness > 0 ? Config.roundness + 4 : 0
+                    visible: previewPanel.currentItem && previewPanel.currentItem.isImage && previewImage.status !== Image.Ready
+
+                    Text {
+                        anchors.centerIn: parent
+                        text: Icons.image
+                        textFormat: Text.RichText
+                        font.family: Icons.font
+                        font.pixelSize: 48
+                        color: Colors.primary
+                    }
+                }
+
+                // Preview para texto con scroll
+                Flickable {
+                    anchors.fill: parent
+                    visible: previewPanel.currentItem && !previewPanel.currentItem.isImage
+                    clip: true
+                    contentWidth: width
+                    contentHeight: previewText.height
+                    boundsBehavior: Flickable.StopAtBounds
+
+                    Text {
+                        id: previewText
+                        text: root.currentFullContent || (previewPanel.currentItem ? previewPanel.currentItem.preview : "")
+                        font.family: Config.theme.font
+                        font.pixelSize: Config.theme.fontSize
+                        color: Colors.overBackground
+                        wrapMode: Text.Wrap
+                        width: parent.width
+                        textFormat: Text.PlainText
                     }
 
-                    // Placeholder cuando la imagen no está lista
-                    Rectangle {
-                        anchors.centerIn: parent
-                        width: 120
-                        height: 120
+                    ScrollBar.vertical: ScrollBar {
+                        policy: ScrollBar.AsNeeded
+                    }
+                }
+
+                // Placeholder cuando no hay nada seleccionado
+                Column {
+                    anchors.centerIn: parent
+                    spacing: 16
+                    visible: !previewPanel.currentItem
+
+                    Text {
+                        text: Icons.clipboard
+                        font.family: Icons.font
+                        font.pixelSize: 48
                         color: Colors.surfaceBright
-                        radius: Config.roundness > 0 ? Config.roundness + 4 : 0
-                        visible: previewPanel.currentItem && previewPanel.currentItem.isImage && previewImage.status !== Image.Ready
-
-                        Text {
-                            anchors.centerIn: parent
-                            text: Icons.image
-                            textFormat: Text.RichText
-                            font.family: Icons.font
-                            font.pixelSize: 48
-                            color: Colors.primary
-                        }
-                    }
-
-                    // Preview para texto con scroll
-                    Flickable {
-                        anchors.fill: parent
-                        visible: previewPanel.currentItem && !previewPanel.currentItem.isImage
-                        clip: true
-                        contentWidth: width
-                        contentHeight: previewText.height
-                        boundsBehavior: Flickable.StopAtBounds
-
-                        Text {
-                            id: previewText
-                            text: root.currentFullContent || (previewPanel.currentItem ? previewPanel.currentItem.preview : "")
-                            font.family: Config.theme.font
-                            font.pixelSize: Config.theme.fontSize
-                            color: Colors.overBackground
-                            wrapMode: Text.Wrap
-                            width: parent.width
-                            textFormat: Text.PlainText
-                        }
-
-                        ScrollBar.vertical: ScrollBar {
-                            policy: ScrollBar.AsNeeded
-                        }
-                    }
-
-                    // Placeholder cuando no hay nada seleccionado
-                    Column {
-                        anchors.centerIn: parent
-                        spacing: 16
-                        visible: !previewPanel.currentItem
-
-                        Text {
-                            text: Icons.clipboard
-                            font.family: Icons.font
-                            font.pixelSize: 48
-                            color: Colors.surfaceBright
-                            anchors.horizontalCenter: parent.horizontalCenter
-                            textFormat: Text.RichText
-                        }
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        textFormat: Text.RichText
                     }
                 }
             }
