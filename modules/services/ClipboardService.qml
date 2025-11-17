@@ -10,6 +10,7 @@ QtObject {
     property var items: []
     property var imageDataById: ({})
     property int revision: 0
+    property bool _operationInProgress: false
     
     readonly property string dbPath: Quickshell.dataPath("clipboard.db")
     readonly property string binaryDataDir: Quickshell.dataPath("clipboard-data")
@@ -25,7 +26,7 @@ QtObject {
     // Timer to poll clipboard
     property Timer pollTimer: Timer {
         interval: 1000
-        running: root._initialized
+        running: root._initialized && !root._operationInProgress
         repeat: true
         onTriggered: root.checkClipboard()
     }
@@ -159,8 +160,16 @@ QtObject {
             onStreamFinished: {
                 var clipboardItems = [];
                 
+                var trimmedText = text.trim();
+                if (trimmedText.length === 0) {
+                    root.items = clipboardItems;
+                    root.listCompleted();
+                    root._operationInProgress = false;
+                    return;
+                }
+                
                 try {
-                    var jsonArray = JSON.parse(text);
+                    var jsonArray = JSON.parse(trimmedText);
                     
                     for (var i = 0; i < jsonArray.length; i++) {
                         var item = jsonArray[i];
@@ -182,6 +191,15 @@ QtObject {
                 
                 root.items = clipboardItems;
                 root.listCompleted();
+                root._operationInProgress = false;
+            }
+        }
+        
+        stderr: StdioCollector {
+            onStreamFinished: {
+                if (text.length > 0) {
+                    console.warn("ClipboardService: listProcess stderr:", text);
+                }
             }
         }
         
@@ -189,6 +207,7 @@ QtObject {
             if (code !== 0) {
                 root.items = [];
                 root.listCompleted();
+                root._operationInProgress = false;
             }
         }
     }
@@ -213,6 +232,7 @@ QtObject {
                 Qt.callLater(root.list);
             } else {
                 console.warn("ClipboardService: insertProcess failed with code:", code);
+                root._operationInProgress = false;
             }
             
             // Cleanup temp file
@@ -245,6 +265,7 @@ QtObject {
                 insertImageDbProcess.running = true;
             } else {
                 console.warn("ClipboardService: Failed to save image");
+                root._operationInProgress = false;
             }
         }
     }
@@ -261,6 +282,7 @@ QtObject {
                 Qt.callLater(root.list);
             } else {
                 console.warn("ClipboardService: Failed to insert image into database");
+                root._operationInProgress = false;
             }
         }
     }
@@ -290,9 +312,19 @@ QtObject {
         property string itemId: ""
         running: false
         
+        stderr: StdioCollector {
+            onStreamFinished: {
+                if (text.length > 0) {
+                    console.warn("ClipboardService: deleteProcess stderr:", text);
+                }
+            }
+        }
+        
         onExited: function(code) {
             if (code === 0) {
                 Qt.callLater(root.list);
+            } else {
+                root._operationInProgress = false;
             }
         }
     }
@@ -366,6 +398,7 @@ QtObject {
     }
 
     function insertTextItemFromFile(hash, tmpFile) {
+        _operationInProgress = true;
         // Call insert script with temp file
         insertProcess.itemHash = hash;
         insertProcess.tmpFile = tmpFile;
@@ -398,6 +431,7 @@ QtObject {
     }
 
     function insertImageItem(hash, mimeType) {
+        _operationInProgress = true;
         var binaryPath = binaryDataDir + "/" + hash;
         saveImageProcess.hash = hash;
         saveImageProcess.mimeType = mimeType;
@@ -407,9 +441,10 @@ QtObject {
 
     function list() {
         if (!_initialized) return;
-        // Use JSON mode for reliable parsing
+        _operationInProgress = true;
+        // Use JSON mode for reliable parsing, with timeout to avoid locks
         listProcess.command = ["sh", "-c", 
-            "sqlite3 '" + dbPath + "' <<'EOSQL'\n.mode json\nSELECT id, mime_type, preview, is_image, binary_path, content_hash, created_at FROM clipboard_items ORDER BY created_at DESC LIMIT 100;\nEOSQL"
+            "sqlite3 '" + dbPath + "' <<'EOSQL'\n.timeout 5000\n.mode json\nSELECT id, mime_type, preview, is_image, binary_path, content_hash, created_at FROM clipboard_items ORDER BY created_at DESC LIMIT 100;\nEOSQL"
         ];
         listProcess.running = true;
     }
@@ -417,21 +452,21 @@ QtObject {
     function getFullContent(id) {
         if (!_initialized) return;
         getContentProcess.itemId = id;
-        getContentProcess.command = ["sqlite3", dbPath,
-                                     "SELECT full_content FROM clipboard_items WHERE id = " + id + ";"];
+        getContentProcess.command = ["sh", "-c", "sqlite3 '" + dbPath + "' '.timeout 5000' 'SELECT full_content FROM clipboard_items WHERE id = " + id + ";'"];
         getContentProcess.running = true;
     }
 
     function deleteItem(id) {
         if (!_initialized) return;
+        _operationInProgress = true;
         deleteProcess.itemId = id;
-        deleteProcess.command = ["sqlite3", dbPath, "DELETE FROM clipboard_items WHERE id = " + id + ";"];
+        deleteProcess.command = ["sh", "-c", "sqlite3 '" + dbPath + "' '.timeout 5000' 'DELETE FROM clipboard_items WHERE id = " + id + ";'"];
         deleteProcess.running = true;
     }
 
     function clear() {
         if (!_initialized) return;
-        clearProcess.command = ["sqlite3", dbPath, "DELETE FROM clipboard_items;"];
+        clearProcess.command = ["sh", "-c", "sqlite3 '" + dbPath + "' '.timeout 5000' 'DELETE FROM clipboard_items;'"];
         clearProcess.running = true;
     }
 

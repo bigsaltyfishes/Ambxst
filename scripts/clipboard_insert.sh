@@ -31,6 +31,7 @@ ESCAPED_PREVIEW="${PREVIEW//\'/\'\'}"
 ESCAPED_CONTENT="${CONTENT//\'/\'\'}"
 
 sqlite3 "$DB_PATH" <<EOSQL
+.timeout 5000
 INSERT OR REPLACE INTO clipboard_items 
 (content_hash, mime_type, preview, full_content, is_image, binary_path, created_at, updated_at) 
 VALUES ('$HASH', '$MIME_TYPE', '$ESCAPED_PREVIEW', '$ESCAPED_CONTENT', $IS_IMAGE, '$BINARY_PATH', $TIMESTAMP, $TIMESTAMP);

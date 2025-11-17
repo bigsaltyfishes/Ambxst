@@ -888,30 +888,79 @@ Item {
                                 }
                             }
 
-                            Text {
+                            Column {
                                 Layout.fillWidth: true
-                                text: displayText
-                                color: {
-                                    if (isInDeleteMode) {
-                                        return Colors.overError;
-                                    } else if (isSelected) {
-                                        return Colors.overPrimary;
-                                    } else {
-                                        return Colors.overBackground;
+                                spacing: 2
+
+                                Text {
+                                    width: parent.width
+                                    text: displayText
+                                    color: {
+                                        if (isInDeleteMode) {
+                                            return Colors.overError;
+                                        } else if (isSelected) {
+                                            return Colors.overPrimary;
+                                        } else {
+                                            return Colors.overBackground;
+                                        }
+                                    }
+                                    font.family: Config.theme.font
+                                    font.pixelSize: Config.theme.fontSize
+                                    font.weight: Font.Bold
+                                    elide: Text.ElideRight
+                                    maximumLineCount: 1
+                                    wrapMode: Text.NoWrap
+
+                                    Behavior on color {
+                                        enabled: Config.animDuration > 0
+                                        ColorAnimation {
+                                            duration: Config.animDuration / 2
+                                            easing.type: Easing.OutQuart
+                                        }
                                     }
                                 }
-                                font.family: Config.theme.font
-                                font.pixelSize: Config.theme.fontSize
-                                font.weight: Font.Bold
-                                elide: Text.ElideRight
-                                maximumLineCount: 1
-                                wrapMode: Text.NoWrap
 
-                                Behavior on color {
-                                    enabled: Config.animDuration > 0
-                                    ColorAnimation {
-                                        duration: Config.animDuration / 2
-                                        easing.type: Easing.OutQuart
+                                Text {
+                                    width: parent.width
+                                    text: {
+                                        if (!modelData.createdAt) return "";
+                                        var date = new Date(modelData.createdAt);
+                                        var now = new Date();
+                                        var diffMs = now - date;
+                                        var diffSecs = Math.floor(diffMs / 1000);
+                                        var diffMins = Math.floor(diffSecs / 60);
+                                        var diffHours = Math.floor(diffMins / 60);
+                                        var diffDays = Math.floor(diffHours / 24);
+                                        
+                                        if (diffMins < 1) return "Just now";
+                                        if (diffMins < 60) return diffMins + " min ago";
+                                        if (diffHours < 24) return diffHours + " hour" + (diffHours > 1 ? "s" : "") + " ago";
+                                        if (diffDays < 7) return diffDays + " day" + (diffDays > 1 ? "s" : "") + " ago";
+                                        
+                                        return Qt.formatDateTime(date, "MMM dd, yyyy");
+                                    }
+                                    color: {
+                                        if (isInDeleteMode) {
+                                            return Colors.overError;
+                                        } else if (isSelected) {
+                                            return Colors.overPrimary;
+                                        } else {
+                                            return Colors.surfaceBright;
+                                        }
+                                    }
+                                    font.family: Config.theme.font
+                                    font.pixelSize: Config.theme.fontSize
+                                    elide: Text.ElideRight
+                                    maximumLineCount: 1
+                                    wrapMode: Text.NoWrap
+                                    opacity: 0.8
+
+                                    Behavior on color {
+                                        enabled: Config.animDuration > 0
+                                        ColorAnimation {
+                                            duration: Config.animDuration / 2
+                                            easing.type: Easing.OutQuart
+                                        }
                                     }
                                 }
                             }
@@ -1173,19 +1222,7 @@ Item {
                                     text: {
                                         if (!previewPanel.currentItem || !previewPanel.currentItem.createdAt) return "Unknown";
                                         var date = new Date(previewPanel.currentItem.createdAt);
-                                        var now = new Date();
-                                        var diffMs = now - date;
-                                        var diffSecs = Math.floor(diffMs / 1000);
-                                        var diffMins = Math.floor(diffSecs / 60);
-                                        var diffHours = Math.floor(diffMins / 60);
-                                        var diffDays = Math.floor(diffHours / 24);
-                                        
-                                        if (diffSecs < 60) return "Just now";
-                                        if (diffMins < 60) return diffMins + " min ago";
-                                        if (diffHours < 24) return diffHours + " hour" + (diffHours > 1 ? "s" : "") + " ago";
-                                        if (diffDays < 7) return diffDays + " day" + (diffDays > 1 ? "s" : "") + " ago";
-                                        
-                                        return Qt.formatDateTime(date, "MMM dd, yyyy");
+                                        return Qt.formatDateTime(date, "MMM dd, yyyy hh:mm:ss AP");
                                     }
                                     font.family: Config.theme.font
                                     font.pixelSize: Config.theme.fontSize
