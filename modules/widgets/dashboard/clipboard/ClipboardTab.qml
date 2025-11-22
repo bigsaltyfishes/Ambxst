@@ -374,6 +374,30 @@ Item {
         }
     }
 
+    function openItem(itemId) {
+        // Find the item to determine its type
+        for (var i = 0; i < root.allItems.length; i++) {
+            if (root.allItems[i].id === itemId) {
+                var item = root.allItems[i];
+                var content = root.currentFullContent || item.preview;
+                
+                if (item.isFile) {
+                    // Open file with xdg-open
+                    var filePath = getFilePathFromUri(content);
+                    if (filePath) {
+                        openProcess.command = ["xdg-open", filePath];
+                        openProcess.running = true;
+                    }
+                } else if (ClipboardUtils.isUrl(content)) {
+                    // Open URL in browser
+                    openProcess.command = ["xdg-open", content.trim()];
+                    openProcess.running = true;
+                }
+                break;
+            }
+        }
+    }
+
     // MouseArea global para detectar clicks en cualquier espacio vacío
     MouseArea {
         anchors.fill: parent
@@ -459,6 +483,16 @@ Item {
         }
     }
 
+    Process {
+        id: openProcess
+        running: false
+
+        onStarted: function () {
+            // Close dashboard after opening file/URL
+            Visibilities.setActiveModule("");
+        }
+    }
+
     Row {
         id: mainLayout
         anchors.fill: parent
@@ -491,17 +525,26 @@ Item {
                         if (root.deleteMode) {
                             console.log("DEBUG: Enter in delete mode - canceling");
                             root.cancelDeleteMode();
-                        } else                             if (root.expandedItemIndex >= 0) {
+                        } else if (root.expandedItemIndex >= 0) {
                             // Execute selected option when menu is expanded
                             let item = root.allItems[root.expandedItemIndex];
                             if (item) {
-                                // Recreate the options model
+                                // Build options array dynamically
                                 let options = [
-                                    function() { root.copyToClipboard(item.id); Visibilities.setActiveModule(""); },
+                                    function() { root.copyToClipboard(item.id); Visibilities.setActiveModule(""); }
+                                ];
+                                
+                                // Add Open if applicable
+                                if (item.isFile || ClipboardUtils.isUrl(item.preview)) {
+                                    options.push(function() { root.openItem(item.id); });
+                                }
+                                
+                                options.push(
                                     function() { root.pendingItemIdToSelect = item.id; ClipboardService.togglePin(item.id); root.expandedItemIndex = -1; },
                                     function() { root.enterAliasMode(item.id); root.expandedItemIndex = -1; },
                                     function() { root.enterDeleteMode(item.id); root.expandedItemIndex = -1; }
-                                ];
+                                );
+                                
                                 if (root.selectedOptionIndex >= 0 && root.selectedOptionIndex < options.length) {
                                     options[root.selectedOptionIndex]();
                                 }
@@ -568,10 +611,17 @@ Item {
 
                     onDownPressed: {
                         if (root.expandedItemIndex >= 0) {
-                            // Navigate options when menu is expanded
-                            if (root.selectedOptionIndex < 3) {  // 4 options (0-3)
-                                root.selectedOptionIndex++;
-                                root.keyboardNavigation = true;
+                            // Navigate options when menu is expanded - get dynamic count
+                            let item = root.allItems[root.expandedItemIndex];
+                            if (item) {
+                                let maxOptions = 4; // Base: Copy, Pin, Alias, Delete
+                                if (item.isFile || ClipboardUtils.isUrl(item.preview)) {
+                                    maxOptions++; // Add Open
+                                }
+                                if (root.selectedOptionIndex < maxOptions - 1) {
+                                    root.selectedOptionIndex++;
+                                    root.keyboardNavigation = true;
+                                }
                             }
                         } else {
                             root.onDownPressed();
@@ -730,7 +780,7 @@ Item {
                     anchors.fill: parent
                     visible: ClipboardService.items.length > 0
                     clip: true
-                    interactive: !root.deleteMode
+                    interactive: !root.deleteMode && root.expandedItemIndex === -1
                     cacheBuffer: 96
                     reuseItems: false
                     boundsBehavior: Flickable.StopAtBounds
@@ -752,7 +802,12 @@ Item {
                         height: {
                             let baseHeight = 48;
                             if (index === root.expandedItemIndex && !isInDeleteMode && !isInAliasMode) {
-                                return baseHeight + 4 + (36 * 4); // base + spacing + 4 options
+                                var optionsCount = 4; // Base: Copy, Pin, Alias, Delete
+                                if (modelData.isFile || ClipboardUtils.isUrl(modelData.preview)) {
+                                    optionsCount++; // Add Open
+                                }
+                                var listHeight = 36 * Math.min(3, optionsCount);
+                                return baseHeight + 4 + listHeight + 8; // base + spacing + list + bottom margin
                             }
                             return baseHeight;
                         }
@@ -1205,7 +1260,7 @@ Item {
                         }
 
                         // Expandable options list (similar to SchemeSelector/FullPlayer)
-                        Column {
+                        RowLayout {
                             anchors.left: parent.left
                             anchors.right: parent.right
                             anchors.bottom: parent.bottom
@@ -1224,78 +1279,114 @@ Item {
                                 }
                             }
 
-                            Rectangle {
-                                width: parent.width
-                                height: 36 * 4  // 4 options
+                            ClippingRectangle {
+                                Layout.fillWidth: true
+                                Layout.preferredHeight: {
+                                    var count = 4; // Copy, Pin, Alias, Delete
+                                    if (modelData.isFile || ClipboardUtils.isUrl(modelData.preview)) {
+                                        count++; // Add Open
+                                    }
+                                    return 36 * Math.min(3, count);
+                                }
                                 color: Colors.background
                                 radius: Config.roundness
-                                clip: true
+
+                                Behavior on Layout.preferredHeight {
+                                    enabled: Config.animDuration > 0
+                                    NumberAnimation {
+                                        duration: Config.animDuration
+                                        easing.type: Easing.OutQuart
+                                    }
+                                }
 
                                 ListView {
                                     id: optionsListView
                                     anchors.fill: parent
-                                    interactive: false
-                                    model: [
-                                        {
-                                            text: "Copy",
-                                            icon: Icons.copy,
-                                            highlightColor: Colors.primary,
-                                            textColor: Colors.overPrimary,
-                                            action: function () {
-                                                root.copyToClipboard(modelData.id);
-                                                Visibilities.setActiveModule("");
+                                    clip: true
+                                    interactive: true
+                                    boundsBehavior: Flickable.StopAtBounds
+                                    model: {
+                                        var options = [
+                                            {
+                                                text: "Copy",
+                                                icon: Icons.copy,
+                                                highlightColor: Colors.primary,
+                                                textColor: Colors.overPrimary,
+                                                action: function () {
+                                                    root.copyToClipboard(modelData.id);
+                                                    Visibilities.setActiveModule("");
+                                                }
                                             }
-                                        },
-                                        {
-                                            text: modelData.pinned ? "Unpin" : "Pin",
-                                            icon: modelData.pinned ? Icons.unpin : Icons.pin,
-                                            highlightColor: Colors.primary,
-                                            textColor: Colors.overPrimary,
-                                            action: function () {
-                                                root.pendingItemIdToSelect = modelData.id;
-                                                ClipboardService.togglePin(modelData.id);
-                                                root.expandedItemIndex = -1;
-                                            }
-                                        },
-                                        {
-                                            text: "Alias",
-                                            icon: Icons.edit,
-                                            highlightColor: Colors.secondary,
-                                            textColor: Colors.overSecondary,
-                                            action: function () {
-                                                root.enterAliasMode(modelData.id);
-                                                root.expandedItemIndex = -1;
-                                            }
-                                        },
-                                        {
-                                            text: "Delete",
-                                            icon: Icons.trash,
-                                            highlightColor: Colors.error,
-                                            textColor: Colors.overError,
-                                            action: function () {
-                                                root.enterDeleteMode(modelData.id);
-                                                root.expandedItemIndex = -1;
-                                            }
+                                        ];
+                                        
+                                        // Add Open option only for files and URLs
+                                        if (modelData.isFile || ClipboardUtils.isUrl(modelData.preview)) {
+                                            options.push({
+                                                text: "Open",
+                                                icon: Icons.popOpen,
+                                                highlightColor: Colors.primary,
+                                                textColor: Colors.overPrimary,
+                                                action: function () {
+                                                    root.openItem(modelData.id);
+                                                }
+                                            });
                                         }
-                                    ]
+                                        
+                                        options.push(
+                                            {
+                                                text: modelData.pinned ? "Unpin" : "Pin",
+                                                icon: modelData.pinned ? Icons.unpin : Icons.pin,
+                                                highlightColor: Colors.primary,
+                                                textColor: Colors.overPrimary,
+                                                action: function () {
+                                                    root.pendingItemIdToSelect = modelData.id;
+                                                    ClipboardService.togglePin(modelData.id);
+                                                    root.expandedItemIndex = -1;
+                                                }
+                                            },
+                                            {
+                                                text: "Alias",
+                                                icon: Icons.edit,
+                                                highlightColor: Colors.secondary,
+                                                textColor: Colors.overSecondary,
+                                                action: function () {
+                                                    root.enterAliasMode(modelData.id);
+                                                    root.expandedItemIndex = -1;
+                                                }
+                                            },
+                                            {
+                                                text: "Delete",
+                                                icon: Icons.trash,
+                                                highlightColor: Colors.error,
+                                                textColor: Colors.overError,
+                                                action: function () {
+                                                    root.enterDeleteMode(modelData.id);
+                                                    root.expandedItemIndex = -1;
+                                                }
+                                            }
+                                        );
+                                        
+                                        return options;
+                                    }
                                     currentIndex: root.selectedOptionIndex
                                     highlightFollowsCurrentItem: true
+                                    highlightRangeMode: ListView.ApplyRange
+                                    preferredHighlightBegin: 0
+                                    preferredHighlightEnd: height
 
                                     highlight: Rectangle {
                                         color: {
-                                            let options = [
-                                                { highlightColor: Colors.primary },
-                                                { highlightColor: Colors.primary },
-                                                { highlightColor: Colors.secondary },
-                                                { highlightColor: Colors.error }
-                                            ];
-                                            if (optionsListView.currentIndex >= 0 && optionsListView.currentIndex < options.length) {
-                                                return options[optionsListView.currentIndex].highlightColor;
+                                            if (optionsListView.currentIndex >= 0 && optionsListView.currentIndex < optionsListView.count) {
+                                                var item = optionsListView.model[optionsListView.currentIndex];
+                                                if (item && item.highlightColor) {
+                                                    return item.highlightColor;
+                                                }
                                             }
                                             return Colors.primary;
                                         }
                                         radius: Config.roundness
                                         visible: optionsListView.currentIndex >= 0
+                                        z: -1
 
                                         Behavior on color {
                                             enabled: Config.animDuration > 0
@@ -1304,10 +1395,20 @@ Item {
                                                 easing.type: Easing.OutQuart
                                             }
                                         }
+
+                                        Behavior on opacity {
+                                            enabled: Config.animDuration > 0
+                                            NumberAnimation {
+                                                duration: Config.animDuration / 2
+                                                easing.type: Easing.OutQuart
+                                            }
+                                        }
                                     }
 
                                     highlightMoveDuration: Config.animDuration > 0 ? Config.animDuration / 2 : 0
                                     highlightMoveVelocity: -1
+                                    highlightResizeDuration: Config.animDuration / 2
+                                    highlightResizeVelocity: -1
 
                                     delegate: Item {
                                         required property var modelData
@@ -1397,6 +1498,72 @@ Item {
                                                 }
                                             }
                                         }
+                                    }
+                                }
+
+                                // MouseArea to handle wheel events for scrolling
+                                MouseArea {
+                                    anchors.fill: parent
+                                    propagateComposedEvents: true
+                                    acceptedButtons: Qt.NoButton
+                                    
+                                    onWheel: wheel => {
+                                        if (optionsListView.contentHeight > optionsListView.height) {
+                                            const delta = wheel.angleDelta.y;
+                                            optionsListView.contentY = Math.max(0, Math.min(
+                                                optionsListView.contentHeight - optionsListView.height,
+                                                optionsListView.contentY - delta
+                                            ));
+                                            wheel.accepted = true;
+                                        } else {
+                                            wheel.accepted = false;
+                                        }
+                                    }
+                                }
+                            }
+
+                            ScrollBar {
+                                Layout.preferredWidth: 8
+                                Layout.preferredHeight: {
+                                    var count = 4;
+                                    if (modelData.isFile || ClipboardUtils.isUrl(modelData.preview)) {
+                                        count++;
+                                    }
+                                    var listHeight = 36 * Math.min(3, count);
+                                    return Math.max(0, listHeight - 32);
+                                }
+                                Layout.alignment: Qt.AlignVCenter
+                                orientation: Qt.Vertical
+                                visible: {
+                                    var count = 4;
+                                    if (modelData.isFile || ClipboardUtils.isUrl(modelData.preview)) {
+                                        count++;
+                                    }
+                                    return count > 3;
+                                }
+
+                                position: optionsListView.contentY / optionsListView.contentHeight
+                                size: optionsListView.height / optionsListView.contentHeight
+
+                                background: Rectangle {
+                                    color: Colors.background
+                                    radius: Config.roundness
+                                }
+
+                                contentItem: Rectangle {
+                                    color: Colors.primary
+                                    radius: Config.roundness
+                                }
+
+                                property bool scrollBarPressed: false
+
+                                onPressedChanged: {
+                                    scrollBarPressed = pressed;
+                                }
+
+                                onPositionChanged: {
+                                    if (scrollBarPressed && optionsListView.contentHeight > optionsListView.height) {
+                                        optionsListView.contentY = position * optionsListView.contentHeight;
                                     }
                                 }
                             }
@@ -2238,10 +2405,8 @@ Item {
                                         cursorShape: Qt.PointingHandCursor
                                         
                                         onClicked: {
-                                            if (root.currentFullContent) {
-                                                Qt.openUrlExternally(root.currentFullContent.trim());
-                                            } else if (previewPanel.currentItem) {
-                                                Qt.openUrlExternally(previewPanel.currentItem.preview.trim());
+                                            if (previewPanel.currentItem) {
+                                                root.openItem(previewPanel.currentItem.id);
                                             }
                                         }
                                     }
@@ -2355,6 +2520,16 @@ Item {
                         }
                         
                         property bool isImage: root.isImageFile(filePath)
+                        
+                        MouseArea {
+                            anchors.fill: parent
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: {
+                                if (previewPanel.currentItem) {
+                                    root.openItem(previewPanel.currentItem.id);
+                                }
+                            }
+                        }
                         
                         // Preview de imagen para archivos de imagen
                         Image {
