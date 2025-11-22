@@ -259,8 +259,12 @@ Item {
         for (var i = 0; i < ClipboardService.items.length; i++) {
             var item = ClipboardService.items[i];
             var content = item.preview || "";
+            var alias = item.alias || "";
 
-            if (searchText.length === 0 || content.toLowerCase().includes(searchText.toLowerCase())) {
+            // Search in both content and alias
+            if (searchText.length === 0 || 
+                content.toLowerCase().includes(searchText.toLowerCase()) ||
+                alias.toLowerCase().includes(searchText.toLowerCase())) {
                 newItems.push(item);
             }
         }
