@@ -48,6 +48,9 @@ Item {
     property string newAlias: ""
     property int aliasSelectedIndex: -1
     property int aliasButtonIndex: 0
+    
+    // Track item to restore selection after operations
+    property string pendingItemIdToSelect: ""
 
     // Options menu state (expandable list)
     property int expandedItemIndex: -1
@@ -230,6 +233,9 @@ Item {
             }
         }
         
+        // Mark this item to be selected after refresh
+        pendingItemIdToSelect = itemToAlias;
+        
         // Only set alias if different from original preview
         if (newAlias.trim() !== "" && newAlias.trim() !== originalPreview) {
             ClipboardService.setAlias(itemToAlias, newAlias.trim());
@@ -242,7 +248,6 @@ Item {
         itemToAlias = "";
         newAlias = "";
         aliasButtonIndex = 0;
-        selectedIndex = aliasSelectedIndex;
         aliasSelectedIndex = -1;
         searchInput.focusInput();
     }
@@ -276,6 +281,21 @@ Item {
 
         allItems = newItems;
 
+        // If we have a pending item to select (after pin/alias operations), find it
+        if (pendingItemIdToSelect !== "") {
+            for (var i = 0; i < newItems.length; i++) {
+                if (newItems[i].id === pendingItemIdToSelect) {
+                    selectedIndex = i;
+                    resultsList.currentIndex = i;
+                    pendingItemIdToSelect = "";
+                    return;
+                }
+            }
+            // If not found, clear the pending selection
+            pendingItemIdToSelect = "";
+        }
+
+        // Default behavior when no pending item
         if (searchText.length > 0 && allItems.length > 0) {
             selectedIndex = 0;
             resultsList.currentIndex = 0;
@@ -459,14 +479,14 @@ Item {
                         if (root.deleteMode) {
                             console.log("DEBUG: Enter in delete mode - canceling");
                             root.cancelDeleteMode();
-                        } else if (root.expandedItemIndex >= 0) {
+                        } else                             if (root.expandedItemIndex >= 0) {
                             // Execute selected option when menu is expanded
                             let item = root.allItems[root.expandedItemIndex];
                             if (item) {
                                 // Recreate the options model
                                 let options = [
                                     function() { root.copyToClipboard(item.id); Visibilities.setActiveModule(""); },
-                                    function() { ClipboardService.togglePin(item.id); root.expandedItemIndex = -1; },
+                                    function() { root.pendingItemIdToSelect = item.id; ClipboardService.togglePin(item.id); root.expandedItemIndex = -1; },
                                     function() { root.enterAliasMode(item.id); root.expandedItemIndex = -1; },
                                     function() { root.enterDeleteMode(item.id); root.expandedItemIndex = -1; }
                                 ];
@@ -1201,6 +1221,7 @@ Item {
                                             highlightColor: Colors.primary,
                                             textColor: Colors.overPrimary,
                                             action: function () {
+                                                root.pendingItemIdToSelect = modelData.id;
                                                 ClipboardService.togglePin(modelData.id);
                                                 root.expandedItemIndex = -1;
                                             }
