@@ -1332,7 +1332,7 @@ Item {
                 // Panes layout preview (top section)
                 Item {
                     width: parent.width
-                    height: parent.height - 60 - parent.spacing - 2
+                    height: parent.height - 32 - parent.spacing - 2
 
                     Item {
                         anchors.fill: parent
@@ -1355,14 +1355,22 @@ Item {
                                 width: modelData.width * parent.scaleX
                                 height: modelData.height * parent.scaleY
                                 
-                                color: modelData.active ? Colors.primary : Colors.surface
-                                border.width: 2
-                                border.color: modelData.active ? Colors.primary : Colors.outline
+                                color: Colors.surface
+                                border.width: modelData.active ? 2 : 0
+                                border.color: modelData.active ? Colors.primary : "transparent"
                                 radius: Config.roundness > 0 ? Math.max(Config.roundness - 2, 0) : 0
 
                                 Behavior on color {
                                     enabled: Config.animDuration > 0
                                     ColorAnimation {
+                                        duration: Config.animDuration / 2
+                                        easing.type: Easing.OutQuart
+                                    }
+                                }
+                                
+                                Behavior on border.width {
+                                    enabled: Config.animDuration > 0
+                                    NumberAnimation {
                                         duration: Config.animDuration / 2
                                         easing.type: Easing.OutQuart
                                     }
@@ -1388,7 +1396,7 @@ Item {
                                         font.family: Config.theme.font
                                         font.pixelSize: Config.theme.fontSize
                                         font.weight: Font.Bold
-                                        color: modelData.active ? Colors.overPrimary : Colors.overSurface
+                                        color: Colors.overSurface
                                         visible: parent.parent.height > 35
 
                                         Behavior on color {
@@ -1407,7 +1415,7 @@ Item {
                                         font.family: Config.theme.font
                                         font.pixelSize: Config.theme.fontSize
                                         font.weight: modelData.active ? Font.Bold : Font.Normal
-                                        color: modelData.active ? Colors.overPrimary : Colors.overSurface
+                                        color: Colors.overSurface
                                         horizontalAlignment: Text.AlignHCenter
                                         elide: Text.ElideMiddle
                                         visible: parent.parent.height > 50
@@ -1427,7 +1435,7 @@ Item {
                                         text: modelData.width + "×" + modelData.height
                                         font.family: Config.theme.font
                                         font.pixelSize: Config.theme.fontSize
-                                        color: modelData.active ? Colors.overPrimary : Colors.outline
+                                        color: Colors.outline
                                         opacity: 0.7
                                         visible: parent.parent.height > 70
 
@@ -1515,7 +1523,7 @@ Item {
                 // Windows info section (bottom section)
                 Item {
                     width: parent.width
-                    height: 52
+                    height: 32
 
                     Flickable {
                         anchors.fill: parent
@@ -1534,8 +1542,7 @@ Item {
                                 delegate: Rectangle {
                                     required property var modelData
                                     width: windowText.width + 16
-                                    height: 32
-                                    anchors.verticalCenter: parent.verticalCenter
+                                    height: parent.height
                                     color: modelData.active ? Colors.primary : Colors.surface
                                     radius: Config.roundness > 0 ? Math.max(Config.roundness - 4, 0) : 0
 
