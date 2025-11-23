@@ -381,32 +381,12 @@ Item {
         }
     }
 
-    function openItem(itemId) {
-        // Find the item to determine its type
-        for (var i = 0; i < root.allItems.length; i++) {
-            if (root.allItems[i].id === itemId) {
-                var item = root.allItems[i];
-                var content = root.currentFullContent || item.preview;
+    // Signal to request opening an item
+    signal requestOpenItem(string itemId, var items, string currentContent, var filePathGetter, var urlChecker)
 
-                if (item.isFile) {
-                    // Open file with xdg-open
-                    var filePath = getFilePathFromUri(content);
-                    if (filePath) {
-                        openProcess.command = ["xdg-open", filePath];
-                        openProcess.running = true;
-                    }
-                } else if (item.isImage && item.binaryPath) {
-                    // Open image from clipboard with xdg-open
-                    openProcess.command = ["xdg-open", item.binaryPath];
-                    openProcess.running = true;
-                } else if (ClipboardUtils.isUrl(content)) {
-                    // Open URL in browser
-                    openProcess.command = ["xdg-open", content.trim()];
-                    openProcess.running = true;
-                }
-                break;
-            }
-        }
+    function openItem(itemId) {
+        console.log("DEBUG: ClipboardTab.openItem called for itemId:", itemId);
+        requestOpenItem(itemId, root.allItems, root.currentFullContent, getFilePathFromUri, ClipboardUtils.isUrl);
     }
 
     // MouseArea global para detectar clicks en cualquier espacio vacío
@@ -491,16 +471,6 @@ Item {
         // if (code === 0) {
         //     root.itemSelected();
         // }
-        }
-    }
-
-    Process {
-        id: openProcess
-        running: false
-
-        onStarted: function () {
-            // Close dashboard after opening file/URL
-            Visibilities.setActiveModule("");
         }
     }
 

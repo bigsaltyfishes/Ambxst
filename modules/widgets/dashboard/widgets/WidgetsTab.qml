@@ -547,6 +547,10 @@ Rectangle {
                             GlobalStates.launcherSearchText = Config.prefix.clipboard + " ";
                             appLauncher.focusSearchInput();
                         }
+                        onRequestOpenItem: (itemId, items, currentContent, filePathGetter, urlChecker) => {
+                            console.log("DEBUG: Received requestOpenItem signal for:", itemId);
+                            openItemInternal(itemId, items, currentContent, filePathGetter, urlChecker);
+                        }
                     }
                 }
                 onLoaded: {
@@ -679,5 +683,58 @@ Rectangle {
 
     Component.onCompleted: {
         Qt.callLater(focusAppSearch);
+    }
+
+    // Global process for opening files/URLs - persists even when tabs change
+    Process {
+        id: globalOpenProcess
+        running: false
+
+        onStarted: function () {
+            console.log("DEBUG: globalOpenProcess started with command:", globalOpenProcess.command);
+        }
+        
+        onExited: function (code, status) {
+            if (code === 0) {
+                console.log("DEBUG: globalOpenProcess completed successfully");
+            } else {
+                console.warn("DEBUG: globalOpenProcess failed with exit code:", code, "status:", status);
+            }
+        }
+    }
+
+    // Internal function to open items - called by signal handlers
+    function openItemInternal(itemId, items, currentContent, getFilePathFromUri, isUrl) {
+        console.log("DEBUG: WidgetsTab.openItemInternal called for itemId:", itemId);
+        for (var i = 0; i < items.length; i++) {
+            if (items[i].id === itemId) {
+                var item = items[i];
+                var content = currentContent || item.preview;
+                console.log("DEBUG: item found - isFile:", item.isFile, "isImage:", item.isImage, "content:", content);
+
+                if (item.isFile) {
+                    var filePath = getFilePathFromUri(content);
+                    console.log("DEBUG: Opening file with path:", filePath);
+                    if (filePath) {
+                        globalOpenProcess.command = ["xdg-open", filePath];
+                        globalOpenProcess.running = true;
+                        Qt.callLater(() => Visibilities.setActiveModule(""));
+                    }
+                } else if (item.isImage && item.binaryPath) {
+                    console.log("DEBUG: Opening image with binaryPath:", item.binaryPath);
+                    globalOpenProcess.command = ["xdg-open", item.binaryPath];
+                    globalOpenProcess.running = true;
+                    Qt.callLater(() => Visibilities.setActiveModule(""));
+                } else if (isUrl(content)) {
+                    console.log("DEBUG: Opening URL:", content.trim());
+                    globalOpenProcess.command = ["xdg-open", content.trim()];
+                    globalOpenProcess.running = true;
+                    Qt.callLater(() => Visibilities.setActiveModule(""));
+                } else {
+                    console.warn("DEBUG: Item does not match any openable type");
+                }
+                break;
+            }
+        }
     }
 }
