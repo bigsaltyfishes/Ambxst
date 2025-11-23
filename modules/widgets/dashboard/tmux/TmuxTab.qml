@@ -10,7 +10,7 @@ import qs.modules.globals
 import qs.modules.services
 import qs.config
 
-Rectangle {
+Item {
     id: root
     focus: true
 
@@ -38,6 +38,11 @@ Rectangle {
     property bool optionsMenuOpen: false
     property int menuItemIndex: -1
     property bool menuJustClosed: false
+    
+    // Session preview state
+    property var sessionWindows: []
+    property var sessionPanes: []
+    property bool loadingSessionInfo: false
 
     QtObject {
         id: listModel
@@ -51,6 +56,20 @@ Rectangle {
     onSelectedIndexChanged: {
         if (selectedIndex === -1 && resultsList.count > 0) {
             resultsList.positionViewAtIndex(0, ListView.Beginning);
+        }
+        
+        // Load session info when selection changes
+        if (selectedIndex >= 0 && selectedIndex < filteredSessions.length) {
+            let session = filteredSessions[selectedIndex];
+            if (session && !session.isCreateButton && !session.isCreateSpecificButton) {
+                loadSessionInfo(session.name);
+            } else {
+                sessionWindows = [];
+                sessionPanes = [];
+            }
+        } else {
+            sessionWindows = [];
+            sessionPanes = [];
         }
     }
 
@@ -203,6 +222,28 @@ Rectangle {
     function refreshTmuxSessions() {
         tmuxProcess.running = true;
     }
+    
+    function loadSessionInfo(sessionName) {
+        if (!sessionName) return;
+        loadingSessionInfo = true;
+        sessionWindows = [];
+        sessionPanes = [];
+        
+        // Get windows for this session
+        windowsProcess.command = ["tmux", "list-windows", "-t", sessionName, "-F", "#{window_index}:#{window_name}:#{window_active}"];
+        windowsProcess.running = true;
+        
+        // Get panes layout and info: pane_index, width, height, top, left, active, command
+        panesProcess.command = ["tmux", "list-panes", "-t", sessionName, "-F", "#{pane_index}:#{pane_width}:#{pane_height}:#{pane_top}:#{pane_left}:#{pane_active}:#{pane_current_command}"];
+        panesProcess.running = true;
+    }
+    
+    function stripAnsiCodes(text) {
+        // Remove ANSI escape sequences (CSI sequences)
+        return text.replace(/\x1b\[[0-9;]*[a-zA-Z]/g, '')
+                   .replace(/\x1b\][0-9;]*;[^\x07]*\x07/g, '')
+                   .replace(/\x1b[=>]/g, '');
+    }
 
     function createTmuxSession(sessionName) {
         if (sessionName) {
@@ -221,8 +262,7 @@ Rectangle {
     }
 
     implicitWidth: 400
-    implicitHeight: mainLayout.implicitHeight
-    color: "transparent"
+    implicitHeight: 7 * 48 + 56
 
     MouseArea {
         anchors.fill: parent
@@ -326,16 +366,110 @@ Rectangle {
             root.cancelRenameMode();
         }
     }
+    
+    Process {
+        id: windowsProcess
+        running: false
+        
+        stdout: StdioCollector {
+            id: windowsCollector
+            waitForEnd: true
+            
+            onStreamFinished: {
+                let windows = [];
+                let lines = text.trim().split('\n');
+                for (let line of lines) {
+                    if (line.trim().length > 0) {
+                        let parts = line.split(':');
+                        if (parts.length >= 3) {
+                            windows.push({
+                                index: parts[0],
+                                name: parts[1],
+                                active: parts[2] === '1'
+                            });
+                        }
+                    }
+                }
+                root.sessionWindows = windows;
+            }
+        }
+    }
+    
+    Process {
+        id: panesProcess
+        running: false
+        
+        stdout: StdioCollector {
+            id: panesCollector
+            waitForEnd: true
+            
+            onStreamFinished: {
+                let panes = [];
+                let lines = text.trim().split('\n');
+                
+                // First pass: collect all pane data and find max dimensions
+                let maxWidth = 0;
+                let maxHeight = 0;
+                
+                for (let line of lines) {
+                    if (line.trim().length > 0) {
+                        let parts = line.split(':');
+                        if (parts.length >= 7) {
+                            let width = parseInt(parts[1]);
+                            let height = parseInt(parts[2]);
+                            let top = parseInt(parts[3]);
+                            let left = parseInt(parts[4]);
+                            
+                            maxWidth = Math.max(maxWidth, left + width);
+                            maxHeight = Math.max(maxHeight, top + height);
+                            
+                            panes.push({
+                                index: parts[0],
+                                width: width,
+                                height: height,
+                                top: top,
+                                left: left,
+                                active: parts[5] === '1',
+                                command: parts[6]
+                            });
+                        }
+                    }
+                }
+                
+                // Store total dimensions and panes
+                for (let pane of panes) {
+                    pane.totalWidth = maxWidth;
+                    pane.totalHeight = maxHeight;
+                }
+                
+                root.sessionPanes = panes;
+                root.loadingSessionInfo = false;
+            }
+        }
+        
+        onExited: function (code) {
+            if (code !== 0) {
+                root.sessionPanes = [];
+                root.loadingSessionInfo = false;
+            }
+        }
+    }
 
-    ColumnLayout {
+    Row {
         id: mainLayout
         anchors.fill: parent
         spacing: 8
 
+        // Columna izquierda: Search + Lista
+        Column {
+            width: parent.width * 0.35
+            height: parent.height
+            spacing: 8
+
         // Search input
         SearchInput {
             id: searchInput
-            Layout.fillWidth: true
+            width: parent.width
             text: root.searchText
             placeholderText: "Search or create tmux session..."
             iconText: ""
@@ -456,8 +590,8 @@ Rectangle {
 
         ListView {
             id: resultsList
-            Layout.fillWidth: true
-            Layout.preferredHeight: 7 * 48
+            width: parent.width
+            height: parent.height - searchInput.height - parent.spacing
             visible: true
             clip: true
             interactive: !root.deleteMode && !root.renameMode && !root.optionsMenuOpen
@@ -1165,6 +1299,363 @@ Rectangle {
                  }
              }
          }
+        }
+
+        // Separator
+        Rectangle {
+            width: 2
+            height: parent.height
+            radius: Config.roundness
+            color: Colors.surface
+        }
+
+        // Preview panel
+        Item {
+            id: previewPanel
+            width: parent.width - parent.spacing * 2 - 2 - (parent.width * 0.35)
+            height: parent.height
+
+            property var currentSession: root.selectedIndex >= 0 && root.selectedIndex < root.filteredSessions.length ? root.filteredSessions[root.selectedIndex] : null
+
+            // Content when session is selected
+            Column {
+                anchors.fill: parent
+                anchors.margins: 8
+                spacing: 8
+                visible: {
+                    if (!previewPanel.currentSession) return false;
+                    if (previewPanel.currentSession.isCreateButton === true) return false;
+                    if (previewPanel.currentSession.isCreateSpecificButton === true) return false;
+                    return true;
+                }
+
+                // Windows info section
+                Item {
+                    width: parent.width
+                    height: 80
+
+                    Column {
+                        anchors.fill: parent
+                        spacing: 8
+
+                        // Header
+                        Text {
+                            text: "Windows"
+                            font.family: Config.theme.font
+                            font.pixelSize: Config.theme.fontSize
+                            font.weight: Font.Bold
+                            color: Colors.overBackground
+                        }
+
+                        // Windows list
+                        Flickable {
+                            width: parent.width
+                            height: 56
+                            contentWidth: windowsRow.width
+                            contentHeight: height
+                            clip: true
+                            boundsBehavior: Flickable.StopAtBounds
+
+                            Row {
+                                id: windowsRow
+                                spacing: 4
+                                height: parent.height
+
+                                Repeater {
+                                    model: root.sessionWindows
+                                    delegate: Rectangle {
+                                        required property var modelData
+                                        width: windowText.width + 16
+                                        height: 32
+                                        color: modelData.active ? Colors.primary : Colors.surface
+                                        radius: Config.roundness > 0 ? Math.max(Config.roundness - 4, 0) : 0
+
+                                        Behavior on color {
+                                            enabled: Config.animDuration > 0
+                                            ColorAnimation {
+                                                duration: Config.animDuration / 2
+                                                easing.type: Easing.OutQuart
+                                            }
+                                        }
+
+                                        Row {
+                                            anchors.centerIn: parent
+                                            spacing: 4
+
+                                            Text {
+                                                id: windowText
+                                                text: modelData.index + ": " + modelData.name
+                                                font.family: Config.theme.font
+                                                font.pixelSize: Config.theme.fontSize
+                                                font.weight: modelData.active ? Font.Bold : Font.Normal
+                                                color: modelData.active ? Colors.overPrimary : Colors.overSurface
+
+                                                Behavior on color {
+                                                    enabled: Config.animDuration > 0
+                                                    ColorAnimation {
+                                                        duration: Config.animDuration / 2
+                                                        easing.type: Easing.OutQuart
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // Separator
+                Rectangle {
+                    width: parent.width
+                    height: 2
+                    radius: Config.roundness
+                    color: Colors.surface
+                }
+
+                // Panes layout preview
+                Item {
+                    width: parent.width
+                    height: parent.height - 80 - parent.spacing * 2 - 2
+
+                    // Header
+                    Text {
+                        id: panesHeader
+                        text: "Panes Layout"
+                        font.family: Config.theme.font
+                        font.pixelSize: Config.theme.fontSize
+                        font.weight: Font.Bold
+                        color: Colors.overBackground
+                    }
+
+                    // Panes visualization (direct rendering without container background)
+                    Item {
+                        anchors.top: panesHeader.bottom
+                        anchors.topMargin: 8
+                        anchors.left: parent.left
+                        anchors.right: parent.right
+                        anchors.bottom: parent.bottom
+
+                        Item {
+                            id: panesContainer
+                            anchors.fill: parent
+
+                            // Calculate scale to fit panes proportionally
+                            property real totalWidth: root.sessionPanes.length > 0 ? root.sessionPanes[0].totalWidth || 1 : 1
+                            property real totalHeight: root.sessionPanes.length > 0 ? root.sessionPanes[0].totalHeight || 1 : 1
+                            
+                            property real scaleX: width / totalWidth
+                            property real scaleY: height / totalHeight
+                            property real scale: Math.min(scaleX, scaleY)
+                            
+                            // Calculate actual rendered size
+                            property real renderedWidth: totalWidth * scale
+                            property real renderedHeight: totalHeight * scale
+                            
+                            // Center offset
+                            property real offsetX: (width - renderedWidth) / 2
+                            property real offsetY: (height - renderedHeight) / 2
+
+                            Repeater {
+                                model: root.sessionPanes
+                                delegate: Rectangle {
+                                    required property var modelData
+                                    
+                                    x: panesContainer.offsetX + modelData.left * panesContainer.scale
+                                    y: panesContainer.offsetY + modelData.top * panesContainer.scale
+                                    width: modelData.width * panesContainer.scale
+                                    height: modelData.height * panesContainer.scale
+                                    
+                                    color: modelData.active ? Colors.primary : Colors.surface
+                                    border.width: 2
+                                    border.color: modelData.active ? Colors.primary : Colors.outline
+                                    radius: Config.roundness > 0 ? Math.max(Config.roundness - 2, 0) : 0
+
+                                    Behavior on color {
+                                        enabled: Config.animDuration > 0
+                                        ColorAnimation {
+                                            duration: Config.animDuration / 2
+                                            easing.type: Easing.OutQuart
+                                        }
+                                    }
+                                    
+                                    Behavior on border.color {
+                                        enabled: Config.animDuration > 0
+                                        ColorAnimation {
+                                            duration: Config.animDuration / 2
+                                            easing.type: Easing.OutQuart
+                                        }
+                                    }
+
+                                    Column {
+                                        anchors.centerIn: parent
+                                        spacing: 6
+                                        width: parent.width - 16
+
+                                        // Pane index
+                                        Text {
+                                            anchors.horizontalCenter: parent.horizontalCenter
+                                            text: "Pane " + modelData.index
+                                            font.family: Config.theme.font
+                                            font.pixelSize: Config.theme.fontSize
+                                            font.weight: Font.Bold
+                                            color: modelData.active ? Colors.overPrimary : Colors.overSurface
+                                            visible: parent.parent.height > 35
+
+                                            Behavior on color {
+                                                enabled: Config.animDuration > 0
+                                                ColorAnimation {
+                                                    duration: Config.animDuration / 2
+                                                    easing.type: Easing.OutQuart
+                                                }
+                                            }
+                                        }
+
+                                        // Command
+                                        Text {
+                                            width: parent.width
+                                            text: modelData.command
+                                            font.family: Config.theme.font
+                                            font.pixelSize: Config.theme.fontSize
+                                            font.weight: modelData.active ? Font.Bold : Font.Normal
+                                            color: modelData.active ? Colors.overPrimary : Colors.overSurface
+                                            horizontalAlignment: Text.AlignHCenter
+                                            elide: Text.ElideMiddle
+                                            visible: parent.parent.height > 50
+
+                                            Behavior on color {
+                                                enabled: Config.animDuration > 0
+                                                ColorAnimation {
+                                                    duration: Config.animDuration / 2
+                                                    easing.type: Easing.OutQuart
+                                                }
+                                            }
+                                        }
+                                        
+                                        // Dimensions info
+                                        Text {
+                                            anchors.horizontalCenter: parent.horizontalCenter
+                                            text: modelData.width + "×" + modelData.height
+                                            font.family: Config.theme.font
+                                            font.pixelSize: Config.theme.fontSize
+                                            color: modelData.active ? Colors.overPrimary : Colors.outline
+                                            opacity: 0.7
+                                            visible: parent.parent.height > 70
+
+                                            Behavior on color {
+                                                enabled: Config.animDuration > 0
+                                                ColorAnimation {
+                                                    duration: Config.animDuration / 2
+                                                    easing.type: Easing.OutQuart
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+
+                            // Empty state for panes
+                            Column {
+                                anchors.centerIn: parent
+                                spacing: 8
+                                visible: root.sessionPanes.length === 0 && !root.loadingSessionInfo
+
+                                Text {
+                                    text: Icons.terminalWindow
+                                    font.family: Icons.font
+                                    font.pixelSize: 32
+                                    color: Colors.outline
+                                    anchors.horizontalCenter: parent.horizontalCenter
+                                    textFormat: Text.RichText
+                                }
+
+                                Text {
+                                    text: "No panes to display"
+                                    font.family: Config.theme.font
+                                    font.pixelSize: Config.theme.fontSize
+                                    color: Colors.outline
+                                    anchors.horizontalCenter: parent.horizontalCenter
+                                }
+                            }
+
+                            // Loading indicator
+                            Rectangle {
+                                anchors.fill: parent
+                                color: Colors.background
+                                visible: root.loadingSessionInfo
+
+                                Row {
+                                    anchors.centerIn: parent
+                                    spacing: 12
+
+                                    Text {
+                                        text: Icons.spinnerGap
+                                        font.family: Icons.font
+                                        font.pixelSize: 20
+                                        color: Colors.primary
+                                        textFormat: Text.RichText
+
+                                        RotationAnimator on rotation {
+                                            from: 0
+                                            to: 360
+                                            duration: 1000
+                                            loops: Animation.Infinite
+                                            running: root.loadingSessionInfo
+                                        }
+                                    }
+
+                                    Text {
+                                        text: "Loading panes..."
+                                        font.family: Config.theme.font
+                                        font.pixelSize: Config.theme.fontSize
+                                        color: Colors.outline
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Empty state
+            Column {
+                anchors.centerIn: parent
+                spacing: 8
+                visible: {
+                    if (!previewPanel.currentSession) return true;
+                    if (previewPanel.currentSession.isCreateButton === true) return true;
+                    if (previewPanel.currentSession.isCreateSpecificButton === true) return true;
+                    return false;
+                }
+
+                Text {
+                    text: Icons.terminalWindow
+                    font.family: Icons.font
+                    font.pixelSize: 48
+                    color: Colors.surfaceBright
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    textFormat: Text.RichText
+                }
+
+                Text {
+                    text: "No session selected"
+                    font.family: Config.theme.font
+                    font.pixelSize: Config.theme.fontSize
+                    font.weight: Font.Bold
+                    color: Colors.overBackground
+                    anchors.horizontalCenter: parent.horizontalCenter
+                }
+
+                Text {
+                    text: "Select a session to preview"
+                    font.family: Config.theme.font
+                    font.pixelSize: Config.theme.fontSize
+                    color: Colors.outline
+                    anchors.horizontalCenter: parent.horizontalCenter
+                }
+            }
+        }
      }
 
     Component.onCompleted: {
