@@ -13,7 +13,7 @@ PaneRect {
     required property bool isToggled
 
     signal controlValueChanged(real newValue)
-    signal toggled()
+    signal toggled
     signal draggingChanged(bool isDragging)
 
     property real iconRotation: 0
@@ -50,7 +50,8 @@ PaneRect {
         }
 
         onPositionChanged: mouse => {
-            if (!pressed) return;
+            if (!pressed)
+                return;
 
             let deltaY = dragStartY - mouse.y;
             if (Math.abs(deltaY) > 3) {
@@ -89,7 +90,7 @@ PaneRect {
         height: 48
 
         property real angle: root.value * (360 - 2 * root.gapAngle)
-        property real radius: 18
+        property real radius: 16
 
         Canvas {
             id: canvas
@@ -126,13 +127,13 @@ PaneRect {
                 if (progressCanvas.angle >= 0) {
                     let handleAngle = baseStartAngle + progressAngleRad;
                     let innerRadius = radius - 2;
-                    let outerRadius = radius + 3;
-                    
+                    let outerRadius = radius + 4;
+
                     let innerX = centerX + innerRadius * Math.cos(handleAngle);
                     let innerY = centerY + innerRadius * Math.sin(handleAngle);
                     let outerX = centerX + outerRadius * Math.cos(handleAngle);
                     let outerY = centerY + outerRadius * Math.sin(handleAngle);
-                    
+
                     ctx.strokeStyle = Colors.overBackground;
                     ctx.lineWidth = lineWidth;
                     ctx.beginPath();
@@ -145,7 +146,7 @@ PaneRect {
                 let remainingStart = baseStartAngle + progressAngleRad + handleGapRad;
                 let totalAngle = (360 - 2 * root.gapAngle) * Math.PI / 180;
                 let remainingEnd = baseStartAngle + totalAngle;
-                
+
                 if (remainingStart < remainingEnd) {
                     ctx.strokeStyle = Colors.surfaceBright;
                     ctx.lineWidth = lineWidth;
