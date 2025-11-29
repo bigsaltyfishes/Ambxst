@@ -102,6 +102,84 @@ Rectangle {
             property bool optionsMenuOpen: false
             property int menuItemIndex: -1
             property bool menuJustClosed: false
+            
+            // Animated model for smooth filtering
+            property var filteredApps: searchText.length > 0 ? AppSearch.fuzzyQuery(searchText) : AppSearch.getAllApps()
+            property var appsById: ({})
+            
+            onFilteredAppsChanged: {
+                updateAnimatedModel();
+            }
+            
+            function updateAnimatedModel() {
+                let newApps = filteredApps;
+                
+                // Build apps by ID map for execution
+                appsById = {};
+                for (let i = 0; i < newApps.length; i++) {
+                    appsById[newApps[i].id] = newApps[i];
+                }
+                
+                // Build set of new app IDs for fast lookup
+                let newIds = {};
+                for (let i = 0; i < newApps.length; i++) {
+                    newIds[newApps[i].id] = i;
+                }
+                
+                // Step 1: Remove items that are no longer in the new list
+                for (let i = animatedModel.count - 1; i >= 0; i--) {
+                    let item = animatedModel.get(i);
+                    if (newIds[item.appId] === undefined) {
+                        animatedModel.remove(i);
+                    }
+                }
+                
+                // Step 2: Add new items and reorder existing ones
+                for (let targetIndex = 0; targetIndex < newApps.length; targetIndex++) {
+                    let app = newApps[targetIndex];
+                    
+                    // Find if item already exists
+                    let currentIndex = -1;
+                    for (let j = 0; j < animatedModel.count; j++) {
+                        if (animatedModel.get(j).appId === app.id) {
+                            currentIndex = j;
+                            break;
+                        }
+                    }
+                    
+                    if (currentIndex === -1) {
+                        // Item doesn't exist - insert it
+                        animatedModel.insert(targetIndex, {
+                            appId: app.id,
+                            appName: app.name,
+                            appIcon: app.icon,
+                            appComment: app.comment,
+                            appExecString: app.execString,
+                            appCategories: app.categories,
+                            appRunInTerminal: app.runInTerminal
+                        });
+                    } else if (currentIndex !== targetIndex) {
+                        // Item exists but is in wrong position - move it
+                        animatedModel.move(currentIndex, targetIndex, 1);
+                    }
+                }
+            }
+            
+            function executeApp(appId) {
+                let app = appsById[appId];
+                if (app && app.execute) {
+                    app.execute();
+                }
+            }
+            
+            ListModel {
+                id: animatedModel
+            }
+            
+            Component.onCompleted: {
+                updateAnimatedModel();
+                focusSearchInput();
+            }
 
             onSearchTextChanged: {
                 // Detect prefix and switch tab if needed
@@ -215,10 +293,10 @@ Rectangle {
                     }
 
                     onAccepted: {
-                        if (appLauncher.selectedIndex >= 0 && appLauncher.selectedIndex < resultsList.count) {
-                            let selectedApp = resultsList.model[appLauncher.selectedIndex];
+                        if (appLauncher.selectedIndex >= 0 && appLauncher.selectedIndex < animatedModel.count) {
+                            let selectedApp = animatedModel.get(appLauncher.selectedIndex);
                             if (selectedApp) {
-                                selectedApp.execute();
+                                appLauncher.executeApp(selectedApp.appId);
                                 Visibilities.setActiveModule("");
                             }
                         }
@@ -306,9 +384,9 @@ Rectangle {
                     clip: true
                     interactive: !appLauncher.optionsMenuOpen
                     cacheBuffer: 96
-                    reuseItems: true
+                    reuseItems: false
 
-                    model: appLauncher.searchText.length > 0 ? AppSearch.fuzzyQuery(appLauncher.searchText) : AppSearch.getAllApps()
+                    model: animatedModel
                     currentIndex: appLauncher.selectedIndex
 
                     onCurrentIndexChanged: {
@@ -318,8 +396,65 @@ Rectangle {
                         }
                     }
 
+                    // Animación para items que se desplazan a nueva posición
+                    displaced: Transition {
+                        NumberAnimation {
+                            properties: "y"
+                            duration: Config.animDuration > 0 ? Config.animDuration : 0
+                            easing.type: Easing.OutCubic
+                        }
+                    }
+
+                    // Animación para items que aparecen
+                    add: Transition {
+                        ParallelAnimation {
+                            NumberAnimation {
+                                property: "opacity"
+                                from: 0
+                                to: 1
+                                duration: Config.animDuration > 0 ? Config.animDuration / 2 : 0
+                                easing.type: Easing.OutCubic
+                            }
+                            NumberAnimation {
+                                property: "y"
+                                duration: Config.animDuration > 0 ? Config.animDuration : 0
+                                easing.type: Easing.OutCubic
+                            }
+                        }
+                    }
+
+                    // Animación para items que desaparecen
+                    remove: Transition {
+                        SequentialAnimation {
+                            // Mantener la posición inicial brevemente
+                            PauseAnimation {
+                                duration: 50
+                            }
+                            ParallelAnimation {
+                                NumberAnimation {
+                                    property: "opacity"
+                                    to: 0
+                                    duration: Config.animDuration > 0 ? Config.animDuration / 2 : 0
+                                    easing.type: Easing.OutCubic
+                                }
+                                NumberAnimation {
+                                    property: "height"
+                                    to: 0
+                                    duration: Config.animDuration > 0 ? Config.animDuration / 2 : 0
+                                    easing.type: Easing.OutCubic
+                                }
+                            }
+                        }
+                    }
+
                     delegate: Rectangle {
-                        required property var modelData
+                        required property string appId
+                        required property string appName
+                        required property string appIcon
+                        required property string appComment
+                        required property string appExecString
+                        required property var appCategories
+                        required property bool appRunInTerminal
                         required property int index
 
                         width: resultsList.width
@@ -346,7 +481,7 @@ Rectangle {
                                 }
 
                                 if (mouse.button === Qt.LeftButton) {
-                                    modelData.execute();
+                                    appLauncher.executeApp(appId);
                                     Visibilities.setActiveModule("");
                                 } else if (mouse.button === Qt.RightButton) {
                                     appLauncher.menuItemIndex = index;
@@ -381,7 +516,7 @@ Rectangle {
                                         highlightColor: Colors.primary,
                                         textColor: Colors.overPrimary,
                                         onTriggered: function () {
-                                            modelData.execute();
+                                            appLauncher.executeApp(appId);
                                             Visibilities.setActiveModule("");
                                         }
                                     },
@@ -393,10 +528,10 @@ Rectangle {
                                         onTriggered: function () {
                                             let desktopDir = Quickshell.env("XDG_DESKTOP_DIR") || Quickshell.env("HOME") + "/Desktop";
                                             let timestamp = Date.now();
-                                            let fileName = modelData.id + "-" + timestamp + ".desktop";
+                                            let fileName = appId + "-" + timestamp + ".desktop";
                                             let filePath = desktopDir + "/" + fileName;
 
-                                            let desktopContent = "[Desktop Entry]\n" + "Version=1.0\n" + "Type=Application\n" + "Name=" + modelData.name + "\n" + "Exec=" + modelData.execString + "\n" + "Icon=" + modelData.icon + "\n" + (modelData.comment ? "Comment=" + modelData.comment + "\n" : "") + (modelData.categories.length > 0 ? "Categories=" + modelData.categories.join(";") + ";\n" : "") + (modelData.runInTerminal ? "Terminal=true\n" : "Terminal=false\n");
+                                            let desktopContent = "[Desktop Entry]\n" + "Version=1.0\n" + "Type=Application\n" + "Name=" + appName + "\n" + "Exec=" + appExecString + "\n" + "Icon=" + appIcon + "\n" + (appComment ? "Comment=" + appComment + "\n" : "") + (appCategories.length > 0 ? "Categories=" + appCategories.join(";") + ";\n" : "") + (appRunInTerminal ? "Terminal=true\n" : "Terminal=false\n");
 
                                             let writeCmd = "printf '%s' '" + desktopContent.replace(/'/g, "'\\''") + "' > \"" + filePath + "\" && chmod 755 \"" + filePath + "\" && gio set \"" + filePath + "\" metadata::trusted true";
                                             copyProcess.command = ["sh", "-c", writeCmd];
@@ -421,8 +556,8 @@ Rectangle {
                             Component {
                                 id: normalIconComponent
                                 Image {
-                                    id: appIcon
-                                    source: "image://icon/" + modelData.icon
+                                    id: appIconImage
+                                    source: "image://icon/" + appIcon
                                     fillMode: Image.PreserveAspectFit
 
                                     Rectangle {
@@ -447,7 +582,7 @@ Rectangle {
                                 id: tintedIconComponent
                                 Tinted {
                                     sourceItem: Image {
-                                        source: "image://icon/" + modelData.icon
+                                        source: "image://icon/" + appIcon
                                         fillMode: Image.PreserveAspectFit
                                     }
                                 }
@@ -459,7 +594,7 @@ Rectangle {
 
                                 Text {
                                     width: parent.width
-                                    text: modelData.name
+                                    text: appName
                                     color: appLauncher.selectedIndex === index ? Colors.overPrimary : Colors.overBackground
                                     font.family: Config.theme.font
                                     font.pixelSize: Config.theme.fontSize
@@ -477,7 +612,7 @@ Rectangle {
 
                                 Text {
                                     width: parent.width
-                                    text: modelData.comment || ""
+                                    text: appComment || ""
                                     color: appLauncher.selectedIndex === index ? Colors.overPrimary : Colors.outline
                                     font.family: Config.theme.font
                                     font.pixelSize: Math.max(8, Config.theme.fontSize - 2)
@@ -505,10 +640,6 @@ Rectangle {
                     highlightMoveDuration: Config.animDuration > 0 ? Config.animDuration / 2 : 0
                     highlightMoveVelocity: -1
                 }
-            }
-
-            Component.onCompleted: {
-                focusSearchInput();
             }
 
             Process {
