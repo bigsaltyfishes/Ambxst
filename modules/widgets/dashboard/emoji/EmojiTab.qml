@@ -33,6 +33,30 @@ Rectangle {
     property var emojiData: []
     property var recentEmojis: []
     property var filteredEmojis: []
+
+    // Skin tone support
+    property var skinTones: [
+        { name: "Default", modifier: "", emoji: "👋" },
+        { name: "Light", modifier: "🏻", emoji: "👋🏻" },
+        { name: "Medium-Light", modifier: "🏼", emoji: "👋🏼" },
+        { name: "Medium", modifier: "🏽", emoji: "👋🏽" },
+        { name: "Medium-Dark", modifier: "🏾", emoji: "👋🏾" },
+        { name: "Dark", modifier: "🏿", emoji: "👋🏿" }
+    ]
+
+    // Options menu state (expandable list)
+    property int expandedItemIndex: -1
+    property int selectedOptionIndex: 0
+    property bool keyboardNavigation: false
+
+    function getSkinToneName(modifier) {
+        for (var i = 0; i < skinTones.length; i++) {
+            if (skinTones[i].modifier === modifier) {
+                return skinTones[i].name.toLowerCase();
+            }
+        }
+        return "default";
+    }
     
     ListModel {
         id: emojisModel
@@ -46,6 +70,17 @@ Rectangle {
         if (selectedIndex === -1 && emojiList.count > 0) {
             emojiList.positionViewAtIndex(0, ListView.Beginning);
         }
+
+        // Close expanded options when selection changes to a different item
+        if (expandedItemIndex >= 0 && selectedIndex !== expandedItemIndex) {
+            expandedItemIndex = -1;
+            selectedOptionIndex = 0;
+            keyboardNavigation = false;
+        }
+    }
+
+    onExpandedItemIndexChanged: {
+        // Close expanded options when selection changes to a different item is handled in onSelectedIndexChanged
     }
 
     onSearchTextChanged: {
@@ -107,8 +142,15 @@ Rectangle {
                 var emoji = emojiData[i];
                 var emojiText = emoji.emoji;
                 var searchTerms = emoji.search;
+                var name = emoji.name;
+                var slug = emoji.slug;
+                var group = emoji.group;
 
-                if (emojiText.includes(searchText) || searchTerms.toLowerCase().includes(searchLower)) {
+                if (emojiText.includes(searchText) ||
+                    searchTerms.toLowerCase().includes(searchLower) ||
+                    name.toLowerCase().includes(searchLower) ||
+                    slug.toLowerCase().includes(searchLower) ||
+                    group.toLowerCase().includes(searchLower)) {
                     filtered.push(emoji);
                 }
             }
@@ -148,7 +190,7 @@ Rectangle {
     }
 
     function loadEmojiData() {
-        emojiProcess.command = ["bash", "-c", "sed '1,/^### DATA ###$/d' /home/adriano/Repos/Axenide/Ambxst/scripts/fuzzel-emoji.sh"];
+        emojiProcess.command = ["bash", "-c", "cat /home/adriano/Repos/Axenide/Ambxst/assets/emojis.json"];
         emojiProcess.running = true;
     }
     
@@ -204,10 +246,25 @@ Rectangle {
         saveRecentEmojis();
     }
 
-    function copyEmoji(emoji) {
-        root.addToRecent(emoji);
+    function copyEmoji(emoji, skinToneModifier) {
+        var emojiToCopy = emoji.emoji;
+        if (skinToneModifier && skinToneModifier !== "") {
+            emojiToCopy = emoji.emoji + skinToneModifier;
+        }
+
+        // Create emoji object with skin tone applied for recent storage
+        var emojiForRecent = {
+            emoji: emojiToCopy,
+            name: emoji.name + (skinToneModifier ? " (" + getSkinToneName(skinToneModifier) + ")" : ""),
+            slug: emoji.slug,
+            group: emoji.group,
+            search: emoji.name + " " + emoji.slug + (skinToneModifier ? " " + getSkinToneName(skinToneModifier) : ""),
+            skin_tone_support: emoji.skin_tone_support
+        };
+
+        root.addToRecent(emojiForRecent);
         Visibilities.setActiveModule("");
-        ClipboardService.copyAndTypeEmoji(emoji.emoji);
+        ClipboardService.copyAndTypeEmoji(emojiToCopy);
     }
 
     function onDownPressed() {
@@ -308,24 +365,29 @@ Rectangle {
             waitForEnd: true
 
             onStreamFinished: {
-                var lines = text.trim().split('\n');
-                var data = [];
-                for (var i = 0; i < lines.length; i++) {
-                    var line = lines[i].trim();
-                    if (line.length > 0) {
-                        var parts = line.split(' ');
-                        if (parts.length >= 2) {
-                            var emoji = parts[0];
-                            var search = parts.slice(1).join(' ');
+                try {
+                    var jsonData = JSON.parse(text.trim());
+                    var data = [];
+                    for (var emoji in jsonData) {
+                        if (jsonData.hasOwnProperty(emoji)) {
+                            var emojiInfo = jsonData[emoji];
                             data.push({
                                 emoji: emoji,
-                                search: search
+                                name: emojiInfo.name,
+                                slug: emojiInfo.slug,
+                                group: emojiInfo.group,
+                                search: emojiInfo.name + " " + emojiInfo.slug,
+                                skin_tone_support: emojiInfo.skin_tone_support || false
                             });
                         }
                     }
+                    emojiData = data;
+                    loadInitialEmojis();
+                } catch (e) {
+                    console.error("Failed to parse emojis.json:", e);
+                    emojiData = [];
+                    loadInitialEmojis();
                 }
-                emojiData = data;
-                loadInitialEmojis();
             }
         }
     }
@@ -390,7 +452,23 @@ Rectangle {
                         }
 
                         onAccepted: {
-                            if (isRecentFocused && selectedRecentIndex >= 0 && selectedRecentIndex < recentEmojis.length) {
+                            if (root.expandedItemIndex >= 0) {
+                                // Execute selected option when menu is expanded
+                                let emoji = root.filteredEmojis[root.expandedItemIndex];
+                                if (emoji) {
+                                    if (root.selectedOptionIndex === 0) {
+                                        // Default emoji
+                                        root.copyEmoji(emoji, "");
+                                    } else {
+                                        // Skin tone option
+                                        var skinToneIndex = root.selectedOptionIndex - 1;
+                                        if (skinToneIndex >= 0 && skinToneIndex < root.skinTones.length) {
+                                            var skinTone = root.skinTones[skinToneIndex];
+                                            root.copyEmoji(emoji, skinTone.modifier);
+                                        }
+                                    }
+                                }
+                            } else if (isRecentFocused && selectedRecentIndex >= 0 && selectedRecentIndex < recentEmojis.length) {
                                 var selectedEmoji = recentEmojis[selectedRecentIndex];
                                 if (selectedEmoji) {
                                     root.copyEmoji(selectedEmoji);
@@ -403,8 +481,32 @@ Rectangle {
                             }
                         }
 
+                        onShiftAccepted: {
+                            if (!root.deleteMode && !root.aliasMode) {
+                                if (root.selectedIndex >= 0 && root.selectedIndex < root.filteredEmojis.length) {
+                                    var selectedEmoji = root.filteredEmojis[root.selectedIndex];
+                                    if (selectedEmoji && selectedEmoji.skin_tone_support) {
+                                        // Toggle expanded state
+                                        if (root.expandedItemIndex === root.selectedIndex) {
+                                            root.expandedItemIndex = -1;
+                                            root.selectedOptionIndex = 0;
+                                            root.keyboardNavigation = false;
+                                        } else {
+                                            root.expandedItemIndex = root.selectedIndex;
+                                            root.selectedOptionIndex = 0;
+                                            root.keyboardNavigation = true;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
                         onEscapePressed: {
-                            if (root.searchText.length === 0) {
+                            if (root.expandedItemIndex >= 0) {
+                                root.expandedItemIndex = -1;
+                                root.selectedOptionIndex = 0;
+                                root.keyboardNavigation = false;
+                            } else if (root.searchText.length === 0) {
                                 Visibilities.setActiveModule("");
                             } else {
                                 root.clearSearch();
@@ -412,11 +514,32 @@ Rectangle {
                         }
 
                         onDownPressed: {
-                            root.onDownPressed();
+                            if (root.expandedItemIndex >= 0) {
+                                // Navigate options when menu is expanded
+                                var emoji = root.filteredEmojis[root.expandedItemIndex];
+                                if (emoji && emoji.skin_tone_support) {
+                                    var maxOptions = root.skinTones.length + 1; // +1 for default
+                                    if (root.selectedOptionIndex < maxOptions - 1) {
+                                        root.selectedOptionIndex++;
+                                        root.keyboardNavigation = true;
+                                    }
+                                }
+                            } else {
+                                root.onDownPressed();
+                            }
                         }
 
                         onUpPressed: {
-                            root.onUpPressed();
+                            if (root.expandedItemIndex >= 0) {
+                                // Navigate options when menu is expanded
+                                if (root.selectedOptionIndex > 0) {
+                                    root.selectedOptionIndex--;
+                                    root.keyboardNavigation = true;
+                                }
+                                // Stay on first option if already at index 0
+                            } else {
+                                root.onUpPressed();
+                            }
                         }
 
                         onLeftPressed: {
@@ -568,16 +691,39 @@ Rectangle {
                         if (currentIndex !== root.selectedIndex && !root.isRecentFocused) {
                             root.selectedIndex = currentIndex;
                         }
-                        
+
                         if (currentIndex >= 0 && !root.isRecentFocused) {
-                            var itemY = currentIndex * 48;
+                            var itemY = 0;
+                            for (var i = 0; i < currentIndex; i++) {
+                                var itemHeight = 48;
+                                if (i === root.expandedItemIndex && !root.deleteMode && !root.aliasMode) {
+                                    var itemData = itemsModel.get(i).itemData;
+                                    if (itemData && itemData.skin_tone_support) {
+                                        var optionsCount = root.skinTones.length + 1;
+                                        var listHeight = 36 * Math.min(3, optionsCount);
+                                        itemHeight = 48 + 4 + listHeight + 8;
+                                    }
+                                }
+                                itemY += itemHeight;
+                            }
+
+                            var currentItemHeight = 48;
+                            if (currentIndex === root.expandedItemIndex && !root.deleteMode && !root.aliasMode) {
+                                var itemData = itemsModel.get(currentIndex).itemData;
+                                if (itemData && itemData.skin_tone_support) {
+                                    var optionsCount = root.skinTones.length + 1;
+                                    var listHeight = 36 * Math.min(3, optionsCount);
+                                    currentItemHeight = 48 + 4 + listHeight + 8;
+                                }
+                            }
+
                             var viewportTop = emojiList.contentY;
                             var viewportBottom = viewportTop + emojiList.height;
-                            
+
                             if (itemY < viewportTop) {
                                 emojiList.contentY = itemY;
-                            } else if (itemY + 48 > viewportBottom) {
-                                emojiList.contentY = itemY + 48 - emojiList.height;
+                            } else if (itemY + currentItemHeight > viewportBottom) {
+                                emojiList.contentY = itemY + currentItemHeight - emojiList.height;
                             }
                         }
                     }
@@ -590,7 +736,15 @@ Rectangle {
                         property var modelData: emojiData
 
                         width: emojiList.width
-                        height: 48
+                        height: {
+                            let baseHeight = 48;
+                            if (index === root.expandedItemIndex && !root.deleteMode && !root.aliasMode && modelData.skin_tone_support) {
+                                var optionsCount = root.skinTones.length + 1; // +1 for default
+                                var listHeight = 36 * Math.min(3, optionsCount);
+                                return baseHeight + 4 + listHeight + 8; // base + spacing + list + bottom margin
+                            }
+                            return baseHeight;
+                        }
                         color: "transparent"
                         radius: 16
                         
@@ -607,6 +761,7 @@ Rectangle {
                             hoverEnabled: true
                             preventStealing: false
                             propagateComposedEvents: true
+                            acceptedButtons: Qt.LeftButton | Qt.RightButton
 
                             onEntered: {
                                 if (root.isRecentFocused) {
@@ -618,8 +773,39 @@ Rectangle {
                                 emojiList.currentIndex = index;
                             }
 
-                            onClicked: {
-                                root.copyEmoji(modelData);
+                            onClicked: mouse => {
+                                if (mouse.button === Qt.LeftButton) {
+                                    if (modelData.skin_tone_support) {
+                                        // For emojis with skin tone support, expand options on left click
+                                        if (root.expandedItemIndex === index) {
+                                            root.expandedItemIndex = -1;
+                                            root.selectedOptionIndex = 0;
+                                            root.keyboardNavigation = false;
+                                        } else {
+                                            root.expandedItemIndex = index;
+                                            root.selectedIndex = index;
+                                            root.selectedOptionIndex = 0;
+                                            root.keyboardNavigation = false;
+                                        }
+                                    } else {
+                                        // For regular emojis, copy directly
+                                        root.copyEmoji(modelData);
+                                    }
+                                } else if (mouse.button === Qt.RightButton) {
+                                    if (modelData.skin_tone_support) {
+                                        // Toggle expanded state for skin tone selection
+                                        if (root.expandedItemIndex === index) {
+                                            root.expandedItemIndex = -1;
+                                            root.selectedOptionIndex = 0;
+                                            root.keyboardNavigation = false;
+                                        } else {
+                                            root.expandedItemIndex = index;
+                                            root.selectedIndex = index;
+                                            root.selectedOptionIndex = 0;
+                                            root.keyboardNavigation = false;
+                                        }
+                                    }
+                                }
                             }
                         }
 
@@ -656,6 +842,214 @@ Rectangle {
                                 font.pixelSize: Config.theme.fontSize
                                 elide: Text.ElideRight
                                 verticalAlignment: Text.AlignVCenter
+                            }
+                        }
+
+                        // Expandable options list (for skin tones)
+                        RowLayout {
+                            anchors.left: parent.left
+                            anchors.right: parent.right
+                            anchors.bottom: parent.bottom
+                            anchors.leftMargin: 8
+                            anchors.rightMargin: 8
+                            anchors.bottomMargin: 8
+                            spacing: 4
+                            visible: index === root.expandedItemIndex && !root.deleteMode && !root.aliasMode && modelData.skin_tone_support
+                            opacity: (index === root.expandedItemIndex && !root.deleteMode && !root.aliasMode && modelData.skin_tone_support) ? 1 : 0
+
+                            Behavior on opacity {
+                                enabled: Config.animDuration > 0
+                                NumberAnimation {
+                                    duration: Config.animDuration
+                                    easing.type: Easing.OutQuart
+                                }
+                            }
+
+                            ClippingRectangle {
+                                Layout.fillWidth: true
+                                Layout.preferredHeight: {
+                                    var optionsCount = root.skinTones.length + 1; // +1 for default
+                                    return 36 * Math.min(3, optionsCount);
+                                }
+                                color: Colors.background
+                                radius: Config.roundness
+
+                                Behavior on Layout.preferredHeight {
+                                    enabled: Config.animDuration > 0
+                                    NumberAnimation {
+                                        duration: Config.animDuration
+                                        easing.type: Easing.OutQuart
+                                    }
+                                }
+
+                                ListView {
+                                    id: skinToneOptionsListView
+                                    anchors.fill: parent
+                                    clip: true
+                                    interactive: true
+                                    boundsBehavior: Flickable.StopAtBounds
+                                    model: {
+                                        var options = [{ text: "Default", emoji: modelData.emoji, modifier: "" }];
+                                        for (var i = 0; i < root.skinTones.length; i++) {
+                                            options.push({
+                                                text: root.skinTones[i].name,
+                                                emoji: modelData.emoji + root.skinTones[i].modifier,
+                                                modifier: root.skinTones[i].modifier
+                                            });
+                                        }
+                                        return options;
+                                    }
+                                    currentIndex: root.selectedOptionIndex
+                                    highlightFollowsCurrentItem: true
+                                    highlightRangeMode: ListView.ApplyRange
+                                    preferredHighlightBegin: 0
+                                    preferredHighlightEnd: height
+
+                                    highlight: StyledRect {
+                                        variant: "primary"
+                                        radius: Config.roundness
+                                        visible: skinToneOptionsListView.currentIndex >= 0
+                                        z: -1
+
+                                        Behavior on opacity {
+                                            enabled: Config.animDuration > 0
+                                            NumberAnimation {
+                                                duration: Config.animDuration / 2
+                                                easing.type: Easing.OutQuart
+                                            }
+                                        }
+                                    }
+
+                                    highlightMoveDuration: Config.animDuration > 0 ? Config.animDuration / 2 : 0
+                                    highlightMoveVelocity: -1
+                                    highlightResizeDuration: Config.animDuration / 2
+                                    highlightResizeVelocity: -1
+
+                                    delegate: Item {
+                                        required property var modelData
+                                        required property int index
+
+                                        width: skinToneOptionsListView.width
+                                        height: 36
+
+                                        Rectangle {
+                                            anchors.fill: parent
+                                            color: "transparent"
+
+                                            RowLayout {
+                                                anchors.fill: parent
+                                                anchors.margins: 8
+                                                spacing: 8
+
+                                                Text {
+                                                    text: modelData.emoji
+                                                    font.pixelSize: 20
+                                                    horizontalAlignment: Text.AlignHCenter
+                                                    verticalAlignment: Text.AlignVCenter
+                                                }
+
+                                                Text {
+                                                    Layout.fillWidth: true
+                                                    text: modelData.text
+                                                    font.family: Config.theme.font
+                                                    font.pixelSize: Config.theme.fontSize
+                                                    font.weight: skinToneOptionsListView.currentIndex === index ? Font.Bold : Font.Normal
+                                                    color: {
+                                                        if (skinToneOptionsListView.currentIndex === index) {
+                                                            return Config.resolveColor(Config.theme.srPrimary.itemColor);
+                                                        }
+                                                        return Colors.overSurface;
+                                                    }
+                                                    elide: Text.ElideRight
+                                                    maximumLineCount: 1
+
+                                                    Behavior on color {
+                                                        enabled: Config.animDuration > 0
+                                                        ColorAnimation {
+                                                            duration: Config.animDuration / 2
+                                                            easing.type: Easing.OutQuart
+                                                        }
+                                                    }
+                                                }
+                                            }
+
+                                            MouseArea {
+                                                anchors.fill: parent
+                                                hoverEnabled: true
+                                                cursorShape: Qt.PointingHandCursor
+
+                                                onEntered: {
+                                                    skinToneOptionsListView.currentIndex = index;
+                                                    root.selectedOptionIndex = index;
+                                                    root.keyboardNavigation = false;
+                                                }
+
+                                                onClicked: {
+                                                    if (modelData) {
+                                                        root.copyEmoji(root.filteredEmojis[root.expandedItemIndex], modelData.modifier);
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+
+                                // MouseArea to handle wheel events for scrolling
+                                MouseArea {
+                                    anchors.fill: parent
+                                    propagateComposedEvents: true
+                                    acceptedButtons: Qt.NoButton
+
+                                    onWheel: wheel => {
+                                        if (skinToneOptionsListView.contentHeight > skinToneOptionsListView.height) {
+                                            const delta = wheel.angleDelta.y;
+                                            skinToneOptionsListView.contentY = Math.max(0, Math.min(skinToneOptionsListView.contentHeight - skinToneOptionsListView.height, skinToneOptionsListView.contentY - delta));
+                                            wheel.accepted = true;
+                                        } else {
+                                            wheel.accepted = false;
+                                        }
+                                    }
+                                }
+                            }
+
+                            ScrollBar {
+                                Layout.preferredWidth: 8
+                                Layout.preferredHeight: {
+                                    var optionsCount = root.skinTones.length + 1;
+                                    var listHeight = 36 * Math.min(3, optionsCount);
+                                    return Math.max(0, listHeight - 32);
+                                }
+                                Layout.alignment: Qt.AlignVCenter
+                                orientation: Qt.Vertical
+                                visible: {
+                                    var optionsCount = root.skinTones.length + 1;
+                                    return optionsCount > 3;
+                                }
+
+                                position: skinToneOptionsListView.contentY / skinToneOptionsListView.contentHeight
+                                size: skinToneOptionsListView.height / skinToneOptionsListView.contentHeight
+
+                                background: Rectangle {
+                                    color: Colors.background
+                                    radius: Config.roundness
+                                }
+
+                                contentItem: Rectangle {
+                                    color: Colors.primary
+                                    radius: Config.roundness
+                                }
+
+                                property bool scrollBarPressed: false
+
+                                onPressedChanged: {
+                                    scrollBarPressed = pressed;
+                                }
+
+                                onPositionChanged: {
+                                    if (scrollBarPressed && skinToneOptionsListView.contentHeight > skinToneOptionsListView.height) {
+                                        skinToneOptionsListView.contentY = position * skinToneOptionsListView.contentHeight;
+                                    }
+                                }
                             }
                         }
                     }
