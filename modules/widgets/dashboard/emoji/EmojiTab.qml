@@ -65,6 +65,52 @@ Rectangle {
         id: recentModel
     }
 
+    function adjustScrollForExpandedItem(index) {
+        if (index < 0 || index >= emojisModel.count) return;
+        
+        // Calculate Y position of the item
+        var itemY = 0;
+        for (var i = 0; i < index; i++) {
+            var h = 48;
+            if (i === root.expandedItemIndex && !root.deleteMode && !root.aliasMode) {
+                 var itemData = emojisModel.get(i).emojiData;
+                 if (itemData && itemData.skin_tone_support) {
+                     var optionsCount = root.skinTones.length;
+                     var listHeight = 36 * Math.min(3, optionsCount);
+                     h = 48 + 4 + listHeight + 8;
+                 }
+            }
+            itemY += h;
+        }
+        
+        // Calculate expanded item height
+        var currentItemHeight = 48;
+        var itemData = emojisModel.get(index).emojiData;
+        if (itemData && itemData.skin_tone_support) {
+             var optionsCount = root.skinTones.length;
+             var listHeight = 36 * Math.min(3, optionsCount);
+             currentItemHeight = 48 + 4 + listHeight + 8;
+        }
+        
+        // Calculate max valid scroll position
+        var maxContentY = Math.max(0, emojiList.contentHeight - emojiList.height);
+        
+        // Current viewport bounds
+        var viewportTop = emojiList.contentY;
+        var viewportBottom = viewportTop + emojiList.height;
+        
+        // Only scroll if item is not fully visible
+        var itemBottom = itemY + currentItemHeight;
+        
+        if (itemY < viewportTop) {
+            // Item top is above viewport - scroll up to show it
+            emojiList.contentY = itemY;
+        } else if (itemBottom > viewportBottom) {
+            // Item bottom is below viewport - scroll down to show it
+            emojiList.contentY = Math.min(itemBottom - emojiList.height, maxContentY);
+        }
+    }
+
     onSelectedIndexChanged: {
         if (selectedIndex === -1 && emojiList.count > 0) {
             emojiList.positionViewAtIndex(0, ListView.Beginning);
@@ -1048,10 +1094,36 @@ Rectangle {
 
                     highlight: Item {
                         width: emojiList.width
-                        height: 48
+                        height: {
+                            let baseHeight = 48;
+                            if (emojiList.currentIndex === root.expandedItemIndex && !root.deleteMode && !root.aliasMode) {
+                                var itemData = emojisModel.get(emojiList.currentIndex).emojiData;
+                                if (itemData && itemData.skin_tone_support) {
+                                    var optionsCount = root.skinTones.length;
+                                    var listHeight = 36 * Math.min(3, optionsCount);
+                                    return baseHeight + 4 + listHeight + 8;
+                                }
+                            }
+                            return baseHeight;
+                        }
                         
                         // Calculate Y position based on index, not item position
-                        y: emojiList.currentIndex * 48
+                        y: {
+                            var yPos = 0;
+                            for (var i = 0; i < emojiList.currentIndex && i < emojisModel.count; i++) {
+                                var itemHeight = 48;
+                                if (i === root.expandedItemIndex && !root.deleteMode && !root.aliasMode) {
+                                    var itemData = emojisModel.get(i).emojiData;
+                                    if (itemData && itemData.skin_tone_support) {
+                                        var optionsCount = root.skinTones.length;
+                                        var listHeight = 36 * Math.min(3, optionsCount);
+                                        itemHeight = 48 + 4 + listHeight + 8;
+                                    }
+                                }
+                                yPos += itemHeight;
+                            }
+                            return yPos;
+                        }
                         
                         Behavior on y {
                             enabled: Config.animDuration > 0
@@ -1060,12 +1132,43 @@ Rectangle {
                                 easing.type: Easing.OutCubic
                             }
                         }
+
+                        Behavior on height {
+                            enabled: Config.animDuration > 0
+                            NumberAnimation {
+                                duration: Config.animDuration
+                                easing.type: Easing.OutQuart
+                            }
+                        }
+                        
+                        onHeightChanged: {
+                            // Adjust scroll immediately when height changes due to expansion
+                            if (root.expandedItemIndex >= 0 && height > 48) {
+                                Qt.callLater(() => {
+                                    adjustScrollForExpandedItem(root.expandedItemIndex);
+                                });
+                            }
+                        }
                         
                         StyledRect {
                             anchors.fill: parent
-                            variant: "primary"
+                            variant: {
+                                if (root.expandedItemIndex >= 0 && root.selectedIndex === root.expandedItemIndex) {
+                                    return "pane";
+                                } else {
+                                    return "primary";
+                                }
+                            }
                             radius: Config.roundness > 0 ? Config.roundness + 4 : 0
                             visible: root.selectedIndex >= 0 && !root.isRecentFocused
+
+                            Behavior on color {
+                                enabled: Config.animDuration > 0
+                                ColorAnimation {
+                                    duration: Config.animDuration / 2
+                                    easing.type: Easing.OutQuart
+                                }
+                            }
                         }
                     }
 
