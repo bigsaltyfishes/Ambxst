@@ -72,7 +72,7 @@ Rectangle {
         var itemY = 0;
         for (var i = 0; i < index; i++) {
             var h = 48;
-            if (i === root.expandedItemIndex && !root.deleteMode && !root.aliasMode) {
+            if (i === root.expandedItemIndex) {
                  var itemData = emojisModel.get(i).emojiData;
                  if (itemData && itemData.skin_tone_support) {
                      var optionsCount = root.skinTones.length;
@@ -804,6 +804,9 @@ Rectangle {
                         
                         property color textColor: {
                             if (root.selectedIndex === index && !root.isRecentFocused) {
+                                if (root.expandedItemIndex === index) {
+                                    return Config.resolveColor(Config.theme.srPane.itemColor);
+                                }
                                 return Config.resolveColor(Config.theme.srPrimary.itemColor);
                             } else {
                                 return Colors.overSurface;
@@ -864,8 +867,11 @@ Rectangle {
                         }
 
                         Row {
-                            anchors.fill: parent
+                            anchors.left: parent.left
+                            anchors.right: parent.right
+                            anchors.top: parent.top
                             anchors.margins: 8
+                            height: 32
                             spacing: 8
 
                             StyledRect {
@@ -1112,7 +1118,7 @@ Rectangle {
                         width: emojiList.width
                         height: {
                             let baseHeight = 48;
-                            if (emojiList.currentIndex === root.expandedItemIndex && !root.deleteMode && !root.aliasMode) {
+                            if (emojiList.currentIndex === root.expandedItemIndex) {
                                 var itemData = emojisModel.get(emojiList.currentIndex).emojiData;
                                 if (itemData && itemData.skin_tone_support) {
                                     var optionsCount = root.skinTones.length;
@@ -1128,7 +1134,7 @@ Rectangle {
                             var yPos = 0;
                             for (var i = 0; i < emojiList.currentIndex && i < emojisModel.count; i++) {
                                 var itemHeight = 48;
-                                if (i === root.expandedItemIndex && !root.deleteMode && !root.aliasMode) {
+                                if (i === root.expandedItemIndex) {
                                     var itemData = emojisModel.get(i).emojiData;
                                     if (itemData && itemData.skin_tone_support) {
                                         var optionsCount = root.skinTones.length;
