@@ -13,6 +13,7 @@ import qs.modules.widgets.dashboard.assistant
 import qs.modules.widgets.dashboard.tmux
 import qs.modules.widgets.dashboard.clipboard
 import qs.modules.widgets.dashboard.emoji
+import qs.modules.widgets.dashboard.metrics
 import qs.config
 
 NotchAnimationBehavior {
@@ -24,7 +25,7 @@ NotchAnimationBehavior {
         property int currentTab: GlobalStates.dashboardCurrentTab
     }
 
-    readonly property var tabModel: [Icons.widgets, Icons.kanban, Icons.assistant]
+    readonly property var tabModel: [Icons.widgets, Icons.kanban, Icons.assistant, Icons.heartbeat]
     readonly property int tabCount: tabModel.length
     readonly property int tabSpacing: 8
 
@@ -249,7 +250,7 @@ NotchAnimationBehavior {
                 anchors.fill: parent
 
                 // Array de componentes para cargar dinámicamente
-                property var components: [unifiedLauncherComponent, quickSettingsComponent, assistantComponent]
+                property var components: [unifiedLauncherComponent, quickSettingsComponent, assistantComponent, metricsComponent]
 
                 // Cargar directamente el componente correcto según GlobalStates
                 initialItem: components[GlobalStates.dashboardCurrentTab]
@@ -477,5 +478,10 @@ NotchAnimationBehavior {
     Component {
         id: assistantComponent
         AssistantTab {}
+    }
+
+    Component {
+        id: metricsComponent
+        MetricsTab {}
     }
 }
