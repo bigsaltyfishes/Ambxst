@@ -230,6 +230,9 @@ help | --help | -h)
   show_help
   ;;
 "")
+  # Run daemon priority script to kill conflicting processes and start hypridle
+  bash "${SCRIPT_DIR}/scripts/daemon_priority.sh"
+  
   # Launch QuickShell with the main shell.qml
   if [ -n "$NIXGL_BIN" ]; then
     exec "$NIXGL_BIN" "$QS_BIN" -p "${SCRIPT_DIR}/shell.qml"

@@ -98,6 +98,7 @@
         wl-clipboard
         cliphist
         sqlite
+        hypridle
 
       ] ++ (if isNixOS then [
         ambxst-auth
