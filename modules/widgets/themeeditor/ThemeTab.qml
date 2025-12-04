@@ -10,177 +10,148 @@ import qs.config
 Item {
     id: root
 
-    property string selectedVariant: ""
+    property string selectedVariant: "bg"  // Start with srBg selected
 
     signal updateVariant(string variantId, string property, var value)
 
-    readonly property var variantCategories: [
-        {
-            name: "Base",
-            variants: [
-                { id: "bg", label: "Background" },
-                { id: "internalbg", label: "Internal BG" },
-                { id: "pane", label: "Pane" },
-                { id: "common", label: "Common" },
-                { id: "focus", label: "Focus" }
-            ]
-        },
-        {
-            name: "Primary",
-            variants: [
-                { id: "primary", label: "Primary" },
-                { id: "primaryfocus", label: "Primary Focus" },
-                { id: "overprimary", label: "Over Primary" }
-            ]
-        },
-        {
-            name: "Secondary",
-            variants: [
-                { id: "secondary", label: "Secondary" },
-                { id: "secondaryfocus", label: "Secondary Focus" },
-                { id: "oversecondary", label: "Over Secondary" }
-            ]
-        },
-        {
-            name: "Tertiary",
-            variants: [
-                { id: "tertiary", label: "Tertiary" },
-                { id: "tertiaryfocus", label: "Tertiary Focus" },
-                { id: "overtertiary", label: "Over Tertiary" }
-            ]
-        },
-        {
-            name: "Error",
-            variants: [
-                { id: "error", label: "Error" },
-                { id: "errorfocus", label: "Error Focus" },
-                { id: "overerror", label: "Over Error" }
-            ]
-        }
+    readonly property var allVariants: [
+        { id: "bg", label: "Background" },
+        { id: "internalbg", label: "Internal BG" },
+        { id: "pane", label: "Pane" },
+        { id: "common", label: "Common" },
+        { id: "focus", label: "Focus" },
+        { id: "primary", label: "Primary" },
+        { id: "primaryfocus", label: "Primary Focus" },
+        { id: "overprimary", label: "Over Primary" },
+        { id: "secondary", label: "Secondary" },
+        { id: "secondaryfocus", label: "Secondary Focus" },
+        { id: "oversecondary", label: "Over Secondary" },
+        { id: "tertiary", label: "Tertiary" },
+        { id: "tertiaryfocus", label: "Tertiary Focus" },
+        { id: "overtertiary", label: "Over Tertiary" },
+        { id: "error", label: "Error" },
+        { id: "errorfocus", label: "Error Focus" },
+        { id: "overerror", label: "Over Error" }
     ]
 
-    RowLayout {
+    StyledRect {
         anchors.fill: parent
-        spacing: 8
+        variant: "pane"
 
-        // Variants grid
-        StyledRect {
-            id: variantsPane
-            Layout.preferredWidth: 280
-            Layout.fillHeight: true
-            variant: "pane"
+        ColumnLayout {
+            anchors.fill: parent
+            anchors.margins: 12
+            spacing: 12
 
-            ScrollView {
-                anchors.fill: parent
-                anchors.margins: 8
-                contentWidth: availableWidth
-                clip: true
+            // Horizontal scrollable variant selector
+            ColumnLayout {
+                Layout.fillWidth: true
+                Layout.preferredHeight: 100
+                spacing: 8
 
-                ColumnLayout {
-                    width: parent.width
-                    spacing: 12
+                // Flickable with variants
+                Rectangle {
+                    Layout.fillWidth: true
+                    Layout.preferredHeight: 88
+                    color: "transparent"
+                    clip: true
 
-                    Text {
-                        text: "StyledRect Variants"
-                        font.family: Styling.defaultFont
-                        font.pixelSize: Config.theme.fontSize
-                        font.bold: true
-                        color: Colors.primary
-                        Layout.alignment: Qt.AlignHCenter
-                    }
+                    Flickable {
+                        id: variantsFlickable
+                        anchors.fill: parent
+                        contentWidth: variantsRow.width
+                        contentHeight: height
+                        flickableDirection: Flickable.HorizontalFlick
+                        boundsBehavior: Flickable.StopAtBounds
 
-                    Repeater {
-                        model: root.variantCategories
-
-                        delegate: ColumnLayout {
-                            id: categoryDelegate
-                            required property var modelData
-                            required property int index
-
-                            Layout.fillWidth: true
+                        RowLayout {
+                            id: variantsRow
+                            height: parent.height
                             spacing: 8
 
-                            // Category header
-                            Text {
-                                text: categoryDelegate.modelData.name
-                                font.family: Styling.defaultFont
-                                font.pixelSize: Config.theme.fontSize
-                                font.bold: true
-                                color: Colors.overBackground
-                                opacity: 0.7
+                            Repeater {
+                                model: root.allVariants
+
+                                delegate: VariantPreview {
+                                    required property var modelData
+                                    required property int index
+
+                                    variantId: modelData.id
+                                    variantLabel: modelData.label
+                                    isSelected: root.selectedVariant === modelData.id
+
+                                    onClicked: root.selectedVariant = modelData.id
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // Custom horizontal scrollbar
+                Rectangle {
+                    Layout.fillWidth: true
+                    Layout.preferredHeight: 6
+                    color: Colors.surface
+                    radius: 3
+
+                    Rectangle {
+                        id: scrollHandle
+                        height: parent.height
+                        radius: 3
+                        color: Colors.primary
+                        opacity: variantsFlickable.moving || scrollbarMouseArea.containsMouse ? 0.8 : 0.5
+
+                        readonly property real visibleRatio: Math.min(1.0, variantsFlickable.width / variantsFlickable.contentWidth)
+                        readonly property real maxX: parent.width - width
+
+                        width: parent.width * visibleRatio
+                        x: variantsFlickable.contentWidth > variantsFlickable.width 
+                           ? (variantsFlickable.contentX / (variantsFlickable.contentWidth - variantsFlickable.width)) * maxX 
+                           : 0
+
+                        Behavior on opacity {
+                            enabled: (Config.animDuration ?? 0) > 0
+                            NumberAnimation { duration: (Config.animDuration ?? 0) / 2 }
+                        }
+
+                        MouseArea {
+                            id: scrollbarMouseArea
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+
+                            property real dragStartX: 0
+                            property real dragStartContentX: 0
+
+                            onPressed: mouse => {
+                                dragStartX = mouse.x;
+                                dragStartContentX = variantsFlickable.contentX;
                             }
 
-                            // Variants grid
-                            GridLayout {
-                                columns: 4
-                                rowSpacing: 8
-                                columnSpacing: 8
-                                Layout.fillWidth: true
-
-                                Repeater {
-                                    model: categoryDelegate.modelData.variants
-
-                                    delegate: VariantPreview {
-                                        required property var modelData
-                                        required property int index
-
-                                        variantId: modelData.id
-                                        variantLabel: modelData.label
-                                        isSelected: root.selectedVariant === modelData.id
-
-                                        onClicked: root.selectedVariant = modelData.id
-                                    }
+                            onPositionChanged: mouse => {
+                                if (pressed) {
+                                    const delta = mouse.x - dragStartX;
+                                    const contentDelta = delta / scrollHandle.maxX * (variantsFlickable.contentWidth - variantsFlickable.width);
+                                    variantsFlickable.contentX = Math.max(0, Math.min(
+                                        dragStartContentX + contentDelta,
+                                        variantsFlickable.contentWidth - variantsFlickable.width
+                                    ));
                                 }
                             }
                         }
                     }
                 }
             }
-        }
 
-        // Variant editor panel
-        Loader {
-            id: editorLoader
-            Layout.fillWidth: true
-            Layout.fillHeight: true
-            active: root.selectedVariant !== ""
-            sourceComponent: VariantEditor {
+            // Editor panel
+            VariantEditor {
+                Layout.fillWidth: true
+                Layout.fillHeight: true
                 variantId: root.selectedVariant
                 onUpdateVariant: (property, value) => {
                     root.updateVariant(root.selectedVariant, property, value);
                 }
-                onClose: root.selectedVariant = ""
-            }
-        }
-
-        // Placeholder when no variant selected
-        StyledRect {
-            visible: root.selectedVariant === ""
-            Layout.fillWidth: true
-            Layout.fillHeight: true
-            variant: "pane"
-
-            ColumnLayout {
-                anchors.centerIn: parent
-                spacing: 16
-
-                Text {
-                    text: Icons.cube
-                    font.family: Icons.font
-                    font.pixelSize: 48
-                    color: Colors.overBackground
-                    opacity: 0.5
-                    Layout.alignment: Qt.AlignHCenter
-                }
-
-                Text {
-                    text: "Select a variant to edit"
-                    font.family: Styling.defaultFont
-                    font.pixelSize: Config.theme.fontSize
-                    color: Colors.overBackground
-                    opacity: 0.5
-                    Layout.alignment: Qt.AlignHCenter
-                }
+                onClose: {} // No close button in new design
             }
         }
     }

@@ -15,8 +15,8 @@ Item {
 
     signal clicked()
 
-    implicitWidth: 72
-    implicitHeight: 88
+    width: 72
+    height: 88
 
     ColumnLayout {
         anchors.fill: parent

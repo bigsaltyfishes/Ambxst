@@ -101,9 +101,10 @@ Item {
             }
 
             popup: Popup {
+                id: colorPopup
                 y: colorDropdown.height + 4
-                width: colorDropdown.width
-                implicitHeight: contentItem.implicitHeight > 300 ? 300 : contentItem.implicitHeight
+                width: Math.max(colorDropdown.width, popupListView.maxContentWidth + 8)
+                implicitHeight: popupListView.contentHeight > 300 ? 300 : popupListView.contentHeight
                 padding: 4
 
                 background: StyledRect {
@@ -111,12 +112,24 @@ Item {
                     enableShadow: true
                 }
 
-                contentItem: ListView {
+                ListView {
+                    id: popupListView
+                    anchors.fill: parent
                     clip: true
                     implicitHeight: contentHeight
                     model: colorDropdown.popup.visible ? colorDropdown.delegateModel : null
                     currentIndex: colorDropdown.highlightedIndex
                     ScrollIndicator.vertical: ScrollIndicator {}
+
+                    property real maxContentWidth: {
+                        let maxWidth = 150; // minimum
+                        for (let i = 0; i < colorDropdown.model.length; i++) {
+                            // Approximate text width: fontSize * text.length * 0.6 + preview square + spacing
+                            const textWidth = Config.theme.fontSize * colorDropdown.model[i].length * 0.6 + 22 + 20 + 20;
+                            maxWidth = Math.max(maxWidth, textWidth);
+                        }
+                        return maxWidth;
+                    }
                 }
             }
 
@@ -125,7 +138,7 @@ Item {
                 required property var modelData
                 required property int index
 
-                width: colorDropdown.width - 8
+                width: ListView.view.width - 8
                 height: 36
 
                 background: StyledRect {
@@ -162,7 +175,6 @@ Item {
                         font.family: Styling.defaultFont
                         font.pixelSize: Config.theme.fontSize
                         color: Colors.overBackground
-                        elide: Text.ElideRight
                         Layout.fillWidth: true
                     }
                 }

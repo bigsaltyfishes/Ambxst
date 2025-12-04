@@ -43,7 +43,11 @@ GroupBox {
 
     ColumnLayout {
         anchors.fill: parent
-        spacing: 10
+        anchors.topMargin: 0
+        anchors.bottomMargin: 4
+        anchors.leftMargin: 4
+        anchors.rightMargin: 4
+        spacing: 4
 
         // Gradient preview bar
         Rectangle {
@@ -210,7 +214,7 @@ GroupBox {
 
             ColumnLayout {
                 width: parent.width
-                spacing: 6
+                spacing: 4
 
                 Repeater {
                     model: root.stops

@@ -16,7 +16,7 @@ FloatingWindow {
     title: "Theme Editor"
     color: "transparent"
 
-    minimumSize: Qt.size(800, 600)
+    minimumSize: Qt.size(1200, 750)
 
     property string selectedVariant: ""
     property bool hasChanges: false
