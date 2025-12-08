@@ -25,7 +25,7 @@ Item {
     property string notesDir: (Quickshell.env("XDG_DATA_HOME") || (Quickshell.env("HOME") + "/.local/share")) + "/ambxst-notes"
     property string indexPath: notesDir + "/index.json"
     property string notesPath: notesDir + "/notes"
-    property string noteExtension: ".html"  // Store as HTML for rich text
+    property string noteExtension: ".html"  // Store as HTML for rich text (Markdown uses .md)
 
     // Search and selection state
     property string searchText: ""
@@ -62,8 +62,13 @@ Item {
     property string currentNoteId: ""
     property string currentNoteContent: ""
     property string currentNoteTitle: ""
+    property bool currentNoteIsMarkdown: false
     property bool loadingNote: false
     property bool editorDirty: false
+
+    // Create menu state
+    property bool showCreateMenu: false
+    property int createMenuSelectedIndex: 0
 
     // Pre-format state (for typing with format when no selection)
     // null = inherit from cursor position, true/false = explicit state
@@ -409,7 +414,16 @@ Item {
 
     function confirmDeleteNote() {
         if (noteToDelete) {
-            deleteNoteProcess.command = ["rm", "-f", notesPath + "/" + noteToDelete + noteExtension];
+            // Find if note is markdown to use correct extension
+            var isMarkdown = false;
+            for (var i = 0; i < allNotes.length; i++) {
+                if (allNotes[i].id === noteToDelete) {
+                    isMarkdown = allNotes[i].isMarkdown || false;
+                    break;
+                }
+            }
+            var extension = isMarkdown ? ".md" : noteExtension;
+            deleteNoteProcess.command = ["rm", "-f", notesPath + "/" + noteToDelete + extension];
             deleteNoteProcess.running = true;
         }
         cancelDeleteMode();
@@ -456,16 +470,21 @@ Item {
         cancelRenameMode();
     }
 
-    function createNewNote(title) {
+    function createNewNote(title, isMarkdown) {
         var noteId = NotesUtils.generateUUID();
         var noteTitle = title || "Untitled Note";
+        var extension = isMarkdown ? ".md" : noteExtension;
         
-        // Create the note file with HTML content
-        var initialContent = "<h1>" + noteTitle + "</h1><p></p>";
+        // Create the note file with appropriate content
+        var initialContent = isMarkdown 
+            ? "# " + noteTitle + "\n\n" 
+            : "<h1>" + noteTitle + "</h1><p></p>";
+        
         createNoteProcess.noteId = noteId;
         createNoteProcess.noteTitle = noteTitle;
+        createNoteProcess.noteIsMarkdown = isMarkdown || false;
         createNoteProcess.command = ["sh", "-c", 
-            "mkdir -p '" + notesPath + "' && printf '%s' '" + initialContent.replace(/'/g, "'\\''") + "' > '" + notesPath + "/" + noteId + noteExtension + "'"
+            "mkdir -p '" + notesPath + "' && printf '%s' '" + initialContent.replace(/'/g, "'\\''") + "' > '" + notesPath + "/" + noteId + extension + "'"
         ];
         createNoteProcess.running = true;
     }
@@ -478,19 +497,33 @@ Item {
             saveCurrentNote();
         }
         
+        // Find note to get isMarkdown flag
+        var isMarkdown = false;
+        for (var i = 0; i < allNotes.length; i++) {
+            if (allNotes[i].id === noteId) {
+                isMarkdown = allNotes[i].isMarkdown || false;
+                break;
+            }
+        }
+        
         loadingNote = true;
         currentNoteId = noteId;
-        readNoteProcess.command = ["cat", notesPath + "/" + noteId + noteExtension];
+        currentNoteIsMarkdown = isMarkdown;
+        
+        var extension = isMarkdown ? ".md" : noteExtension;
+        readNoteProcess.command = ["cat", notesPath + "/" + noteId + extension];
         readNoteProcess.running = true;
     }
 
     function saveCurrentNote() {
         if (!currentNoteId || currentNoteId === "__create__") return;
         
-        // Get the text content (RichText returns HTML-like format)
-        var content = noteEditor.text;
+        var extension = currentNoteIsMarkdown ? ".md" : noteExtension;
+        
+        // Get the text content
+        var content = currentNoteIsMarkdown ? mdEditor.text : noteEditor.text;
         saveNoteProcess.command = ["sh", "-c",
-            "printf '%s' '" + content.replace(/'/g, "'\\''") + "' > '" + notesPath + "/" + currentNoteId + noteExtension + "'"
+            "printf '%s' '" + content.replace(/'/g, "'\\''") + "' > '" + notesPath + "/" + currentNoteId + extension + "'"
         ];
         saveNoteProcess.running = true;
         editorDirty = false;
@@ -519,15 +552,21 @@ Item {
 
     function openNoteInEditor(noteId) {
         // Select the note and focus editor
+        var isMarkdown = false;
         for (var i = 0; i < filteredNotes.length; i++) {
             if (filteredNotes[i].id === noteId) {
                 selectedIndex = i;
                 resultsList.currentIndex = i;
+                isMarkdown = filteredNotes[i].isMarkdown || false;
                 break;
             }
         }
         Qt.callLater(() => {
-            noteEditor.forceActiveFocus();
+            if (isMarkdown) {
+                mdEditor.forceActiveFocus();
+            } else {
+                noteEditor.forceActiveFocus();
+            }
         });
     }
 
@@ -589,7 +628,8 @@ Item {
             indexData.notes[note.id] = {
                 title: note.title,
                 created: note.created,
-                modified: note.modified
+                modified: note.modified,
+                isMarkdown: note.isMarkdown || false
             };
         }
         var jsonContent = NotesUtils.serializeIndex(indexData);
@@ -638,6 +678,7 @@ Item {
                         title: noteMeta.title || "Untitled",
                         created: noteMeta.created || "",
                         modified: noteMeta.modified || "",
+                        isMarkdown: noteMeta.isMarkdown || false,
                         isCreateButton: false
                     });
                 }
@@ -653,6 +694,7 @@ Item {
         id: createNoteProcess
         property string noteId: ""
         property string noteTitle: ""
+        property bool noteIsMarkdown: false
         
         onExited: (code) => {
             if (code === 0) {
@@ -662,6 +704,7 @@ Item {
                     title: noteTitle,
                     created: NotesUtils.getCurrentTimestamp(),
                     modified: NotesUtils.getCurrentTimestamp(),
+                    isMarkdown: noteIsMarkdown,
                     isCreateButton: false
                 };
                 allNotes.unshift(newNote);
@@ -679,6 +722,7 @@ Item {
             }
             noteId = "";
             noteTitle = "";
+            noteIsMarkdown = false;
         }
     }
 
@@ -864,14 +908,27 @@ Item {
 
                     if (root.expandedItemIndex >= 0) {
                         let note = filteredNotes[root.expandedItemIndex];
-                        if (note && !note.isCreateButton) {
-                            let options = [
-                                function() { openNoteInEditor(note.id); },
-                                function() { enterRenameMode(note.id); },
-                                function() { enterDeleteMode(note.id); }
-                            ];
-                            if (root.selectedOptionIndex >= 0 && root.selectedOptionIndex < options.length) {
-                                options[root.selectedOptionIndex]();
+                        if (note) {
+                            if (note.isCreateButton) {
+                                // Create menu options
+                                let createOptions = [
+                                    function() { createNewNote(note.noteNameToCreate || "", false); },  // Rich Text
+                                    function() { createNewNote(note.noteNameToCreate || "", true); }    // Markdown
+                                ];
+                                if (root.selectedOptionIndex >= 0 && root.selectedOptionIndex < createOptions.length) {
+                                    root.expandedItemIndex = -1;
+                                    createOptions[root.selectedOptionIndex]();
+                                }
+                            } else {
+                                // Note options
+                                let options = [
+                                    function() { openNoteInEditor(note.id); },
+                                    function() { enterRenameMode(note.id); },
+                                    function() { enterDeleteMode(note.id); }
+                                ];
+                                if (root.selectedOptionIndex >= 0 && root.selectedOptionIndex < options.length) {
+                                    options[root.selectedOptionIndex]();
+                                }
                             }
                         }
                         root.expandedItemIndex = -1;
@@ -882,7 +939,10 @@ Item {
                     if (root.selectedIndex >= 0 && root.selectedIndex < filteredNotes.length) {
                         let note = filteredNotes[root.selectedIndex];
                         if (note.isCreateButton || note.isCreateSpecificButton) {
-                            createNewNote(note.noteNameToCreate || "");
+                            // Expand to show create options instead of creating directly
+                            root.expandedItemIndex = root.selectedIndex;
+                            root.selectedOptionIndex = 0;
+                            root.keyboardNavigation = true;
                         } else {
                             openNoteInEditor(note.id);
                         }
@@ -892,16 +952,15 @@ Item {
                 onShiftAccepted: {
                     if (root.selectedIndex >= 0 && root.selectedIndex < filteredNotes.length) {
                         let note = filteredNotes[root.selectedIndex];
-                        if (!note.isCreateButton) {
-                            if (root.expandedItemIndex === root.selectedIndex) {
-                                root.expandedItemIndex = -1;
-                                root.selectedOptionIndex = 0;
-                                root.keyboardNavigation = false;
-                            } else {
-                                root.expandedItemIndex = root.selectedIndex;
-                                root.selectedOptionIndex = 0;
-                                root.keyboardNavigation = true;
-                            }
+                        // Allow expanding both create button and regular notes
+                        if (root.expandedItemIndex === root.selectedIndex) {
+                            root.expandedItemIndex = -1;
+                            root.selectedOptionIndex = 0;
+                            root.keyboardNavigation = false;
+                        } else {
+                            root.expandedItemIndex = root.selectedIndex;
+                            root.selectedOptionIndex = 0;
+                            root.keyboardNavigation = true;
                         }
                     }
                 }
@@ -928,7 +987,11 @@ Item {
                         return;
                     }
                     if (root.expandedItemIndex >= 0) {
-                        if (root.selectedOptionIndex < 2) {
+                        // Max options: 2 for create button, 3 for notes
+                        var isCreateBtn = root.expandedItemIndex < filteredNotes.length 
+                            && filteredNotes[root.expandedItemIndex].isCreateButton;
+                        var maxIndex = isCreateBtn ? 1 : 2;
+                        if (root.selectedOptionIndex < maxIndex) {
                             root.selectedOptionIndex++;
                             root.keyboardNavigation = true;
                         }
@@ -993,7 +1056,11 @@ Item {
                 onTabPressed: {
                     // Focus editor when pressing Tab
                     if (currentNoteId) {
-                        noteEditor.forceActiveFocus();
+                        if (currentNoteIsMarkdown) {
+                            mdEditor.forceActiveFocus();
+                        } else {
+                            noteEditor.forceActiveFocus();
+                        }
                     }
                 }
             }
@@ -1159,7 +1226,11 @@ Item {
                     height: {
                         let baseHeight = 48;
                         if (resultsList.currentIndex === root.expandedItemIndex && !root.deleteMode && !root.renameMode) {
-                            var listHeight = 36 * 3; // 3 options
+                            // Check if current item is create button
+                            var isCreateBtn = resultsList.currentIndex >= 0 && resultsList.currentIndex < filteredNotes.length 
+                                && filteredNotes[resultsList.currentIndex].isCreateButton;
+                            var optionCount = isCreateBtn ? 2 : 3;
+                            var listHeight = 36 * optionCount;
                             return baseHeight + 4 + listHeight + 8;
                         }
                         return baseHeight;
@@ -1170,7 +1241,9 @@ Item {
                         for (var i = 0; i < resultsList.currentIndex && i < notesModel.count; i++) {
                             var itemHeight = 48;
                             if (i === root.expandedItemIndex && !root.deleteMode && !root.renameMode) {
-                                var listHeight = 36 * 3;
+                                var isCreateBtn = i < filteredNotes.length && filteredNotes[i].isCreateButton;
+                                var optionCount = isCreateBtn ? 2 : 3;
+                                var listHeight = 36 * optionCount;
                                 itemHeight = 48 + 4 + listHeight + 8;
                             }
                             yPos += itemHeight;
@@ -1241,7 +1314,9 @@ Item {
                     height: {
                         let baseHeight = 48;
                         if (index === root.expandedItemIndex && !isInDeleteMode && !isInRenameMode) {
-                            var listHeight = 36 * 3;
+                            // 2 options for create button, 3 for regular notes
+                            var optionCount = modelData.isCreateButton ? 2 : 3;
+                            var listHeight = 36 * optionCount;
                             return baseHeight + 4 + listHeight + 8;
                         }
                         return baseHeight;
@@ -1305,7 +1380,18 @@ Item {
 
                                 if (!root.deleteMode && !isExpanded) {
                                     if (modelData.isCreateButton || modelData.isCreateSpecificButton) {
-                                        createNewNote(modelData.noteNameToCreate || "");
+                                        // Show create menu instead of creating directly
+                                        if (root.expandedItemIndex === index) {
+                                            root.expandedItemIndex = -1;
+                                            root.selectedOptionIndex = 0;
+                                            root.keyboardNavigation = false;
+                                        } else {
+                                            root.expandedItemIndex = index;
+                                            root.selectedIndex = index;
+                                            resultsList.currentIndex = index;
+                                            root.selectedOptionIndex = 0;
+                                            root.keyboardNavigation = true;
+                                        }
                                     } else {
                                         openNoteInEditor(modelData.id);
                                     }
@@ -1493,7 +1579,7 @@ Item {
                         spacing: 8
 
                         Text {
-                            text: modelData.isCreateButton ? Icons.plus : Icons.file
+                            text: modelData.isCreateButton ? Icons.plus : (modelData.isMarkdown ? Icons.markdown : Icons.file)
                             font.family: Icons.font
                             font.pixelSize: 16
                             color: textColor
@@ -1546,6 +1632,7 @@ Item {
 
                     // Expanded options
                     Column {
+                        id: expandedOptionsColumn
                         anchors.left: parent.left
                         anchors.right: parent.right
                         anchors.top: parent.top
@@ -1555,36 +1642,61 @@ Item {
                         visible: isExpanded && !isInDeleteMode && !isInRenameMode
                         spacing: 0
 
+                        property var noteOptions: [
+                            {
+                                text: "Edit",
+                                icon: Icons.edit,
+                                variant: "primary",
+                                textColor: Config.resolveColor(Config.theme.srPrimary.itemColor),
+                                action: function() { openNoteInEditor(modelData.id); }
+                            },
+                            {
+                                text: "Rename",
+                                icon: Icons.edit,
+                                variant: "secondary",
+                                textColor: Config.resolveColor(Config.theme.srSecondary.itemColor),
+                                action: function() { enterRenameMode(modelData.id); }
+                            },
+                            {
+                                text: "Delete",
+                                icon: Icons.trash,
+                                variant: "error",
+                                textColor: Config.resolveColor(Config.theme.srError.itemColor),
+                                action: function() { enterDeleteMode(modelData.id); }
+                            }
+                        ]
+
+                        property var createOptions: [
+                            {
+                                text: "Rich Text",
+                                icon: Icons.file,
+                                variant: "primary",
+                                textColor: Config.resolveColor(Config.theme.srPrimary.itemColor),
+                                action: function() { 
+                                    root.expandedItemIndex = -1;
+                                    createNewNote(modelData.noteNameToCreate || "", false); 
+                                }
+                            },
+                            {
+                                text: "Markdown",
+                                icon: Icons.markdown,
+                                variant: "secondary",
+                                textColor: Config.resolveColor(Config.theme.srSecondary.itemColor),
+                                action: function() { 
+                                    root.expandedItemIndex = -1;
+                                    createNewNote(modelData.noteNameToCreate || "", true); 
+                                }
+                            }
+                        ]
+
                         ListView {
                             id: optionsListView
                             width: parent.width
-                            height: 36 * 3
+                            height: 36 * (modelData.isCreateButton ? 2 : 3)
                             interactive: false
                             currentIndex: root.keyboardNavigation ? root.selectedOptionIndex : -1
 
-                            model: [
-                                {
-                                    text: "Edit",
-                                    icon: Icons.edit,
-                                    variant: "primary",
-                                    textColor: Config.resolveColor(Config.theme.srPrimary.itemColor),
-                                    action: function() { openNoteInEditor(modelData.id); }
-                                },
-                                {
-                                    text: "Rename",
-                                    icon: Icons.edit,
-                                    variant: "secondary",
-                                    textColor: Config.resolveColor(Config.theme.srSecondary.itemColor),
-                                    action: function() { enterRenameMode(modelData.id); }
-                                },
-                                {
-                                    text: "Delete",
-                                    icon: Icons.trash,
-                                    variant: "error",
-                                    textColor: Config.resolveColor(Config.theme.srError.itemColor),
-                                    action: function() { enterDeleteMode(modelData.id); }
-                                }
-                            ]
+                            model: modelData.isCreateButton ? expandedOptionsColumn.createOptions : expandedOptionsColumn.noteOptions
 
                             highlight: StyledRect {
                                 width: optionsListView.width
@@ -1696,12 +1808,12 @@ Item {
             vert: true
         }
 
-        // Right panel: WYSIWYG Editor
+        // Right panel: WYSIWYG Editor (Rich Text mode)
         ColumnLayout {
             Layout.fillWidth: true
             Layout.fillHeight: true
             spacing: 8
-            visible: currentNoteId !== ""
+            visible: currentNoteId !== "" && !currentNoteIsMarkdown
 
             // Formatting toolbar
             Rectangle {
@@ -2361,6 +2473,226 @@ Item {
 
                     ScrollBar.vertical: ScrollBar {
                         active: true
+                    }
+                }
+            }
+        }
+
+        // Right panel: Markdown Editor (split view)
+        RowLayout {
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+            spacing: 8
+            visible: currentNoteId !== "" && currentNoteIsMarkdown
+
+            // Markdown Editor (left side)
+            Rectangle {
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+                color: "transparent"
+
+                ColumnLayout {
+                    anchors.fill: parent
+                    spacing: 4
+
+                    // Header
+                    Rectangle {
+                        Layout.fillWidth: true
+                        Layout.preferredHeight: 32
+                        color: "transparent"
+
+                        RowLayout {
+                            anchors.fill: parent
+                            anchors.leftMargin: 8
+                            anchors.rightMargin: 8
+
+                            Text {
+                                text: Icons.edit
+                                font.family: Icons.font
+                                font.pixelSize: 14
+                                color: Colors.overSurface
+                            }
+
+                            Text {
+                                text: "Editor"
+                                font.family: Config.theme.font
+                                font.pixelSize: Config.theme.fontSize
+                                font.weight: Font.Bold
+                                color: Colors.overSurface
+                            }
+
+                            Item { Layout.fillWidth: true }
+                        }
+                    }
+
+                    // Editor area
+                    Rectangle {
+                        Layout.fillWidth: true
+                        Layout.fillHeight: true
+                        color: "transparent"
+
+                        StyledRect {
+                            anchors.fill: parent
+                            variant: "surface"
+                            radius: Styling.radius(-4)
+                        }
+
+                        Flickable {
+                            id: mdEditorFlickable
+                            anchors.fill: parent
+                            anchors.margins: 4
+                            contentWidth: width
+                            contentHeight: mdEditor.contentHeight + 32
+                            clip: true
+                            boundsBehavior: Flickable.StopAtBounds
+
+                            // Sync scroll to preview
+                            onContentYChanged: {
+                                if (mdEditorFlickable.moving || mdEditorFlickable.dragging) {
+                                    let ratio = contentHeight > height ? contentY / (contentHeight - height) : 0;
+                                    let targetY = ratio * (mdPreviewFlickable.contentHeight - mdPreviewFlickable.height);
+                                    if (mdPreviewFlickable.contentHeight > mdPreviewFlickable.height) {
+                                        mdPreviewFlickable.contentY = Math.max(0, Math.min(targetY, mdPreviewFlickable.contentHeight - mdPreviewFlickable.height));
+                                    }
+                                }
+                            }
+
+                            TextArea.flickable: TextArea {
+                                id: mdEditor
+                                text: currentNoteContent
+                                textFormat: TextEdit.PlainText
+                                font.family: "monospace"
+                                font.pixelSize: Config.theme.fontSize
+                                color: Colors.overSurface
+                                wrapMode: TextEdit.Wrap
+                                selectByMouse: true
+                                placeholderText: "Write markdown here..."
+                                leftPadding: 8
+                                rightPadding: 8
+                                topPadding: 8
+                                bottomPadding: 8
+                                background: Rectangle {
+                                    color: "transparent"
+                                }
+
+                                onTextChanged: {
+                                    if (currentNoteId && !loadingNote && currentNoteIsMarkdown) {
+                                        editorDirty = true;
+                                        saveDebounceTimer.restart();
+                                    }
+                                }
+
+                                Keys.onEscapePressed: {
+                                    searchInput.focusInput();
+                                }
+                            }
+
+                            ScrollBar.vertical: ScrollBar {
+                                active: true
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Separator
+            Separator {
+                Layout.preferredWidth: 2
+                Layout.fillHeight: true
+                vert: true
+            }
+
+            // Markdown Preview (right side)
+            Rectangle {
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+                color: "transparent"
+
+                ColumnLayout {
+                    anchors.fill: parent
+                    spacing: 4
+
+                    // Header
+                    Rectangle {
+                        Layout.fillWidth: true
+                        Layout.preferredHeight: 32
+                        color: "transparent"
+
+                        RowLayout {
+                            anchors.fill: parent
+                            anchors.leftMargin: 8
+                            anchors.rightMargin: 8
+
+                            Text {
+                                text: Icons.markdown
+                                font.family: Icons.font
+                                font.pixelSize: 14
+                                color: Colors.overSurface
+                            }
+
+                            Text {
+                                text: "Preview"
+                                font.family: Config.theme.font
+                                font.pixelSize: Config.theme.fontSize
+                                font.weight: Font.Bold
+                                color: Colors.overSurface
+                            }
+
+                            Item { Layout.fillWidth: true }
+                        }
+                    }
+
+                    // Preview area
+                    Rectangle {
+                        Layout.fillWidth: true
+                        Layout.fillHeight: true
+                        color: "transparent"
+
+                        StyledRect {
+                            anchors.fill: parent
+                            variant: "pane"
+                            radius: Styling.radius(-4)
+                        }
+
+                        Flickable {
+                            id: mdPreviewFlickable
+                            anchors.fill: parent
+                            anchors.margins: 4
+                            contentWidth: width
+                            contentHeight: mdPreviewText.contentHeight + 32
+                            clip: true
+                            boundsBehavior: Flickable.StopAtBounds
+
+                            // Sync scroll to editor
+                            onContentYChanged: {
+                                if (mdPreviewFlickable.moving || mdPreviewFlickable.dragging) {
+                                    let ratio = contentHeight > height ? contentY / (contentHeight - height) : 0;
+                                    let targetY = ratio * (mdEditorFlickable.contentHeight - mdEditorFlickable.height);
+                                    if (mdEditorFlickable.contentHeight > mdEditorFlickable.height) {
+                                        mdEditorFlickable.contentY = Math.max(0, Math.min(targetY, mdEditorFlickable.contentHeight - mdEditorFlickable.height));
+                                    }
+                                }
+                            }
+
+                            TextEdit {
+                                id: mdPreviewText
+                                width: mdPreviewFlickable.width - 16
+                                x: 8
+                                y: 8
+                                textFormat: TextEdit.MarkdownText
+                                text: mdEditor.text
+                                font.family: Config.theme.font
+                                font.pixelSize: Config.theme.fontSize
+                                color: Colors.overSurface
+                                wrapMode: TextEdit.Wrap
+                                readOnly: true
+                                selectByMouse: true
+                            }
+
+                            ScrollBar.vertical: ScrollBar {
+                                active: true
+                            }
+                        }
                     }
                 }
             }
