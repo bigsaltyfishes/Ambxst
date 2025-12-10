@@ -704,6 +704,18 @@ Item {
         // Prevent interaction when hidden
         enabled: root.colorPickerActive
 
+        // Block interaction with elements behind when active
+        MouseArea {
+            anchors.fill: parent
+            enabled: root.colorPickerActive
+            hoverEnabled: true
+            acceptedButtons: Qt.AllButtons
+            // Consume all mouse events to prevent pass-through
+            onPressed: event => event.accepted = true
+            onReleased: event => event.accepted = true
+            onWheel: event => event.accepted = true
+        }
+
         ColorPickerView {
             id: colorPickerContent
             anchors.fill: parent
