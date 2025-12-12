@@ -705,7 +705,7 @@ Item {
                                     color: Colors.overBackground
                                     verticalAlignment: Text.AlignVCenter
                                     selectByMouse: true
-                                    onTextChanged: root.editKey = text.toUpperCase()
+                                    onTextChanged: root.editKey = text
 
                                     Text {
                                         anchors.verticalCenter: parent.verticalCenter

@@ -43,9 +43,7 @@ Singleton {
     property bool systemReady: false
     property bool keybindsInitialLoadComplete: false
 
-    property bool initialLoadComplete: themeReady && barReady && workspacesReady &&
-        overviewReady && notchReady && hyprlandReady && performanceReady &&
-        weatherReady && desktopReady && lockscreenReady && prefixReady && systemReady
+    property bool initialLoadComplete: themeReady && barReady && workspacesReady && overviewReady && notchReady && hyprlandReady && performanceReady && weatherReady && desktopReady && lockscreenReady && prefixReady && systemReady
 
     // Aliases for backward compatibility
     property alias loader: themeLoader
@@ -68,7 +66,9 @@ Singleton {
         path: root.configDir + "/theme.json"
         onLoaded: {
             if (!root.themeReady) {
-                validateModule("theme", themeRawLoader, ThemeDefaults.data, () => { root.themeReady = true; });
+                validateModule("theme", themeRawLoader, ThemeDefaults.data, () => {
+                    root.themeReady = true;
+                });
             }
         }
     }
@@ -434,7 +434,9 @@ Singleton {
         path: root.configDir + "/bar.json"
         onLoaded: {
             if (!root.barReady) {
-                validateModule("bar", barRawLoader, BarDefaults.data, () => { root.barReady = true; });
+                validateModule("bar", barRawLoader, BarDefaults.data, () => {
+                    root.barReady = true;
+                });
             }
         }
     }
@@ -489,7 +491,9 @@ Singleton {
         path: root.configDir + "/workspaces.json"
         onLoaded: {
             if (!root.workspacesReady) {
-                validateModule("workspaces", workspacesRawLoader, WorkspacesDefaults.data, () => { root.workspacesReady = true; });
+                validateModule("workspaces", workspacesRawLoader, WorkspacesDefaults.data, () => {
+                    root.workspacesReady = true;
+                });
             }
         }
     }
@@ -541,7 +545,9 @@ Singleton {
         path: root.configDir + "/overview.json"
         onLoaded: {
             if (!root.overviewReady) {
-                validateModule("overview", overviewRawLoader, OverviewDefaults.data, () => { root.overviewReady = true; });
+                validateModule("overview", overviewRawLoader, OverviewDefaults.data, () => {
+                    root.overviewReady = true;
+                });
             }
         }
     }
@@ -592,7 +598,9 @@ Singleton {
         path: root.configDir + "/notch.json"
         onLoaded: {
             if (!root.notchReady) {
-                validateModule("notch", notchRawLoader, NotchDefaults.data, () => { root.notchReady = true; });
+                validateModule("notch", notchRawLoader, NotchDefaults.data, () => {
+                    root.notchReady = true;
+                });
             }
         }
     }
@@ -640,7 +648,9 @@ Singleton {
         path: root.configDir + "/hyprland.json"
         onLoaded: {
             if (!root.hyprlandReady) {
-                validateModule("hyprland", hyprlandRawLoader, HyprlandDefaults.data, () => { root.hyprlandReady = true; });
+                validateModule("hyprland", hyprlandRawLoader, HyprlandDefaults.data, () => {
+                    root.hyprlandReady = true;
+                });
             }
         }
     }
@@ -727,7 +737,9 @@ Singleton {
         path: root.configDir + "/performance.json"
         onLoaded: {
             if (!root.performanceReady) {
-                validateModule("performance", performanceRawLoader, PerformanceDefaults.data, () => { root.performanceReady = true; });
+                validateModule("performance", performanceRawLoader, PerformanceDefaults.data, () => {
+                    root.performanceReady = true;
+                });
             }
         }
     }
@@ -777,7 +789,9 @@ Singleton {
         path: root.configDir + "/weather.json"
         onLoaded: {
             if (!root.weatherReady) {
-                validateModule("weather", weatherRawLoader, WeatherDefaults.data, () => { root.weatherReady = true; });
+                validateModule("weather", weatherRawLoader, WeatherDefaults.data, () => {
+                    root.weatherReady = true;
+                });
             }
         }
     }
@@ -826,7 +840,9 @@ Singleton {
         path: root.configDir + "/desktop.json"
         onLoaded: {
             if (!root.desktopReady) {
-                validateModule("desktop", desktopRawLoader, DesktopDefaults.data, () => { root.desktopReady = true; });
+                validateModule("desktop", desktopRawLoader, DesktopDefaults.data, () => {
+                    root.desktopReady = true;
+                });
             }
         }
     }
@@ -877,7 +893,9 @@ Singleton {
         path: root.configDir + "/lockscreen.json"
         onLoaded: {
             if (!root.lockscreenReady) {
-                validateModule("lockscreen", lockscreenRawLoader, LockscreenDefaults.data, () => { root.lockscreenReady = true; });
+                validateModule("lockscreen", lockscreenRawLoader, LockscreenDefaults.data, () => {
+                    root.lockscreenReady = true;
+                });
             }
         }
     }
@@ -925,7 +943,9 @@ Singleton {
         path: root.configDir + "/prefix.json"
         onLoaded: {
             if (!root.prefixReady) {
-                validateModule("prefix", prefixRawLoader, PrefixDefaults.data, () => { root.prefixReady = true; });
+                validateModule("prefix", prefixRawLoader, PrefixDefaults.data, () => {
+                    root.prefixReady = true;
+                });
             }
         }
     }
@@ -977,7 +997,9 @@ Singleton {
         path: root.configDir + "/system.json"
         onLoaded: {
             if (!root.systemReady) {
-                validateModule("system", systemRawLoader, SystemDefaults.data, () => { root.systemReady = true; });
+                validateModule("system", systemRawLoader, SystemDefaults.data, () => {
+                    root.systemReady = true;
+                });
             }
         }
     }
@@ -1057,7 +1079,8 @@ Singleton {
 
         // Normalize custom binds to ensure all have a 'name' property
         function normalizeCustomBinds() {
-            if (!adapter || !adapter.custom) return;
+            if (!adapter || !adapter.custom)
+                return;
 
             let needsUpdate = false;
             let normalizedBinds = [];
@@ -1168,6 +1191,7 @@ Singleton {
             property list<var> custom: [
                 // Window management
                 {
+                    "name": "Close Window",
                     "modifiers": ["SUPER"],
                     "key": "C",
                     "dispatcher": "killactive",
@@ -1177,6 +1201,7 @@ Singleton {
 
                 // Switch workspaces with SUPER + [0-9]
                 {
+                    "name": "Workspace 1",
                     "modifiers": ["SUPER"],
                     "key": "1",
                     "dispatcher": "workspace",
@@ -1184,6 +1209,7 @@ Singleton {
                     "enabled": true
                 },
                 {
+                    "name": "Workspace 2",
                     "modifiers": ["SUPER"],
                     "key": "2",
                     "dispatcher": "workspace",
@@ -1191,6 +1217,7 @@ Singleton {
                     "enabled": true
                 },
                 {
+                    "name": "Workspace 3",
                     "modifiers": ["SUPER"],
                     "key": "3",
                     "dispatcher": "workspace",
@@ -1198,6 +1225,7 @@ Singleton {
                     "enabled": true
                 },
                 {
+                    "name": "Workspace 4",
                     "modifiers": ["SUPER"],
                     "key": "4",
                     "dispatcher": "workspace",
@@ -1205,6 +1233,7 @@ Singleton {
                     "enabled": true
                 },
                 {
+                    "name": "Workspace 5",
                     "modifiers": ["SUPER"],
                     "key": "5",
                     "dispatcher": "workspace",
@@ -1212,6 +1241,7 @@ Singleton {
                     "enabled": true
                 },
                 {
+                    "name": "Workspace 6",
                     "modifiers": ["SUPER"],
                     "key": "6",
                     "dispatcher": "workspace",
@@ -1219,6 +1249,7 @@ Singleton {
                     "enabled": true
                 },
                 {
+                    "name": "Workspace 7",
                     "modifiers": ["SUPER"],
                     "key": "7",
                     "dispatcher": "workspace",
@@ -1226,6 +1257,7 @@ Singleton {
                     "enabled": true
                 },
                 {
+                    "name": "Workspace 8",
                     "modifiers": ["SUPER"],
                     "key": "8",
                     "dispatcher": "workspace",
@@ -1233,6 +1265,7 @@ Singleton {
                     "enabled": true
                 },
                 {
+                    "name": "Workspace 9",
                     "modifiers": ["SUPER"],
                     "key": "9",
                     "dispatcher": "workspace",
@@ -1240,6 +1273,7 @@ Singleton {
                     "enabled": true
                 },
                 {
+                    "name": "Workspace 10",
                     "modifiers": ["SUPER"],
                     "key": "0",
                     "dispatcher": "workspace",
@@ -1249,6 +1283,7 @@ Singleton {
 
                 // Move active window to workspace with SUPER + SHIFT + [0-9]
                 {
+                    "name": "Move to Workspace 1",
                     "modifiers": ["SUPER", "SHIFT"],
                     "key": "1",
                     "dispatcher": "movetoworkspace",
@@ -1256,6 +1291,7 @@ Singleton {
                     "enabled": true
                 },
                 {
+                    "name": "Move to Workspace 2",
                     "modifiers": ["SUPER", "SHIFT"],
                     "key": "2",
                     "dispatcher": "movetoworkspace",
@@ -1263,6 +1299,7 @@ Singleton {
                     "enabled": true
                 },
                 {
+                    "name": "Move to Workspace 3",
                     "modifiers": ["SUPER", "SHIFT"],
                     "key": "3",
                     "dispatcher": "movetoworkspace",
@@ -1270,6 +1307,7 @@ Singleton {
                     "enabled": true
                 },
                 {
+                    "name": "Move to Workspace 4",
                     "modifiers": ["SUPER", "SHIFT"],
                     "key": "4",
                     "dispatcher": "movetoworkspace",
@@ -1277,6 +1315,7 @@ Singleton {
                     "enabled": true
                 },
                 {
+                    "name": "Move to Workspace 5",
                     "modifiers": ["SUPER", "SHIFT"],
                     "key": "5",
                     "dispatcher": "movetoworkspace",
@@ -1284,6 +1323,7 @@ Singleton {
                     "enabled": true
                 },
                 {
+                    "name": "Move to Workspace 6",
                     "modifiers": ["SUPER", "SHIFT"],
                     "key": "6",
                     "dispatcher": "movetoworkspace",
@@ -1291,6 +1331,7 @@ Singleton {
                     "enabled": true
                 },
                 {
+                    "name": "Move to Workspace 7",
                     "modifiers": ["SUPER", "SHIFT"],
                     "key": "7",
                     "dispatcher": "movetoworkspace",
@@ -1298,6 +1339,7 @@ Singleton {
                     "enabled": true
                 },
                 {
+                    "name": "Move to Workspace 8",
                     "modifiers": ["SUPER", "SHIFT"],
                     "key": "8",
                     "dispatcher": "movetoworkspace",
@@ -1305,6 +1347,7 @@ Singleton {
                     "enabled": true
                 },
                 {
+                    "name": "Move to Workspace 9",
                     "modifiers": ["SUPER", "SHIFT"],
                     "key": "9",
                     "dispatcher": "movetoworkspace",
@@ -1312,6 +1355,7 @@ Singleton {
                     "enabled": true
                 },
                 {
+                    "name": "Move to Workspace 10",
                     "modifiers": ["SUPER", "SHIFT"],
                     "key": "0",
                     "dispatcher": "movetoworkspace",
@@ -1321,6 +1365,7 @@ Singleton {
 
                 // Scroll through workspaces
                 {
+                    "name": "Previous Occupied Workspace (Scroll)",
                     "modifiers": ["SUPER"],
                     "key": "mouse_down",
                     "dispatcher": "workspace",
@@ -1328,6 +1373,7 @@ Singleton {
                     "enabled": true
                 },
                 {
+                    "name": "Previous Occupied Workspace",
                     "modifiers": ["SUPER", "SHIFT"],
                     "key": "Z",
                     "dispatcher": "workspace",
@@ -1335,6 +1381,7 @@ Singleton {
                     "enabled": true
                 },
                 {
+                    "name": "Next Occupied Workspace (Scroll)",
                     "modifiers": ["SUPER"],
                     "key": "mouse_up",
                     "dispatcher": "workspace",
@@ -1342,6 +1389,7 @@ Singleton {
                     "enabled": true
                 },
                 {
+                    "name": "Next Occupied Workspace",
                     "modifiers": ["SUPER", "SHIFT"],
                     "key": "X",
                     "dispatcher": "workspace",
@@ -1351,6 +1399,7 @@ Singleton {
 
                 // Next/previous workspace with Z and X
                 {
+                    "name": "Previous Workspace",
                     "modifiers": ["SUPER"],
                     "key": "Z",
                     "dispatcher": "workspace",
@@ -1358,6 +1407,7 @@ Singleton {
                     "enabled": true
                 },
                 {
+                    "name": "Next Workspace",
                     "modifiers": ["SUPER"],
                     "key": "X",
                     "dispatcher": "workspace",
@@ -1367,6 +1417,7 @@ Singleton {
 
                 // Move/resize windows with mouse
                 {
+                    "name": "Drag Window",
                     "modifiers": ["SUPER"],
                     "key": "mouse:272",
                     "dispatcher": "movewindow",
@@ -1375,6 +1426,7 @@ Singleton {
                     "enabled": true
                 },
                 {
+                    "name": "Drag Resize Window",
                     "modifiers": ["SUPER"],
                     "key": "mouse:273",
                     "dispatcher": "resizewindow",
@@ -1385,6 +1437,7 @@ Singleton {
 
                 // Media player controls
                 {
+                    "name": "Play/Pause",
                     "modifiers": [],
                     "key": "XF86AudioPlay",
                     "dispatcher": "exec",
@@ -1392,6 +1445,7 @@ Singleton {
                     "enabled": true
                 },
                 {
+                    "name": "Previous Track",
                     "modifiers": [],
                     "key": "XF86AudioPrev",
                     "dispatcher": "exec",
@@ -1399,6 +1453,7 @@ Singleton {
                     "enabled": true
                 },
                 {
+                    "name": "Next Track",
                     "modifiers": [],
                     "key": "XF86AudioNext",
                     "dispatcher": "exec",
@@ -1406,6 +1461,7 @@ Singleton {
                     "enabled": true
                 },
                 {
+                    "name": "Media Play/Pause",
                     "modifiers": [],
                     "key": "XF86AudioMedia",
                     "dispatcher": "exec",
@@ -1414,6 +1470,7 @@ Singleton {
                     "enabled": true
                 },
                 {
+                    "name": "Stop Playback",
                     "modifiers": [],
                     "key": "XF86AudioStop",
                     "dispatcher": "exec",
@@ -1424,6 +1481,7 @@ Singleton {
 
                 // Volume controls
                 {
+                    "name": "Volume Up",
                     "modifiers": [],
                     "key": "XF86AudioRaiseVolume",
                     "dispatcher": "exec",
@@ -1432,6 +1490,7 @@ Singleton {
                     "enabled": true
                 },
                 {
+                    "name": "Volume Down",
                     "modifiers": [],
                     "key": "XF86AudioLowerVolume",
                     "dispatcher": "exec",
@@ -1440,6 +1499,7 @@ Singleton {
                     "enabled": true
                 },
                 {
+                    "name": "Mute Audio",
                     "modifiers": [],
                     "key": "XF86AudioMute",
                     "dispatcher": "exec",
@@ -1450,6 +1510,7 @@ Singleton {
 
                 // Brightness controls
                 {
+                    "name": "Brightness Up",
                     "modifiers": [],
                     "key": "XF86MonBrightnessUp",
                     "dispatcher": "exec",
@@ -1458,6 +1519,7 @@ Singleton {
                     "enabled": true
                 },
                 {
+                    "name": "Brightness Down",
                     "modifiers": [],
                     "key": "XF86MonBrightnessDown",
                     "dispatcher": "exec",
@@ -1468,6 +1530,7 @@ Singleton {
 
                 // Calculator key
                 {
+                    "name": "Calculator",
                     "modifiers": [],
                     "key": "XF86Calculator",
                     "dispatcher": "exec",
@@ -1477,6 +1540,7 @@ Singleton {
 
                 // Special workspaces
                 {
+                    "name": "Toggle Special Workspace",
                     "modifiers": ["SUPER", "SHIFT"],
                     "key": "V",
                     "dispatcher": "togglespecialworkspace",
@@ -1484,6 +1548,7 @@ Singleton {
                     "enabled": true
                 },
                 {
+                    "name": "Move to Special Workspace",
                     "modifiers": ["SUPER", "ALT"],
                     "key": "V",
                     "dispatcher": "movetoworkspace",
@@ -1493,6 +1558,7 @@ Singleton {
 
                 // Lid switch events
                 {
+                    "name": "Lock on Lid Close",
                     "modifiers": [],
                     "key": "switch:Lid Switch",
                     "dispatcher": "exec",
@@ -1501,6 +1567,7 @@ Singleton {
                     "enabled": true
                 },
                 {
+                    "name": "Display Off on Lid Close",
                     "modifiers": [],
                     "key": "switch:on:Lid Switch",
                     "dispatcher": "exec",
@@ -1509,6 +1576,7 @@ Singleton {
                     "enabled": true
                 },
                 {
+                    "name": "Display On on Lid Open",
                     "modifiers": [],
                     "key": "switch:off:Lid Switch",
                     "dispatcher": "exec",
