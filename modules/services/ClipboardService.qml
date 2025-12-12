@@ -69,7 +69,6 @@ QtObject {
         
         onExited: function(code) {
             if (code === 0) {
-                console.log("ClipboardService: Database initialized");
                 root._initialized = true;
                 ensureBinaryDataDir();
                 Qt.callLater(root.list);

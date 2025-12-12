@@ -23,10 +23,8 @@ Item {
 
     Keys.onEscapePressed: {
         if (root.deleteMode) {
-            console.log("DEBUG: Escape pressed in delete mode - canceling");
             root.cancelDeleteMode();
         } else if (root.aliasMode) {
-            console.log("DEBUG: Escape pressed in alias mode - canceling");
             root.cancelAliasMode();
         } else {
             // Cerrar el dashboard
@@ -289,17 +287,14 @@ Item {
 
     function cancelDeleteModeFromExternal() {
         if (deleteMode) {
-            console.log("DEBUG: Canceling delete mode from external source (tab change)");
             cancelDeleteMode();
         }
         if (aliasMode) {
-            console.log("DEBUG: Canceling alias mode from external source (tab change)");
             cancelAliasMode();
         }
     }
 
     function enterDeleteMode(itemId) {
-        console.log("DEBUG: Entering delete mode for item:", itemId);
         originalSelectedIndex = selectedIndex;
         deleteMode = true;
         itemToDelete = itemId;
@@ -308,7 +303,6 @@ Item {
     }
 
     function cancelDeleteMode() {
-        console.log("DEBUG: Canceling delete mode");
         deleteMode = false;
         itemToDelete = "";
         deleteButtonIndex = 0;
@@ -320,7 +314,6 @@ Item {
     }
 
     function confirmDeleteItem() {
-        console.log("DEBUG: Confirming delete for item:", itemToDelete);
         ClipboardService.deleteItem(itemToDelete);
 
         deleteMode = false;
@@ -335,7 +328,6 @@ Item {
     }
 
     function enterAliasMode(itemId) {
-        console.log("DEBUG: Entering alias mode for item:", itemId);
         aliasSelectedIndex = selectedIndex;
         aliasMode = true;
         itemToAlias = itemId;
@@ -353,7 +345,6 @@ Item {
     }
 
     function cancelAliasMode() {
-        console.log("DEBUG: Canceling alias mode");
         aliasMode = false;
         itemToAlias = "";
         newAlias = "";
@@ -366,8 +357,6 @@ Item {
     }
 
     function confirmAliasItem() {
-        console.log("DEBUG: Confirming alias for item:", itemToAlias, "new alias:", newAlias);
-
         // Find the original preview to compare
         var originalPreview = "";
         for (var i = 0; i < allItems.length; i++) {
@@ -532,7 +521,6 @@ Item {
     signal requestOpenItem(string itemId, var items, string currentContent, var filePathGetter, var urlChecker)
 
     function openItem(itemId) {
-        console.log("DEBUG: ClipboardTab.openItem called for itemId:", itemId);
         requestOpenItem(itemId, root.allItems, root.safeCurrentContent, getFilePathFromUri, ClipboardUtils.isUrl);
     }
 
@@ -544,7 +532,6 @@ Item {
 
         onClicked: {
             if (root.deleteMode) {
-                console.log("DEBUG: Clicked on empty space globally - canceling delete mode");
                 root.cancelDeleteMode();
             }
         }
@@ -658,7 +645,6 @@ Item {
 
                     onAccepted: {
                         if (root.deleteMode) {
-                            console.log("DEBUG: Enter in delete mode - canceling");
                             root.cancelDeleteMode();
                         } else if (root.expandedItemIndex >= 0) {
                             // Execute selected option when menu is expanded
@@ -696,13 +682,10 @@ Item {
                         } else {
                             if (root.selectedIndex >= 0 && root.selectedIndex < root.allItems.length) {
                                 let selectedItem = root.allItems[root.selectedIndex];
-                                console.log("DEBUG: Selected item:", selectedItem);
                                 if (selectedItem && !root.deleteMode) {
                                     root.copyToClipboard(selectedItem.id);
                                     Visibilities.setActiveModule("");
                                 }
-                            } else {
-                                console.log("DEBUG: No action taken - selectedIndex:", root.selectedIndex, "count:", root.allItems.length);
                             }
                         }
                     }
@@ -1181,7 +1164,6 @@ Item {
                             onClicked: mouse => {
                                 if (mouse.button === Qt.LeftButton && !isInDeleteMode) {
                                     if (root.deleteMode && modelData.id !== root.itemToDelete) {
-                                        console.log("DEBUG: Clicking item outside delete mode - canceling");
                                         root.cancelDeleteMode();
                                         return;
                                     }
@@ -1192,7 +1174,6 @@ Item {
                                     }
                                 } else if (mouse.button === Qt.RightButton) {
                                     if (root.deleteMode) {
-                                        console.log("DEBUG: Right click while in delete mode - canceling");
                                         root.cancelDeleteMode();
                                         return;
                                     }
@@ -2277,12 +2258,10 @@ Item {
 
                     onClicked: mouse => {
                         if (root.deleteMode) {
-                            console.log("DEBUG: Clicked on empty space in list - canceling delete mode");
                             root.cancelDeleteMode();
                             mouse.accepted = true;
                         } else if (root.expandedItemIndex >= 0) {
                             if (!isClickInsideExpandedItem(mouse.y)) {
-                                console.log("DEBUG: Clicked outside expanded item - closing options");
                                 root.expandedItemIndex = -1;
                                 root.selectedOptionIndex = 0;
                                 root.keyboardNavigation = false;
@@ -3466,15 +3445,12 @@ Item {
                 event.accepted = true;
             } else if (event.key === Qt.Key_Return || event.key === Qt.Key_Space) {
                 if (root.deleteButtonIndex === 0) {
-                    console.log("DEBUG: Enter/Space pressed - canceling delete");
                     root.cancelDeleteMode();
                 } else {
-                    console.log("DEBUG: Enter/Space pressed - confirming delete");
                     root.confirmDeleteItem();
                 }
                 event.accepted = true;
             } else if (event.key === Qt.Key_Escape) {
-                console.log("DEBUG: Escape pressed in delete mode - canceling without closing notch");
                 root.cancelDeleteMode();
                 event.accepted = true;
             }
@@ -3487,31 +3463,15 @@ Item {
                 event.accepted = true;
             } else if (event.key === Qt.Key_Return || event.key === Qt.Key_Space) {
                 if (root.aliasButtonIndex === 0) {
-                    console.log("DEBUG: Enter/Space pressed - canceling alias");
                     root.cancelAliasMode();
                 } else {
-                    console.log("DEBUG: Enter/Space pressed - confirming alias");
                     root.confirmAliasItem();
                 }
                 event.accepted = true;
             } else if (event.key === Qt.Key_Escape) {
-                console.log("DEBUG: Escape pressed in alias mode - canceling without closing notch");
                 root.cancelAliasMode();
                 event.accepted = true;
             }
-        }
-    }
-
-    // Monitor cambios en deleteMode y aliasMode
-    onDeleteModeChanged: {
-        if (!deleteMode) {
-            console.log("DEBUG: Delete mode ended");
-        }
-    }
-
-    onAliasModeChanged: {
-        if (!aliasMode) {
-            console.log("DEBUG: Alias mode ended");
         }
     }
 
