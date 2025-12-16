@@ -3249,8 +3249,9 @@ Item {
                             id: mdEditor
                             text: currentNoteContent
                             textFormat: TextEdit.PlainText
-                            font.family: "monospace"
-                            font.pixelSize: Config.theme.fontSize
+                            font.family: Config.theme.monoFont
+                            font.pixelSize: Config.theme.monoFontSize
+                            font.weight: Font.Medium
                             color: Colors.overSurface
                             wrapMode: TextEdit.Wrap
                             selectByMouse: true

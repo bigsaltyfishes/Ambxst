@@ -3,6 +3,7 @@
 
 with pkgs; [
   roboto
+  roboto-mono
   barlow
   terminus_font
   terminus_font_ttf
@@ -11,7 +12,6 @@ with pkgs; [
 
   # Nerd Fonts
   nerd-fonts.symbols-only
-  nerd-fonts.iosevka
 
   # Noto family
   noto-fonts

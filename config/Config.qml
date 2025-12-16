@@ -109,6 +109,8 @@ Singleton {
             property int roundness: 16
             property string font: "Roboto Condensed"
             property int fontSize: 14
+            property string monoFont: "Iosevka Nerd Font Mono"
+            property int monoFontSize: 14
             property bool tintIcons: false
             property bool enableCorners: true
             property int animDuration: 300

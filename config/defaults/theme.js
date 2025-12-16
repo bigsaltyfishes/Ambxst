@@ -6,6 +6,8 @@ var data = {
     "roundness": 16,
     "font": "Roboto Condensed",
     "fontSize": 14,
+    "monoFont": "Iosevka Nerd Font Mono",
+    "monoFontSize": 14,
     "tintIcons": false,
     "enableCorners": true,
     "animDuration": 300,
