@@ -50,11 +50,9 @@ Button {
         Loader {
             active: root.isSeparator
             anchors.centerIn: parent
-            sourceComponent: Rectangle {
-                width: 2
-                height: root.iconSize * 0.6
-                radius: 1
-                color: Qt.rgba(Colors.overBackground.r, Colors.overBackground.g, Colors.overBackground.b, 0.3)
+            sourceComponent: Separator {
+                vert: true
+                implicitHeight: root.iconSize * 0.6
             }
         }
 

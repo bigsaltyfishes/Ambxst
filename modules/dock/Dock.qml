@@ -195,11 +195,9 @@ Scope {
                             active: Config.dock?.showPinButton ?? true
                             Layout.alignment: Qt.AlignVCenter
                             
-                            sourceComponent: Rectangle {
-                                width: 2
-                                height: (Config.dock?.iconSize ?? 40) * 0.6
-                                radius: 1
-                                color: Qt.rgba(Colors.overBackground.r, Colors.overBackground.g, Colors.overBackground.b, 0.3)
+                            sourceComponent: Separator {
+                                vert: true
+                                implicitHeight: (Config.dock?.iconSize ?? 40) * 0.6
                             }
                         }
 
@@ -219,11 +217,9 @@ Scope {
                             active: Config.dock?.showOverviewButton ?? true
                             Layout.alignment: Qt.AlignVCenter
                             
-                            sourceComponent: Rectangle {
-                                width: 2
-                                height: (Config.dock?.iconSize ?? 40) * 0.6
-                                radius: 1
-                                color: Qt.rgba(Colors.overBackground.r, Colors.overBackground.g, Colors.overBackground.b, 0.3)
+                            sourceComponent: Separator {
+                                vert: true
+                                implicitHeight: (Config.dock?.iconSize ?? 40) * 0.6
                             }
                         }
 
