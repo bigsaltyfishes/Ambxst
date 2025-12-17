@@ -641,6 +641,7 @@ Singleton {
 
         adapter: JsonAdapter {
             property string theme: "default"
+            property int hoverRegionHeight: 8
         }
     }
 
