@@ -43,8 +43,52 @@ Singleton {
         }
     }
 
+    // Internal storage for app entries - prevents memory leaks
+    property var _appCache: ({})
+    property var _previousKeys: []
+
     // Main list of apps combining pinned and running apps
-    property list<var> apps: {
+    property list<var> apps: []
+
+    // Debounce timer to prevent rapid recalculations
+    Timer {
+        id: updateTimer
+        interval: 50
+        repeat: false
+        onTriggered: root._updateApps()
+    }
+
+    // Trigger update when toplevels change
+    Connections {
+        target: ToplevelManager.toplevels
+        function onCountChanged() {
+            updateTimer.restart();
+        }
+        function onObjectInsertedPost() {
+            updateTimer.restart();
+        }
+        function onObjectRemovedPost() {
+            updateTimer.restart();
+        }
+    }
+
+    // Also update on config changes
+    Connections {
+        target: Config.dock ?? null
+        function onPinnedAppsChanged() {
+            updateTimer.restart();
+        }
+        function onIgnoredAppRegexesChanged() {
+            updateTimer.restart();
+        }
+    }
+
+    // Initial update
+    Component.onCompleted: {
+        _updateApps();
+    }
+
+    function _updateApps() {
         var map = new Map();
 
         // Get config values
@@ -66,7 +110,9 @@ Singleton {
 
         // Collect running apps that are not pinned
         var unpinnedRunningApps = [];
-        for (const toplevel of ToplevelManager.toplevels.values) {
+        const toplevels = ToplevelManager.toplevels.values;
+        for (let i = 0; i < toplevels.length; i++) {
+            const toplevel = toplevels[i];
             // Skip ignored apps
             if (ignoredRegexes.some(re => re.test(toplevel.appId))) continue;
             
@@ -78,14 +124,15 @@ Singleton {
                 map.get(key).toplevels.push(toplevel);
             } else {
                 // Track as unpinned running app
-                if (!unpinnedRunningApps.find(app => app.key === key)) {
+                const existing = unpinnedRunningApps.find(app => app.key === key);
+                if (!existing) {
                     unpinnedRunningApps.push({
                         key: key,
                         appId: toplevel.appId,
                         toplevels: [toplevel]
                     });
                 } else {
-                    unpinnedRunningApps.find(app => app.key === key).toplevels.push(toplevel);
+                    existing.toplevels.push(toplevel);
                 }
             }
         }
@@ -108,24 +155,47 @@ Singleton {
             });
         }
 
-        // Convert to list of TaskbarAppEntry objects
-        var values = [];
-        for (const [key, value] of map) {
-            values.push(appEntryComp.createObject(null, { 
-                appId: value.appId, 
-                toplevels: value.toplevels, 
-                pinned: value.pinned 
-            }));
+        // Build new keys list
+        var newKeys = Array.from(map.keys());
+
+        // Destroy entries that are no longer needed
+        for (const oldKey of _previousKeys) {
+            if (!map.has(oldKey) && _appCache[oldKey]) {
+                _appCache[oldKey].destroy();
+                delete _appCache[oldKey];
+            }
         }
 
-        return values;
+        // Create or update entries
+        var values = [];
+        for (const [key, value] of map) {
+            if (_appCache[key]) {
+                // Update existing entry
+                _appCache[key].toplevels = value.toplevels;
+                _appCache[key].pinned = value.pinned;
+                values.push(_appCache[key]);
+            } else {
+                // Create new entry
+                const entry = appEntryComp.createObject(root, { 
+                    appId: value.appId, 
+                    toplevels: value.toplevels, 
+                    pinned: value.pinned 
+                });
+                _appCache[key] = entry;
+                values.push(entry);
+            }
+        }
+
+        _previousKeys = newKeys;
+        apps = values;
     }
 
     // Component for TaskbarAppEntry
     component TaskbarAppEntry: QtObject {
         required property string appId
-        required property list<var> toplevels
-        required property bool pinned
+        property var toplevels: []
+        property int toplevelCount: toplevels.length
+        property bool pinned
     }
     
     Component {

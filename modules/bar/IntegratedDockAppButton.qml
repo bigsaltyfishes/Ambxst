@@ -23,11 +23,23 @@ Button {
     readonly property bool isSeparator: appToplevel.appId === "SEPARATOR"
     readonly property var desktopEntry: isSeparator ? null : DesktopEntries.heuristicLookup(appToplevel.appId)
     readonly property bool appIsActive: !isSeparator && appToplevel.toplevels.some(t => t.activated === true)
-    readonly property bool appIsRunning: !isSeparator && appToplevel.toplevels.length > 0
+    readonly property bool appIsRunning: !isSeparator && appToplevel.toplevelCount > 0
+
+    readonly property bool showIndicators: !isSeparator && (Config.dock?.showRunningIndicators ?? true) && appIsRunning
+    readonly property int instanceCount: isSeparator ? 0 : appToplevel.toplevelCount
+    readonly property real indicatorDotSize: 4
 
     enabled: !isSeparator
-    implicitWidth: isSeparator ? (isVertical ? iconSize : 2) : iconSize + 8
-    implicitHeight: isSeparator ? (isVertical ? 2 : iconSize) : iconSize + 8
+    implicitWidth: isSeparator 
+        ? (isVertical ? iconSize : 2) 
+        : (isVertical 
+            ? (showIndicators ? iconSize + 12 : iconSize + 8)
+            : iconSize + 8)
+    implicitHeight: isSeparator 
+        ? (isVertical ? 2 : iconSize) 
+        : (isVertical 
+            ? iconSize + 8
+            : (showIndicators ? iconSize + 12 : iconSize + 8))
 
     padding: 0
     topPadding: 0
@@ -69,46 +81,115 @@ Button {
             }
         }
 
-        // App icon
+        // App icon and indicators
         Loader {
             active: !root.isSeparator
-            anchors.centerIn: parent
+            anchors.fill: parent
             sourceComponent: Item {
-                width: root.iconSize
-                height: root.iconSize
+                anchors.fill: parent
 
-                readonly property string iconName: {
-                    if (root.desktopEntry && root.desktopEntry.icon) {
-                        return root.desktopEntry.icon;
+                // App icon container
+                Item {
+                    id: appIconContainer
+                    anchors.centerIn: parent
+                    anchors.verticalCenterOffset: !root.isVertical && root.showIndicators ? -2 : 0
+                    anchors.horizontalCenterOffset: root.isVertical && root.showIndicators ? 2 : 0
+                    width: root.iconSize
+                    height: root.iconSize
+
+                    readonly property string iconName: {
+                        if (root.desktopEntry && root.desktopEntry.icon) {
+                            return root.desktopEntry.icon;
+                        }
+                        return AppSearch.guessIcon(root.appToplevel.appId);
                     }
-                    return AppSearch.guessIcon(root.appToplevel.appId);
+
+                    Image {
+                        id: appIcon
+                        anchors.fill: parent
+                        source: "image://icon/" + appIconContainer.iconName
+                        sourceSize.width: root.iconSize * 2
+                        sourceSize.height: root.iconSize * 2
+                        fillMode: Image.PreserveAspectFit
+                        visible: !(Config.dock?.monochromeIcons ?? false)
+                    }
+
+                    // Monochrome version with effect
+                    Image {
+                        id: appIconMono
+                        anchors.fill: parent
+                        source: "image://icon/" + appIconContainer.iconName
+                        sourceSize.width: root.iconSize * 2
+                        sourceSize.height: root.iconSize * 2
+                        fillMode: Image.PreserveAspectFit
+                        visible: Config.dock?.monochromeIcons ?? false
+                        layer.enabled: true
+                        layer.effect: MultiEffect {
+                            saturation: 0
+                            brightness: 0.1
+                            colorization: 0.8
+                            colorizationColor: Colors.primary
+                        }
+                    }
+
+                    Behavior on anchors.verticalCenterOffset {
+                        enabled: Config.animDuration > 0
+                        NumberAnimation { duration: Config.animDuration; easing.type: Easing.OutQuart }
+                    }
+
+                    Behavior on anchors.horizontalCenterOffset {
+                        enabled: Config.animDuration > 0
+                        NumberAnimation { duration: Config.animDuration; easing.type: Easing.OutQuart }
+                    }
                 }
 
-                Image {
-                    id: appIcon
-                    anchors.fill: parent
-                    source: "image://icon/" + parent.iconName
-                    sourceSize.width: root.iconSize * 2
-                    sourceSize.height: root.iconSize * 2
-                    fillMode: Image.PreserveAspectFit
-                    visible: !(Config.dock?.monochromeIcons ?? false)
+                // Running indicators - horizontal (for horizontal bar)
+                Row {
+                    anchors.bottom: parent.bottom
+                    anchors.bottomMargin: 1
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    spacing: 2
+                    visible: root.showIndicators && !root.isVertical
+
+                    Repeater {
+                        model: Math.min(root.instanceCount, 3)
+                        delegate: Rectangle {
+                            required property int index
+                            width: root.instanceCount <= 3 ? 6 : root.indicatorDotSize
+                            height: root.indicatorDotSize
+                            radius: height / 2
+                            color: root.appIsActive ? Colors.primary : Qt.rgba(Colors.overBackground.r, Colors.overBackground.g, Colors.overBackground.b, 0.4)
+
+                            Behavior on color {
+                                enabled: Config.animDuration > 0
+                                ColorAnimation { duration: Config.animDuration / 2 }
+                            }
+                        }
+                    }
                 }
 
-                // Monochrome version with effect
-                Image {
-                    id: appIconMono
-                    anchors.fill: parent
-                    source: "image://icon/" + parent.iconName
-                    sourceSize.width: root.iconSize * 2
-                    sourceSize.height: root.iconSize * 2
-                    fillMode: Image.PreserveAspectFit
-                    visible: Config.dock?.monochromeIcons ?? false
-                    layer.enabled: true
-                    layer.effect: MultiEffect {
-                        saturation: 0
-                        brightness: 0.1
-                        colorization: 0.8
-                        colorizationColor: Colors.primary
+                // Running indicators - vertical (for vertical bar)
+                Column {
+                    anchors.left: parent.left
+                    anchors.leftMargin: 1
+                    anchors.verticalCenter: parent.verticalCenter
+                    spacing: 2
+                    visible: root.showIndicators && root.isVertical
+
+                    Repeater {
+                        model: Math.min(root.instanceCount, 3)
+                        delegate: Rectangle {
+                            required property int index
+                            width: root.indicatorDotSize
+                            height: root.instanceCount <= 3 ? 6 : root.indicatorDotSize
+                            radius: width / 2
+                            color: root.appIsActive ? Colors.primary : Qt.rgba(Colors.overBackground.r, Colors.overBackground.g, Colors.overBackground.b, 0.4)
+
+                            Behavior on color {
+                                enabled: Config.animDuration > 0
+                                ColorAnimation { duration: Config.animDuration / 2 }
+                            }
+                        }
                     }
                 }
             }
@@ -119,7 +200,7 @@ Button {
     onClicked: {
         if (isSeparator) return;
 
-        if (appToplevel.toplevels.length === 0) {
+        if (appToplevel.toplevelCount === 0) {
             // Launch the app
             if (desktopEntry) {
                 desktopEntry.execute();
@@ -128,7 +209,7 @@ Button {
         }
 
         // Cycle through running windows
-        lastFocused = (lastFocused + 1) % appToplevel.toplevels.length;
+        lastFocused = (lastFocused + 1) % appToplevel.toplevelCount;
         appToplevel.toplevels[lastFocused].activate();
     }
 
@@ -156,5 +237,15 @@ Button {
     StyledToolTip {
         show: root.hovered && !root.isSeparator
         tooltipText: root.desktopEntry?.name ?? root.appToplevel.appId
+    }
+
+    Behavior on implicitWidth {
+        enabled: Config.animDuration > 0 && root.isVertical
+        NumberAnimation { duration: Config.animDuration; easing.type: Easing.OutQuart }
+    }
+
+    Behavior on implicitHeight {
+        enabled: Config.animDuration > 0 && !root.isVertical
+        NumberAnimation { duration: Config.animDuration; easing.type: Easing.OutQuart }
     }
 }

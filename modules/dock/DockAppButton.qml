@@ -30,9 +30,10 @@ Button {
     readonly property bool isSeparator: appToplevel.appId === "SEPARATOR"
     readonly property var desktopEntry: isSeparator ? null : DesktopEntries.heuristicLookup(appToplevel.appId)
     readonly property bool appIsActive: !isSeparator && appToplevel.toplevels.some(t => t.activated === true)
-    readonly property bool appIsRunning: !isSeparator && appToplevel.toplevels.length > 0
+    readonly property bool appIsRunning: !isSeparator && appToplevel.toplevelCount > 0
 
     readonly property bool showIndicators: !isSeparator && (Config.dock?.showRunningIndicators ?? true) && appIsRunning
+    readonly property int instanceCount: isSeparator ? 0 : appToplevel.toplevelCount
 
     enabled: !isSeparator
     implicitWidth: isSeparator 
@@ -157,10 +158,10 @@ Button {
                     visible: root.showIndicators && !root.isVertical
 
                     Repeater {
-                        model: Math.min(root.appToplevel.toplevels.length, 3)
+                        model: Math.min(root.instanceCount, 3)
                         delegate: Rectangle {
                             required property int index
-                            width: root.appToplevel.toplevels.length <= 3 ? root.countDotWidth : root.countDotHeight
+                            width: root.instanceCount <= 3 ? root.countDotWidth : root.countDotHeight
                             height: root.countDotHeight
                             radius: height / 2
                             color: root.appIsActive ? Colors.primary : Qt.rgba(Colors.overBackground.r, Colors.overBackground.g, Colors.overBackground.b, 0.4)
@@ -185,11 +186,11 @@ Button {
                     visible: root.showIndicators && root.isVertical
 
                     Repeater {
-                        model: Math.min(root.appToplevel.toplevels.length, 3)
+                        model: Math.min(root.instanceCount, 3)
                         delegate: Rectangle {
                             required property int index
                             width: root.countDotHeight
-                            height: root.appToplevel.toplevels.length <= 3 ? root.countDotWidth : root.countDotHeight
+                            height: root.instanceCount <= 3 ? root.countDotWidth : root.countDotHeight
                             radius: width / 2
                             color: root.appIsActive ? Colors.primary : Qt.rgba(Colors.overBackground.r, Colors.overBackground.g, Colors.overBackground.b, 0.4)
                             
@@ -218,7 +219,7 @@ Button {
     onClicked: {
         if (isSeparator) return;
         
-        if (appToplevel.toplevels.length === 0) {
+        if (appToplevel.toplevelCount === 0) {
             // Launch the app
             if (desktopEntry) {
                 desktopEntry.execute();
@@ -227,7 +228,7 @@ Button {
         }
         
         // Cycle through running windows
-        lastFocused = (lastFocused + 1) % appToplevel.toplevels.length;
+        lastFocused = (lastFocused + 1) % appToplevel.toplevelCount;
         appToplevel.toplevels[lastFocused].activate();
     }
 

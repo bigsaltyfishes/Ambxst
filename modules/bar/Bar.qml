@@ -28,11 +28,16 @@ PanelWindow {
     // Integrated dock configuration
     readonly property bool integratedDockEnabled: (Config.dock?.enabled ?? false) && (Config.dock?.theme ?? "default") === "integrated"
     // Map dock position for integrated: "bottom"/"top" should be "center" for integrated dock
+    // In vertical orientation, "center" falls back to "left" (start) to avoid layout issues
     readonly property string integratedDockPosition: {
         const pos = Config.dock?.position ?? "center";
         // For integrated, "bottom" and "top" don't make sense - map to "center"
-        if (pos === "bottom" || pos === "top") return "center";
-        return pos;
+        let mappedPos = (pos === "bottom" || pos === "top") ? "center" : pos;
+        // In vertical orientation, center is not supported - fallback to "left" (start)
+        if (panel.orientation === "vertical" && mappedPos === "center") {
+            return "left";
+        }
+        return mappedPos;
     }
 
     anchors {
@@ -392,16 +397,6 @@ PanelWindow {
                         }
                     }
                 }
-            }
-
-            // Integrated dock - center position
-            IntegratedDock {
-                id: integratedDockCenterVert
-                bar: panel
-                orientation: "vertical"
-                visible: panel.integratedDockEnabled && panel.integratedDockPosition === "center"
-                layer.enabled: Config.showBackground
-                layer.effect: Shadow {}
             }
 
             ColumnLayout {

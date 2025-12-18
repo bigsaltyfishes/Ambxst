@@ -666,9 +666,9 @@ Item {
                             options: {
                                 const isIntegrated = (Config.dock.theme ?? "default") === "integrated";
                                 return [
-                                    { label: "Left", value: "left", icon: isIntegrated ? Icons.alignLeft : Icons.arrowLeft },
+                                    { label: isIntegrated ? "Start" : "Left", value: "left", icon: isIntegrated ? Icons.alignLeft : Icons.arrowLeft },
                                     { label: isIntegrated ? "Center" : "Bottom", value: "bottom", icon: isIntegrated ? Icons.alignCenter : Icons.arrowDown },
-                                    { label: "Right", value: "right", icon: isIntegrated ? Icons.alignRight : Icons.arrowRight }
+                                    { label: isIntegrated ? "End" : "Right", value: "right", icon: isIntegrated ? Icons.alignRight : Icons.arrowRight }
                                 ];
                             }
                             value: Config.dock.position ?? "bottom"
