@@ -382,7 +382,6 @@ Item {
                             value: Config.bar.position ?? "top"
                             onValueSelected: newValue => {
                                 Config.bar.position = newValue;
-                                Config.saveConfig("bar");
                             }
                         }
 
@@ -392,7 +391,6 @@ Item {
                             placeholder: "Symbol or path to icon..."
                             onValueEdited: newValue => {
                                 Config.bar.launcherIcon = newValue;
-                                Config.saveConfig("bar");
                             }
                         }
 
@@ -401,7 +399,6 @@ Item {
                             checked: Config.bar.launcherIconTint ?? true
                             onToggled: value => {
                                 Config.bar.launcherIconTint = value;
-                                Config.saveConfig("bar");
                             }
                         }
 
@@ -410,7 +407,6 @@ Item {
                             checked: Config.bar.launcherIconFullTint ?? true
                             onToggled: value => {
                                 Config.bar.launcherIconFullTint = value;
-                                Config.saveConfig("bar");
                             }
                         }
 
@@ -422,7 +418,6 @@ Item {
                             suffix: "px"
                             onValueEdited: newValue => {
                                 Config.bar.launcherIconSize = newValue;
-                                Config.saveConfig("bar");
                             }
                         }
 
@@ -431,7 +426,6 @@ Item {
                             checked: Config.bar.enableFirefoxPlayer ?? false
                             onToggled: value => {
                                 Config.bar.enableFirefoxPlayer = value;
-                                Config.saveConfig("bar");
                             }
                         }
                     }
@@ -463,7 +457,6 @@ Item {
                             value: Config.notch.theme ?? "default"
                             onValueSelected: newValue => {
                                 Config.notch.theme = newValue;
-                                Config.saveConfig("notch");
                             }
                         }
                     }
@@ -493,7 +486,6 @@ Item {
                             maxValue: 20
                             onValueEdited: newValue => {
                                 Config.workspaces.shown = newValue;
-                                Config.saveConfig("workspaces");
                             }
                         }
 
@@ -502,7 +494,6 @@ Item {
                             checked: Config.workspaces.showAppIcons ?? true
                             onToggled: value => {
                                 Config.workspaces.showAppIcons = value;
-                                Config.saveConfig("workspaces");
                             }
                         }
 
@@ -511,7 +502,6 @@ Item {
                             checked: Config.workspaces.alwaysShowNumbers ?? false
                             onToggled: value => {
                                 Config.workspaces.alwaysShowNumbers = value;
-                                Config.saveConfig("workspaces");
                             }
                         }
 
@@ -520,7 +510,6 @@ Item {
                             checked: Config.workspaces.showNumbers ?? false
                             onToggled: value => {
                                 Config.workspaces.showNumbers = value;
-                                Config.saveConfig("workspaces");
                             }
                         }
 
@@ -529,7 +518,6 @@ Item {
                             checked: Config.workspaces.dynamic ?? false
                             onToggled: value => {
                                 Config.workspaces.dynamic = value;
-                                Config.saveConfig("workspaces");
                             }
                         }
                     }
@@ -559,7 +547,6 @@ Item {
                             maxValue: 5
                             onValueEdited: newValue => {
                                 Config.overview.rows = newValue;
-                                Config.saveConfig("overview");
                             }
                         }
 
@@ -570,7 +557,6 @@ Item {
                             maxValue: 10
                             onValueEdited: newValue => {
                                 Config.overview.columns = newValue;
-                                Config.saveConfig("overview");
                             }
                         }
 
@@ -599,7 +585,6 @@ Item {
                                     let newScale = value * 0.2;
                                     if (Math.abs(newScale - (Config.overview.scale ?? 0.1)) > 0.001) {
                                         Config.overview.scale = newScale;
-                                        Config.saveConfig("overview");
                                     }
                                 }
                             }
@@ -622,7 +607,6 @@ Item {
                             suffix: "px"
                             onValueEdited: newValue => {
                                 Config.overview.workspaceSpacing = newValue;
-                                Config.saveConfig("overview");
                             }
                         }
                     }
@@ -654,7 +638,6 @@ Item {
                             value: Config.lockscreen.position ?? "bottom"
                             onValueSelected: newValue => {
                                 Config.lockscreen.position = newValue;
-                                Config.saveConfig("lockscreen");
                             }
                         }
                     }
@@ -682,7 +665,6 @@ Item {
                             checked: Config.desktop.enabled ?? false
                             onToggled: value => {
                                 Config.desktop.enabled = value;
-                                Config.saveConfig("desktop");
                             }
                         }
 
@@ -694,7 +676,6 @@ Item {
                             suffix: "px"
                             onValueEdited: newValue => {
                                 Config.desktop.iconSize = newValue;
-                                Config.saveConfig("desktop");
                             }
                         }
 
@@ -706,7 +687,6 @@ Item {
                             suffix: "px"
                             onValueEdited: newValue => {
                                 Config.desktop.spacingVertical = newValue;
-                                Config.saveConfig("desktop");
                             }
                         }
 
@@ -735,7 +715,6 @@ Item {
                                 onOpenColorPicker: (colorNames, currentColor, dialogTitle) => {
                                     root.openColorPicker(colorNames, currentColor, dialogTitle, function(color) {
                                         Config.desktop.textColor = color;
-                                        Config.saveConfig("desktop");
                                     });
                                 }
                             }
