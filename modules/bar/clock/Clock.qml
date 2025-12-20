@@ -154,8 +154,8 @@ Item {
         visualMargin: 8
         popupPadding: 0
 
-        contentWidth: 260
-        contentHeight: 140
+        contentWidth: 300
+        contentHeight: 100
 
         // Weather widget with sun arc
         Item {

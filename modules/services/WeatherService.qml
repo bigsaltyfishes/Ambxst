@@ -28,27 +28,38 @@ QtObject {
     property real debugHour: 12.0  // 0-24 hour format (e.g., 14.5 = 2:30 PM)
     property int debugWeatherCode: 0
 
-    // Debug sunrise/sunset (default: 6:00 and 18:00)
-    readonly property real debugSunriseHour: 6.0
-    readonly property real debugSunsetHour: 18.0
+    // Parse "HH:MM" to hours as decimal (e.g., "14:30" -> 14.5)
+    function parseTime(timeStr) {
+        if (!timeStr) return 0;
+        var parts = timeStr.split(":");
+        return parseInt(parts[0]) + parseInt(parts[1]) / 60;
+    }
 
-    // Calculate debug values based on debugHour
-    readonly property real debugSunProgress: {
-        if (debugHour >= debugSunriseHour && debugHour <= debugSunsetHour) {
+    // Fixed sunrise/sunset for visual consistency (sun at zenith at 12:00)
+    readonly property real visualSunriseHour: 6.0
+    readonly property real visualSunsetHour: 18.0
+
+    // Calculate sun/moon progress based on hour (0-24 format)
+    // Returns 0.0 at rise, 1.0 at set for both sun and moon
+    function calculateSunProgress(hour, sunriseH, sunsetH) {
+        if (hour >= sunriseH && hour <= sunsetH) {
             // Daytime: sun moves from 0 to 1
-            return (debugHour - debugSunriseHour) / (debugSunsetHour - debugSunriseHour);
+            return (hour - sunriseH) / (sunsetH - sunriseH);
         } else {
             // Nighttime: moon moves from 0 to 1
-            var nightDuration = 24 - (debugSunsetHour - debugSunriseHour);
-            if (debugHour > debugSunsetHour) {
-                return (debugHour - debugSunsetHour) / nightDuration;
+            var nightDuration = 24 - (sunsetH - sunriseH);
+            if (hour > sunsetH) {
+                return (hour - sunsetH) / nightDuration;
             } else {
-                return (debugHour + (24 - debugSunsetHour)) / nightDuration;
+                return (hour + (24 - sunsetH)) / nightDuration;
             }
         }
     }
 
-    readonly property bool debugIsDay: debugHour >= debugSunriseHour && debugHour <= debugSunsetHour
+    // Calculate debug values based on debugHour (uses visual sunrise/sunset)
+    readonly property real debugSunProgress: calculateSunProgress(debugHour, visualSunriseHour, visualSunsetHour)
+
+    readonly property bool debugIsDay: debugHour >= visualSunriseHour && debugHour <= visualSunsetHour
 
     // Time periods with smooth transitions
     // 6-8: Evening (dawn), 8-18: Day, 18-20: Evening (dusk), 20-6: Night
@@ -128,10 +139,19 @@ QtObject {
     }
 
     readonly property var debugTimeBlend: calculateTimeBlend(debugHour)
-    readonly property var realTimeBlend: {
-        var now = new Date();
-        return calculateTimeBlend(now.getHours() + now.getMinutes() / 60);
-    }
+    
+    // Current hour as decimal, updated every minute by timer
+    property real currentHour: 12.0  // Will be set properly in Component.onCompleted
+    
+    readonly property var realTimeBlend: calculateTimeBlend(currentHour)
+    
+    // Sun progress uses fixed 6:00-18:00 range for visual consistency
+    readonly property real realSunProgress: calculateSunProgress(currentHour, visualSunriseHour, visualSunsetHour)
+    
+    // isDay uses real sunrise/sunset data when available
+    readonly property real realSunriseHour: sunrise.length > 0 ? parseTime(sunrise) : 6.0
+    readonly property real realSunsetHour: sunset.length > 0 ? parseTime(sunset) : 18.0
+    readonly property bool realIsDay: currentHour >= realSunriseHour && currentHour <= realSunsetHour
 
     // Effective blend (use debug or real)
     readonly property var effectiveTimeBlend: debugMode ? debugTimeBlend : realTimeBlend
@@ -145,9 +165,9 @@ QtObject {
     }
 
     // Effective values (use debug values when debugMode is on)
-    readonly property real effectiveSunProgress: debugMode ? debugSunProgress : sunProgress
+    readonly property real effectiveSunProgress: debugMode ? debugSunProgress : realSunProgress
     readonly property string effectiveTimeOfDay: debugMode ? debugTimeOfDay : timeOfDay
-    readonly property bool effectiveIsDay: debugMode ? debugIsDay : isDay
+    readonly property bool effectiveIsDay: debugMode ? debugIsDay : realIsDay
     readonly property int effectiveWeatherCode: debugMode ? debugWeatherCode : weatherCode
     readonly property string effectiveWeatherSymbol: debugMode ? getWeatherCodeEmoji(debugWeatherCode) : weatherSymbol
     readonly property string effectiveWeatherDescription: debugMode ? getWeatherDescription(debugWeatherCode) : weatherDescription
@@ -228,69 +248,33 @@ QtObject {
         return "Unknown";
     }
 
-    function parseTime(timeStr) {
-        // Parse "HH:MM" to minutes since midnight
-        var parts = timeStr.split(":");
-        return parseInt(parts[0]) * 60 + parseInt(parts[1]);
-    }
-
     function calculateSunPosition() {
         var now = new Date();
-        var currentMinutes = now.getHours() * 60 + now.getMinutes();
+        // Use 24-hour format from Date object (independent of user's locale)
+        var currentHour = now.getHours() + now.getMinutes() / 60;
 
-        if (!sunrise || !sunset) {
-            root.isDay = (now.getHours() >= 6 && now.getHours() < 18);
-            root.sunProgress = root.isDay ? 0.5 : 0.5;
-            root.timeOfDay = root.isDay ? "Day" : "Night";
-            return;
+        var sunriseH = 6.0;  // Default
+        var sunsetH = 18.0;  // Default
+
+        if (sunrise && sunset) {
+            sunriseH = parseTime(sunrise);
+            sunsetH = parseTime(sunset);
         }
 
-        var sunriseMinutes = parseTime(sunrise);
-        var sunsetMinutes = parseTime(sunset);
+        // Calculate if it's day
+        root.isDay = (currentHour >= sunriseH && currentHour <= sunsetH);
         
-        // Define golden hour (roughly 1 hour before sunset)
-        var goldenHourStart = sunsetMinutes - 60;
-        // Define twilight end (roughly 1 hour after sunset)
-        var twilightEnd = sunsetMinutes + 60;
-        // Define dawn start (roughly 1 hour before sunrise)
-        var dawnStart = sunriseMinutes - 60;
-
-        if (currentMinutes >= sunriseMinutes && currentMinutes <= sunsetMinutes) {
-            // Daytime: sun moves along the arc
-            root.isDay = true;
-            root.sunProgress = (currentMinutes - sunriseMinutes) / (sunsetMinutes - sunriseMinutes);
-            
-            if (currentMinutes >= goldenHourStart) {
-                root.timeOfDay = "Evening";
-            } else {
-                root.timeOfDay = "Day";
-            }
+        // Calculate sun/moon progress
+        root.sunProgress = calculateSunProgress(currentHour, sunriseH, sunsetH);
+        
+        // TimeOfDay is now handled by calculateTimeBlend, but keep for compatibility
+        var blend = calculateTimeBlend(currentHour);
+        if (blend.day >= blend.evening && blend.day >= blend.night) {
+            root.timeOfDay = "Day";
+        } else if (blend.evening >= blend.night) {
+            root.timeOfDay = "Evening";
         } else {
-            // Nighttime
-            root.isDay = false;
-            
-            if (currentMinutes > sunsetMinutes) {
-                // After sunset
-                if (currentMinutes <= twilightEnd) {
-                    root.timeOfDay = "Evening";
-                } else {
-                    root.timeOfDay = "Night";
-                }
-                // Moon rises at sunset, sets at sunrise (simplified)
-                var nightDuration = (24 * 60 - sunsetMinutes) + sunriseMinutes;
-                var nightElapsed = currentMinutes - sunsetMinutes;
-                root.sunProgress = nightElapsed / nightDuration;
-            } else {
-                // Before sunrise
-                if (currentMinutes >= dawnStart) {
-                    root.timeOfDay = "Day";  // Dawn
-                } else {
-                    root.timeOfDay = "Night";
-                }
-                var nightDuration = (24 * 60 - sunsetMinutes) + sunriseMinutes;
-                var nightElapsed = (24 * 60 - sunsetMinutes) + currentMinutes;
-                root.sunProgress = nightElapsed / nightDuration;
-            }
+            root.timeOfDay = "Night";
         }
     }
 
@@ -530,9 +514,15 @@ QtObject {
     property Timer sunPositionTimer: Timer {
         // Update sun position every minute
         interval: 60000
-        running: root.dataAvailable
+        running: true  // Always run to keep time updated
         repeat: true
-        onTriggered: root.calculateSunPosition()
+        onTriggered: {
+            var now = new Date();
+            root.currentHour = now.getHours() + now.getMinutes() / 60;
+            if (root.dataAvailable) {
+                root.calculateSunPosition();
+            }
+        }
     }
 
     property Connections configConnections: Connections {
@@ -546,6 +536,9 @@ QtObject {
     }
 
     Component.onCompleted: {
+        // Initialize current hour
+        var now = new Date();
+        currentHour = now.getHours() + now.getMinutes() / 60;
         updateWeather();
     }
 }

@@ -174,22 +174,24 @@ Rectangle {
         }
     }
 
-    // Sun rays during clear day
+    // Sun rays during clear day - follows celestialBody position
     Item {
         id: sunRaysEffect
-        anchors.fill: parent
-        // Show rays when day blend > 0.5 and weather is clear
-        opacity: (root.blend.day > 0.5 && root.weatherEffect === "clear") 
-                 ? Math.min(0.4, (root.blend.day - 0.5) * 0.8) : 0
+        
+        // Bind directly to celestialBody's calculated position
+        x: arcContainer.arcCenterX + (arcContainer.arcWidth / 2) * Math.cos(celestialBody.angle)
+        y: arcContainer.arcCenterY - arcContainer.arcHeight * Math.sin(celestialBody.angle)
+        width: 0
+        height: 0
+        
+        // Show rays when day blend > 0.3 and weather is clear
+        opacity: (root.blend.day > 0.3 && root.weatherEffect === "clear") 
+                 ? Math.min(1.0, (root.blend.day - 0.3) * 1.5) : 0
         visible: opacity > 0
 
         Behavior on opacity {
             NumberAnimation { duration: 800; easing.type: Easing.InOutQuad }
         }
-
-        // Position rays emanating from sun position
-        property real sunX: celestialBody.x + celestialBody.width / 2
-        property real sunY: celestialBody.y + celestialBody.height / 2
 
         Repeater {
             model: 8
@@ -201,8 +203,8 @@ Rectangle {
                 property real rayLength: 60 + Math.random() * 30
                 property real pulseSpeed: 3000 + Math.random() * 1500
 
-                x: sunRaysEffect.sunX + Math.cos(ray.angle) * 15 - width / 2
-                y: sunRaysEffect.sunY + Math.sin(ray.angle) * 15 - 1
+                x: Math.cos(ray.angle) * 15
+                y: Math.sin(ray.angle) * 15
                 width: rayLength
                 height: 2
                 radius: 1
@@ -211,7 +213,7 @@ Rectangle {
                 
                 gradient: Gradient {
                     orientation: Gradient.Horizontal
-                    GradientStop { position: 0.0; color: Qt.rgba(1, 0.95, 0.7, 0.6) }
+                    GradientStop { position: 0.0; color: Qt.rgba(1, 0.95, 0.7, 0.9) }
                     GradientStop { position: 1.0; color: Qt.rgba(1, 0.95, 0.7, 0) }
                 }
 
@@ -220,7 +222,7 @@ Rectangle {
                     running: sunRaysEffect.visible
 
                     NumberAnimation {
-                        to: 0.3
+                        to: 0.5
                         duration: ray.pulseSpeed / 2
                         easing.type: Easing.InOutSine
                     }
@@ -915,16 +917,21 @@ Rectangle {
         }
     }
 
-    // Debug toggle button
+    // Debug toggle button (hidden easter egg - visible on hover)
     Rectangle {
+        id: debugToggleButton
         anchors.left: parent.left
         anchors.bottom: parent.bottom
         anchors.margins: 8
         width: 20; height: 20
         radius: 10
         color: WeatherService.debugMode ? Colors.primary : "#555"
-        opacity: 0.8
+        opacity: (debugButtonHover.containsMouse || WeatherService.debugMode) ? 0.8 : 0
         visible: root.showDebugControls
+
+        Behavior on opacity {
+            NumberAnimation { duration: 150; easing.type: Easing.InOutQuad }
+        }
 
         Text {
             anchors.centerIn: parent
@@ -935,7 +942,9 @@ Rectangle {
         }
 
         MouseArea {
+            id: debugButtonHover
             anchors.fill: parent
+            hoverEnabled: true
             onClicked: WeatherService.debugMode = !WeatherService.debugMode
         }
     }
