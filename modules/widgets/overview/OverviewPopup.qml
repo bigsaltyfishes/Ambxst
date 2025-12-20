@@ -25,7 +25,7 @@ PanelWindow {
     color: "transparent"
 
     WlrLayershell.layer: WlrLayer.Overlay
-    WlrLayershell.keyboardFocus: overviewOpen ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
+    WlrLayershell.keyboardFocus: WlrKeyboardFocus.OnDemand
 
     // Get this screen's visibility state
     readonly property var screenVisibilities: Visibilities.getForScreen(screen.name)
@@ -359,16 +359,6 @@ PanelWindow {
                 }
                 searchInput.focusInput();
             });
-        }
-    }
-
-    // Keep focus on search input when workspace changes
-    Connections {
-        target: Hyprland.focusedMonitor
-        function onActiveWorkspaceChanged() {
-            if (overviewOpen) {
-                searchInput.focusInput();
-            }
         }
     }
 }

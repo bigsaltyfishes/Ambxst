@@ -54,6 +54,10 @@ Item {
                     event.accepted = true;
                 }
             }
+
+            Component.onCompleted: {
+                forceActiveFocus();
+            }
         }
     }
 
@@ -68,6 +72,10 @@ Item {
                     Visibilities.setActiveModule("");
                     event.accepted = true;
                 }
+            }
+
+            Component.onCompleted: {
+                forceActiveFocus();
             }
         }
     }
