@@ -1,0 +1,185 @@
+pragma ComponentBehavior: Bound
+import QtQuick
+import QtQuick.Layouts
+import QtQuick.Effects
+import Quickshell
+import Quickshell.Wayland
+import Quickshell.Hyprland
+import qs.modules.theme
+import qs.modules.components
+import qs.config
+
+// BarPopup: A popup component that anchors to bar elements
+// Inspired by end-4/dots-hyprland BarPopup implementation
+// Uses PopupWindow with HyprlandFocusGrab for proper focus management
+PopupWindow {
+    id: root
+
+    // Required: the item this popup anchors to
+    required property Item anchorItem
+    // Required: the bar panel for position detection
+    required property var bar
+
+    // Content to display inside the popup
+    default property alias contentData: contentContainer.data
+
+    // Visual configuration
+    property int popupPadding: 12
+    property int visualMargin: 8  // Distance from bar
+    property int shadowMargin: 16  // Extra margin for shadow
+
+    // Behavior configuration
+    property bool closeOnFocusLost: true
+
+    // Logical open state (changes immediately, not after animation)
+    property bool isOpen: false
+
+    // Signal emitted when popup is closed externally (click outside)
+    signal closedExternally()
+
+    // Animation state
+    property real popupOpacity: 0
+    property real popupScale: 0.9
+
+    // Bar position detection
+    readonly property string barPosition: bar?.position ?? "top"
+    readonly property bool barAtTop: barPosition === "top"
+    readonly property bool barAtBottom: barPosition === "bottom"
+    readonly property bool barAtLeft: barPosition === "left"
+    readonly property bool barAtRight: barPosition === "right"
+    readonly property bool barVertical: barAtLeft || barAtRight
+
+    // Total size including shadow margin
+    readonly property int totalWidth: contentWidth + shadowMargin * 2
+    readonly property int totalHeight: contentHeight + shadowMargin * 2
+    property int contentWidth: 220
+    property int contentHeight: 150
+
+    implicitWidth: totalWidth
+    implicitHeight: totalHeight
+
+    // Calculate popup anchor point based on bar position
+    anchor.item: anchorItem
+    anchor.rect.x: barVertical 
+        ? (barAtLeft ? anchorItem.width + visualMargin - shadowMargin : -totalWidth + shadowMargin - visualMargin)
+        : (anchorItem.width - totalWidth) / 2
+    anchor.rect.y: barVertical 
+        ? (anchorItem.height - totalHeight) / 2
+        : (barAtTop ? anchorItem.height + visualMargin - shadowMargin : -totalHeight + shadowMargin - visualMargin)
+    anchor.rect.width: 0
+    anchor.rect.height: 0
+
+    color: "transparent"
+    visible: false
+
+    // Focus grab for click-outside-to-close behavior
+    HyprlandFocusGrab {
+        id: focusGrab
+        active: root.visible
+        windows: [root]
+
+        onCleared: {
+            if (root.closeOnFocusLost && root.visible) {
+                root.isOpen = false;
+                root.closedExternally();
+                root.close();
+            }
+        }
+    }
+
+    // Animation behaviors
+    Behavior on popupOpacity {
+        enabled: Config.animDuration > 0
+        NumberAnimation {
+            duration: Config.animDuration
+            easing.type: Easing.OutCubic
+        }
+    }
+
+    Behavior on popupScale {
+        enabled: Config.animDuration > 0
+        NumberAnimation {
+            duration: Config.animDuration
+            easing.type: Easing.OutCubic
+        }
+    }
+
+    // Main content wrapper
+    Item {
+        id: popupContainer
+        anchors.fill: parent
+        anchors.margins: root.shadowMargin
+        opacity: root.popupOpacity
+        scale: root.popupScale
+        transformOrigin: {
+            if (root.barAtTop) return Item.Top;
+            if (root.barAtBottom) return Item.Bottom;
+            if (root.barAtLeft) return Item.Left;
+            if (root.barAtRight) return Item.Right;
+            return Item.Center;
+        }
+
+        StyledRect {
+            id: background
+            anchors.fill: parent
+            variant: "bg"
+            enableShadow: true
+
+            Item {
+                id: contentContainer
+                anchors.fill: parent
+                anchors.margins: root.popupPadding
+            }
+        }
+    }
+
+    function open() {
+        if (visible) return;
+
+        // Set logical state immediately
+        isOpen = true;
+
+        // Reset animation state
+        popupOpacity = 0;
+        popupScale = 0.9;
+
+        // Show popup
+        visible = true;
+
+        // Start animation after a frame
+        Qt.callLater(() => {
+            popupOpacity = 1;
+            popupScale = 1;
+        });
+    }
+
+    function close() {
+        if (!visible) return;
+
+        // Set logical state immediately
+        isOpen = false;
+
+        // Animate out
+        popupOpacity = 0;
+        popupScale = 0.9;
+
+        // Hide after animation
+        closeTimer.restart();
+    }
+
+    function toggle() {
+        if (visible) {
+            close();
+        } else {
+            open();
+        }
+    }
+
+    Timer {
+        id: closeTimer
+        interval: Config.animDuration > 0 ? Config.animDuration + 50 : 50
+        onTriggered: {
+            root.visible = false;
+        }
+    }
+}

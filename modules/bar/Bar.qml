@@ -300,20 +300,8 @@ PanelWindow {
                                     layer.enabled: false
                                 }
 
-                                MicSlider {
-                                    id: micSlider
-                                    bar: panel
-                                    layerEnabled: false
-                                }
-
-                                VolumeSlider {
-                                    id: volume
-                                    bar: panel
-                                    layerEnabled: false
-                                }
-
-                                BrightnessSlider {
-                                    id: brightnessSlider
+                                ControlsButton {
+                                    id: controlsButton
                                     bar: panel
                                     layerEnabled: false
                                 }
@@ -452,20 +440,8 @@ PanelWindow {
                                     layer.enabled: false
                                 }
 
-                                MicSlider {
-                                    id: micSliderVert
-                                    bar: panel
-                                    layerEnabled: false
-                                }
-
-                                VolumeSlider {
-                                    id: volumeVert
-                                    bar: panel
-                                    layerEnabled: false
-                                }
-
-                                BrightnessSlider {
-                                    id: brightnessSliderVert
+                                ControlsButton {
+                                    id: controlsButtonVert
                                     bar: panel
                                     layerEnabled: false
                                 }
