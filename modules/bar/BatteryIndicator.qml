@@ -128,8 +128,9 @@ Item {
 
         // Central icon (Lightning/Plug for battery, PowerProfile icon otherwise)
         Text {
+            id: batteryIcon
             anchors.centerIn: parent
-            text: Battery.available ? (Battery.isCharging ? Icons.plug : Icons.lightning) : PowerProfile.getProfileIcon(PowerProfile.currentProfile)
+            text: Battery.available ? (Battery.isPluggedIn ? Icons.plug : Icons.lightning) : PowerProfile.getProfileIcon(PowerProfile.currentProfile)
             font.family: Icons.font
             font.pixelSize: Battery.available ? 14 : 18
             color: root.popupOpen ? buttonBg.itemColor : Colors.overBackground
@@ -137,6 +138,16 @@ Item {
             Behavior on color {
                 enabled: Config.animDuration > 0
                 ColorAnimation { duration: Config.animDuration / 2 }
+            }
+            
+            Connections {
+                target: Battery
+                function onIsPluggedInChanged() {
+                    batteryIcon.text = Battery.available ? (Battery.isPluggedIn ? Icons.plug : Icons.lightning) : PowerProfile.getProfileIcon(PowerProfile.currentProfile)
+                }
+                function onAvailableChanged() {
+                    batteryIcon.text = Battery.available ? (Battery.isPluggedIn ? Icons.plug : Icons.lightning) : PowerProfile.getProfileIcon(PowerProfile.currentProfile)
+                }
             }
         }
 
@@ -148,7 +159,7 @@ Item {
 
         StyledToolTip {
             visible: root.isHovered && !root.popupOpen
-            tooltipText: Battery.available ? ("Battery: " + Math.round(Battery.percentage * 100) + "%" + (Battery.isCharging ? " (Charging)" : "")) : ("Power Profile: " + PowerProfile.getProfileDisplayName(PowerProfile.currentProfile))
+            tooltipText: Battery.available ? ("Battery: " + Math.round(Battery.percentage) + "%" + (Battery.isCharging ? " (Charging)" : "")) : ("Power Profile: " + PowerProfile.getProfileDisplayName(PowerProfile.currentProfile))
         }
     }
 
@@ -158,13 +169,66 @@ Item {
         anchorItem: buttonBg
         bar: root.bar
 
-        contentWidth: profilesRow.implicitWidth + batteryPopup.popupPadding * 2
-        contentHeight: 36 + batteryPopup.popupPadding * 2
+        contentWidth: Math.max(batteryDetailsColumn.implicitWidth, profilesRow.implicitWidth) + batteryPopup.popupPadding * 2
+        contentHeight: mainColumn.implicitHeight + batteryPopup.popupPadding * 3
 
-        Row {
-            id: profilesRow
-            anchors.centerIn: parent
-            spacing: 4
+        Column {
+            id: mainColumn
+            anchors.fill: parent
+            anchors.margins: batteryPopup.popupPadding
+            spacing: 12
+
+            Column {
+                id: batteryDetailsColumn
+                width: parent.width
+                visible: Battery.available
+                spacing: 8
+
+                Row {
+                    spacing: 12
+
+                    Text {
+                        anchors.verticalCenter: parent.verticalCenter
+                        text: Battery.getBatteryIcon()
+                        font.family: Icons.font
+                        font.pixelSize: 24
+                        color: Colors.overBackground
+                    }
+
+                    Column {
+                        anchors.verticalCenter: parent.verticalCenter
+                        spacing: 4
+
+                        Text {
+                            text: Math.round(Battery.percentage) + "%"
+                            font.family: Styling.defaultFont
+                            font.pixelSize: Styling.fontSize(0)
+                            font.bold: true
+                            color: Colors.overBackground
+                        }
+
+                        Text {
+                            text: Battery.isPluggedIn ? 
+                                  (Battery.timeToFull !== "" ? "Full in " + Battery.timeToFull : "Charging") :
+                                  (Battery.timeToEmpty !== "" ? Battery.timeToEmpty + " remaining" : "On battery")
+                            font.family: Styling.defaultFont
+                            font.pixelSize: Styling.fontSize(-1)
+                            color: Colors.overBackground
+                            opacity: 0.8
+                        }
+                    }
+                }
+
+                Separator {
+                    anchors.left: parent.left
+                    anchors.right: parent.right
+                }
+            }
+
+            Row {
+                id: profilesRow
+                anchors.horizontalCenter: parent.horizontalCenter
+                spacing: 4
 
             Repeater {
                 model: PowerProfile.availableProfiles
@@ -229,4 +293,5 @@ Item {
             }
         }
     }
+}
 }
