@@ -737,6 +737,20 @@ Item {
                 // The original Input Area was here, now it's moved outside this ColumnLayout
             }
             
+            
+            // Model Selection Popup
+            ModelSelectorPopup {
+                id: modelSelector
+                parent: mainChatArea
+            }
+            
+            Connections {
+                target: Ai
+                function onModelSelectionRequested() {
+                    modelSelector.open();
+                }
+            }
+
             // Input Area (Floating)
             Item {
                 id: inputContainer

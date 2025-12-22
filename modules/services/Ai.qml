@@ -214,6 +214,7 @@ Singleton {
             case "/clear":
                 createNewChat();
                 return true;
+
             case "/model":
                 if (args) {
                     // Fuzzy search or exact match
@@ -232,7 +233,8 @@ Singleton {
                         pushSystemMessage("Switched to model: " + currentModel.name);
                     }
                 } else {
-                    pushSystemMessage("Current model: " + currentModel.name + "\nAvailable models:\n" + models.map(m => "- " + m.name).join("\n"));
+                    // Request UI to show selection popup
+                    modelSelectionRequested();
                 }
                 return true;
             case "/help":
@@ -446,7 +448,8 @@ Singleton {
                         role: "assistant",
                         content: "I want to run a command: `" + reply.functionCall.name + "`",
                         functionCall: reply.functionCall,
-                        functionPending: true // UI will show Approve/Reject
+                        functionPending: true, // UI will show Approve/Reject
+                        geminiParts: reply.geminiParts // Store raw parts (thoughts) for API history
                     };
                     newChat.push(funcMsg);
                 }
@@ -578,7 +581,196 @@ Singleton {
         }
     }
     
+    // ============================================ 
+    // DYNAMIC MODEL FETCHING
+    // ============================================ 
+    
+    property bool fetchingModels: false
+    property int pendingFetches: 0
+    
+    function fetchAvailableModels() {
+        if (fetchingModels) return;
+        
+        fetchingModels = true;
+        pendingFetches = 0;
+        
+        // Gemini
+        if (geminiStrategy && Quickshell.env("GEMINI_API_KEY")) {
+            pendingFetches++;
+            fetchProcessGemini.command = ["bash", "-c", "curl -s 'https://generativelanguage.googleapis.com/v1beta/models?key=" + Quickshell.env("GEMINI_API_KEY") + "'"];
+            fetchProcessGemini.running = true;
+        }
+        
+        // OpenAI
+        if (openaiStrategy && Quickshell.env("OPENAI_API_KEY")) {
+            pendingFetches++;
+            fetchProcessOpenAi.command = ["bash", "-c", "curl -s https://api.openai.com/v1/models -H 'Authorization: Bearer " + Quickshell.env("OPENAI_API_KEY") + "'"];
+            fetchProcessOpenAi.running = true;
+        }
+        
+        // Mistral
+        if (mistralStrategy && Quickshell.env("MISTRAL_API_KEY")) {
+            pendingFetches++;
+            fetchProcessMistral.command = ["bash", "-c", "curl -s https://api.mistral.ai/v1/models -H 'Authorization: Bearer " + Quickshell.env("MISTRAL_API_KEY") + "'"];
+            fetchProcessMistral.running = true;
+        }
+        
+        if (pendingFetches === 0) {
+            fetchingModels = false;
+        }
+    }
+    
+    function checkFetchCompletion() {
+        pendingFetches--;
+        if (pendingFetches <= 0) {
+            fetchingModels = false;
+            pendingFetches = 0;
+            // Force update UI if needed (models list change triggers it)
+        }
+    }
+    
+    function mergeModels(newModels) {
+        // Create a map of existing models by name to avoid duplicates
+        let existingMap = {};
+        for (let i = 0; i < models.length; i++) {
+            existingMap[models[i].name] = true;
+        }
+        
+        let updatedList = [];
+        // Keep hardcoded/existing models first? Or allow overwriting?
+        // Let's keep existing ones and append new ones.
+        for (let i = 0; i < models.length; i++) {
+            updatedList.push(models[i]);
+        }
+        
+        for (let i = 0; i < newModels.length; i++) {
+            let m = newModels[i];
+            // Simple duplicate check by name or model ID
+            let isDuplicate = false;
+            for (let j=0; j<updatedList.length; j++) {
+                if (updatedList[j].model === m.model) {
+                    isDuplicate = true;
+                    break;
+                }
+            }
+            
+            if (!isDuplicate) {
+                updatedList.push(m);
+            }
+        }
+        
+        models = updatedList;
+    }
+
+    Process {
+        id: fetchProcessGemini
+        stdout: StdioCollector { id: fetchGeminiOut }
+        onExited: exitCode => {
+            if (exitCode === 0) {
+                try {
+                    let data = JSON.parse(fetchGeminiOut.text);
+                    if (data.models) {
+                        let newModels = [];
+                        for (let i=0; i<data.models.length; i++) {
+                            let item = data.models[i]; // name: "models/gemini-pro", displayName: "Gemini Pro"
+                            let id = item.name.replace("models/", "");
+                            // Filter for generative models if possible, but for now just add them
+                            if (id.includes("gemini") || id.includes("flash") || id.includes("pro")) {
+                                let m = aiModelFactory.createObject(root, {
+                                    name: item.displayName || id,
+                                    icon: "sparkles",
+                                    description: item.description || "Google Gemini Model",
+                                    endpoint: "https://generativelanguage.googleapis.com/v1beta/models/",
+                                    model: id,
+                                    api_format: "gemini",
+                                    requires_key: true,
+                                    key_id: "GEMINI_API_KEY"
+                                });
+                                if (m) newModels.push(m);
+                            }
+                        }
+                        mergeModels(newModels);
+                    }
+                } catch(e) { console.log("Gemini fetch error: " + e) }
+            }
+            checkFetchCompletion();
+        }
+    }
+
+    Process {
+        id: fetchProcessOpenAi
+        stdout: StdioCollector { id: fetchOpenAiOut }
+        onExited: exitCode => {
+            if (exitCode === 0) {
+                try {
+                    let data = JSON.parse(fetchOpenAiOut.text);
+                    if (data.data) {
+                        let newModels = [];
+                        for (let i=0; i<data.data.length; i++) {
+                            let item = data.data[i];
+                            let id = item.id;
+                            if (id.includes("gpt")) {
+                                let m = aiModelFactory.createObject(root, {
+                                    name: id,
+                                    icon: "openai",
+                                    description: "OpenAI Model",
+                                    endpoint: "https://api.openai.com/v1",
+                                    model: id,
+                                    api_format: "openai",
+                                    requires_key: true,
+                                    key_id: "OPENAI_API_KEY"
+                                });
+                                if (m) newModels.push(m);
+                            }
+                        }
+                        mergeModels(newModels);
+                    }
+                } catch(e) { console.log("OpenAI fetch error: " + e) }
+            }
+            checkFetchCompletion();
+        }
+    }
+
+    Process {
+        id: fetchProcessMistral
+        stdout: StdioCollector { id: fetchMistralOut }
+        onExited: exitCode => {
+            if (exitCode === 0) {
+                try {
+                    let data = JSON.parse(fetchMistralOut.text);
+                    if (data.data) {
+                        let newModels = [];
+                        for (let i=0; i<data.data.length; i++) {
+                            let item = data.data[i];
+                            let id = item.id;
+                             let m = aiModelFactory.createObject(root, {
+                                name: id,
+                                icon: "wind",
+                                description: "Mistral Model",
+                                endpoint: "https://api.mistral.ai/v1",
+                                model: id,
+                                api_format: "mistral",
+                                requires_key: true,
+                                key_id: "MISTRAL_API_KEY"
+                            });
+                            if (m) newModels.push(m);
+                        }
+                        mergeModels(newModels);
+                    }
+                } catch(e) { console.log("Mistral fetch error: " + e) }
+            }
+            checkFetchCompletion();
+        }
+    }
+
     // Signals
     signal chatModelChanged()
     signal historyModelChanged()
+    signal modelSelectionRequested()
+
+    Component {
+        id: aiModelFactory
+        AiModel {}
+    }
 }
+

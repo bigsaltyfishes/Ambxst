@@ -12,11 +12,16 @@ ApiStrategy {
 
     function getBody(messages, model, tools) {
         // Convert messages to Gemini format
-        // Gemini expects { role: "user"|"model", parts: [{ text: "..." }] }
-        // For function calls: { role: "model", parts: [{ functionCall: { ... } }] }
-        // For function responses: { role: "function", parts: [{ functionResponse: { ... } }] }
         let contents = messages.map(msg => {
             if (msg.role === "assistant") {
+                // If we preserved raw Gemini parts (e.g. thought + function call), use them
+                if (msg.geminiParts) {
+                    return {
+                        role: "model",
+                        parts: msg.geminiParts
+                    };
+                }
+                
                 if (msg.functionCall) {
                     return {
                         role: "model",
@@ -48,6 +53,7 @@ ApiStrategy {
             }
         });
         
+        // ... (rest of body construction)
         let body = {
             contents: contents,
             generationConfig: {
@@ -76,16 +82,37 @@ ApiStrategy {
             if (json.candidates && json.candidates.length > 0) {
                 let content = json.candidates[0].content;
                 if (content && content.parts && content.parts.length > 0) {
-                    let part = content.parts[0];
-                    if (part.functionCall) {
+                    
+                    // Look for function calls and thoughts
+                    let hasFunctionCall = false;
+                    let textContent = "";
+                    let funcCall = null;
+                    
+                    // We must preserve specific structure for Gemini if tool calls are involved
+                    // We'll store the raw parts to send back in history
+                    let rawParts = content.parts;
+                    
+                    for (let i = 0; i < content.parts.length; i++) {
+                        let part = content.parts[i];
+                        if (part.functionCall) {
+                            hasFunctionCall = true;
+                            funcCall = part.functionCall;
+                        } else if (part.text) {
+                            textContent += part.text + "\n";
+                        }
+                    }
+                    
+                    if (hasFunctionCall) {
                         return {
-                            functionCall: part.functionCall,
-                            content: null // No text content for function calls typically
+                            functionCall: funcCall,
+                            content: textContent.trim(), // Optional thought text
+                            geminiParts: rawParts // Store raw parts for history
                         };
                     }
-                    return { content: part.text };
+                    
+                    return { content: textContent.trim() || "Empty response" };
                 }
-                // Handle case where content is present but parts are missing or blocked
+                
                 if (json.candidates[0].finishReason) {
                     return { content: "Response finished with reason: " + json.candidates[0].finishReason };
                 }
