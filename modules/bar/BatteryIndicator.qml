@@ -169,35 +169,36 @@ Item {
         anchorItem: buttonBg
         bar: root.bar
 
-        contentWidth: Math.max(batteryDetailsColumn.implicitWidth, profilesRow.implicitWidth) + batteryPopup.popupPadding * 2
-        contentHeight: mainColumn.implicitHeight + batteryPopup.popupPadding * 3
+        contentWidth: Math.max(280, mainColumn.implicitWidth + batteryPopup.popupPadding * 2)
+        contentHeight: mainColumn.implicitHeight + batteryPopup.popupPadding * 2
 
-        Column {
+        ColumnLayout {
             id: mainColumn
             anchors.fill: parent
-            anchors.margins: batteryPopup.popupPadding
             spacing: 12
 
-            Column {
+            ColumnLayout {
                 id: batteryDetailsColumn
-                width: parent.width
+                Layout.fillWidth: true
                 visible: Battery.available
                 spacing: 8
 
-                Row {
+                RowLayout {
                     spacing: 12
+                    Layout.fillWidth: true
 
                     Text {
-                        anchors.verticalCenter: parent.verticalCenter
+                        Layout.alignment: Qt.AlignVCenter
                         text: Battery.getBatteryIcon()
                         font.family: Icons.font
                         font.pixelSize: 24
                         color: Colors.overBackground
                     }
 
-                    Column {
-                        anchors.verticalCenter: parent.verticalCenter
-                        spacing: 4
+                    ColumnLayout {
+                        Layout.alignment: Qt.AlignVCenter
+                        Layout.fillWidth: true
+                        spacing: 2
 
                         Text {
                             text: Math.round(Battery.percentage) + "%"
@@ -215,19 +216,20 @@ Item {
                             font.pixelSize: Styling.fontSize(-1)
                             color: Colors.overBackground
                             opacity: 0.8
+                            Layout.fillWidth: true
+                            elide: Text.ElideRight
                         }
                     }
                 }
 
                 Separator {
-                    anchors.left: parent.left
-                    anchors.right: parent.right
+                    Layout.fillWidth: true
                 }
             }
 
-            Row {
+            RowLayout {
                 id: profilesRow
-                anchors.horizontalCenter: parent.horizontalCenter
+                Layout.fillWidth: true
                 spacing: 4
 
             Repeater {
@@ -238,23 +240,17 @@ Item {
                     required property string modelData
                     required property int index
 
-                    readonly property bool isSelected: PowerProfile.currentProfile === modelData
-                    readonly property bool isFirst: index === 0
-                    readonly property bool isLast: index === PowerProfile.availableProfiles.length - 1
-                    property bool buttonHovered: false
+                    Layout.fillWidth: true
+                    Layout.preferredWidth: 80
+                    height: 36
 
-                    readonly property real defaultRadius: Styling.radius(0)
-                    readonly property real selectedRadius: Styling.radius(0) / 2
+                    readonly property bool isSelected: PowerProfile.currentProfile === modelData
+                    property bool buttonHovered: false
 
                     variant: isSelected ? "primary" : (buttonHovered ? "focus" : "common")
                     enableShadow: false
-                    width: profileLabel.implicitWidth + 48
-                    height: 36
-                    
-                    topLeftRadius: isSelected ? (isFirst ? defaultRadius : selectedRadius) : defaultRadius
-                    bottomLeftRadius: isSelected ? (isFirst ? defaultRadius : selectedRadius) : defaultRadius
-                    topRightRadius: isSelected ? (isLast ? defaultRadius : selectedRadius) : defaultRadius
-                    bottomRightRadius: isSelected ? (isLast ? defaultRadius : selectedRadius) : defaultRadius
+
+                    radius: Styling.radius(0)
 
                     RowLayout {
                         anchors.centerIn: parent
