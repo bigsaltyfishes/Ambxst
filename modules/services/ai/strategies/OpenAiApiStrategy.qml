@@ -28,7 +28,7 @@ ApiStrategy {
                 return { content: json.choices[0].message.content };
             }
             if (json.error) return { content: "API Error: " + json.error.message };
-            return { content: "Error: No content" };
+            return { content: "Error: No content in response. Raw: " + JSON.stringify(json) };
         } catch (e) {
             return { content: "Error parsing response: " + e.message };
         }

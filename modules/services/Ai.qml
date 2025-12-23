@@ -320,7 +320,18 @@ Singleton {
         // Add history (simple version: all messages)
         // Note: Gemini doesn't support 'system' role in messages list the same way, handled in strategy
         for (let i = 0; i < currentChat.length; i++) {
-            messages.push(currentChat[i]);
+            let msg = currentChat[i];
+            // Sanitize message object for strict APIs
+            let apiMsg = {
+                role: msg.role,
+                content: msg.content
+            };
+            
+            // Only include function call info if relevant and supported (though currently strategies might ignore)
+            if (msg.functionCall) apiMsg.functionCall = msg.functionCall;
+            if (msg.name) apiMsg.name = msg.name; // For function role
+            
+            messages.push(apiMsg);
         }
         
         // Pass tools

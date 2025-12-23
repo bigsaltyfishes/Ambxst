@@ -362,7 +362,7 @@ Item {
 
                     
                     Text {
-                        text: Ai.currentModel.name
+                        text: Ai.currentModel ? Ai.currentModel.name : ""
                         color: Colors.overBackground
                         font.family: Config.theme.font
                         font.pixelSize: 16
@@ -398,6 +398,7 @@ Item {
                     }
                     
                     delegate: Item {
+                        id: messageDelegate
                         required property var modelData
                         required property int index
                         
@@ -486,7 +487,7 @@ Item {
                                     anchors.leftMargin: 8
                                     anchors.rightMargin: 8
                                     spacing: 4
-                                    visible: bubbleArea.containsMouse || isEditing
+                                    visible: bubbleArea.containsMouse || messageDelegate.isEditing
                                     
                                     // Edit (User & Assistant)
                                     Button {
@@ -498,7 +499,7 @@ Item {
                                         property bool isHovered: hovered
                                         
                                         contentItem: Text { 
-                                            text: isEditing ? Icons.accept : Icons.edit
+                                            text: messageDelegate.isEditing ? Icons.accept : Icons.edit
                                             font.family: Icons.font
                                             color: parent.down ? Colors.overPrimary : (parent.isHovered ? Colors.overSurface : Colors.overSurface)
                                             horizontalAlignment: Text.AlignHCenter
@@ -511,11 +512,11 @@ Item {
                                         }
                                         
                                         onClicked: {
-                                            if (isEditing) {
+                                            if (messageDelegate.isEditing) {
                                                 Ai.updateMessage(index, bubbleContentText.text);
-                                                isEditing = false;
+                                                messageDelegate.isEditing = false;
                                             } else {
-                                                isEditing = true;
+                                                messageDelegate.isEditing = true;
                                                 bubbleContentText.forceActiveFocus();
                                                 bubbleContentText.cursorPosition = bubbleContentText.text.length;
                                             }
@@ -526,7 +527,7 @@ Item {
                                         width: 24; height: 24
                                         flat: true
                                         padding: 0
-                                        visible: !isEditing
+                                        visible: !messageDelegate.isEditing
                                         
                                         property bool isHovered: hovered
                                         
@@ -551,7 +552,7 @@ Item {
                                     
                                     // Regenerate (Assistant only)
                                     Button {
-                                        visible: !isUser && !isSystem && !isEditing
+                                        visible: !isUser && !isSystem && !messageDelegate.isEditing
                                         width: 24; height: 24
                                         flat: true
                                         padding: 0
@@ -588,8 +589,8 @@ Item {
                                     
                                     variant: isSystem ? "surface" : (isUser ? "primaryContainer" : "surfaceVariant")
                                     radius: Styling.radius(4)
-                                    border.width: isSystem || isEditing ? 1 : 0
-                                    border.color: isEditing ? Colors.primary : Colors.surfaceDim
+                                    border.width: isSystem || messageDelegate.isEditing ? 1 : 0
+                                    border.color: messageDelegate.isEditing ? Colors.primary : Colors.surfaceDim
                                     
                                     ColumnLayout {
                                         id: bubbleContent
@@ -607,7 +608,7 @@ Item {
                                             font.family: Config.theme.font
                                             font.pixelSize: 14
                                             wrapMode: Text.Wrap
-                                            readOnly: !isEditing
+                                            readOnly: !messageDelegate.isEditing
                                             selectByMouse: true
                                             visible: text !== ""
                                         }
@@ -1005,7 +1006,7 @@ Item {
                 anchors.topMargin: 8
                 anchors.horizontalCenter: inputContainer.horizontalCenter
                 
-                text: Ai.currentModel.name
+                text: Ai.currentModel ? Ai.currentModel.name : ""
                 color: Colors.outline
                 font.family: Config.theme.font
                 font.pixelSize: Styling.fontSize(-2)
