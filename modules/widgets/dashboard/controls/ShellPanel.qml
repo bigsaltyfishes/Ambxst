@@ -46,6 +46,52 @@ Item {
         colorPickerCurrentColor = color;
     }
 
+    property string currentSection: ""
+
+    component SectionButton: StyledRect {
+        id: sectionBtn
+        required property string text
+        required property string sectionId
+        
+        property bool isHovered: false
+        
+        variant: isHovered ? "focus" : "pane"
+        Layout.fillWidth: true
+        Layout.preferredHeight: 56
+        radius: Styling.radius(0)
+        
+        RowLayout {
+            anchors.fill: parent
+            anchors.margins: 16
+            spacing: 16
+            
+            Text {
+                text: sectionBtn.text
+                font.family: Config.theme.font
+                font.pixelSize: Styling.fontSize(0)
+                font.bold: true
+                color: Colors.overBackground
+                Layout.fillWidth: true
+            }
+            
+            Text {
+                text: Icons.caretRight
+                font.family: Icons.font
+                font.pixelSize: 20
+                color: Colors.overSurfaceVariant
+            }
+        }
+        
+        MouseArea {
+            anchors.fill: parent
+            hoverEnabled: true
+            cursorShape: Qt.PointingHandCursor
+            onEntered: sectionBtn.isHovered = true
+            onExited: sectionBtn.isHovered = false
+            onClicked: root.currentSection = sectionBtn.sectionId
+        }
+    }
+
     // Inline component for toggle rows
     component ToggleRow: RowLayout {
         id: toggleRowRoot
@@ -460,28 +506,40 @@ Item {
                     id: titlebar
                     width: root.contentWidth
                     anchors.horizontalCenter: parent.horizontalCenter
-                    title: "Shell"
+                    title: root.currentSection === "" ? "Shell" : (root.currentSection.charAt(0).toUpperCase() + root.currentSection.slice(1))
                     statusText: GlobalStates.shellHasChanges ? "Unsaved changes" : ""
                     statusColor: Colors.error
 
-                    actions: [
-                        {
-                            icon: Icons.arrowCounterClockwise,
-                            tooltip: "Discard changes",
-                            enabled: GlobalStates.shellHasChanges,
-                            onClicked: function () {
-                                GlobalStates.discardShellChanges();
+                    actions: {
+                        let baseActions = [
+                            {
+                                icon: Icons.arrowCounterClockwise,
+                                tooltip: "Discard changes",
+                                enabled: GlobalStates.shellHasChanges,
+                                onClicked: function () {
+                                    GlobalStates.discardShellChanges();
+                                }
+                            },
+                            {
+                                icon: Icons.disk,
+                                tooltip: "Apply changes",
+                                enabled: GlobalStates.shellHasChanges,
+                                onClicked: function () {
+                                    GlobalStates.applyShellChanges();
+                                }
                             }
-                        },
-                        {
-                            icon: Icons.disk,
-                            tooltip: "Apply changes",
-                            enabled: GlobalStates.shellHasChanges,
-                            onClicked: function () {
-                                GlobalStates.applyShellChanges();
-                            }
+                        ];
+                        
+                        if (root.currentSection !== "") {
+                            return [{
+                                icon: Icons.arrowLeft,
+                                tooltip: "Back",
+                                onClicked: function() { root.currentSection = ""; }
+                            }].concat(baseActions);
                         }
-                    ]
+                        
+                        return baseActions;
+                    }
                 }
             }
 
@@ -497,9 +555,27 @@ Item {
                     spacing: 16
 
                     // ═══════════════════════════════════════════════════════════════
+                    // MENU SECTION
+                    // ═══════════════════════════════════════════════════════════════
+                    ColumnLayout {
+                        visible: root.currentSection === ""
+                        Layout.fillWidth: true
+                        spacing: 8
+
+                        SectionButton { text: "Bar"; sectionId: "bar" }
+                        SectionButton { text: "Notch"; sectionId: "notch" }
+                        SectionButton { text: "Workspaces"; sectionId: "workspaces" }
+                        SectionButton { text: "Overview"; sectionId: "overview" }
+                        SectionButton { text: "Dock"; sectionId: "dock" }
+                        SectionButton { text: "Lockscreen"; sectionId: "lockscreen" }
+                        SectionButton { text: "Desktop"; sectionId: "desktop" }
+                    }
+
+                    // ═══════════════════════════════════════════════════════════════
                     // BAR SECTION
                     // ═══════════════════════════════════════════════════════════════
                     ColumnLayout {
+                        visible: root.currentSection === "bar"
                         Layout.fillWidth: true
                         spacing: 8
 
@@ -598,12 +674,13 @@ Item {
                         }
                     }
 
-                    Separator { Layout.fillWidth: true }
+                    Separator { Layout.fillWidth: true; visible: false }
 
                     // ═══════════════════════════════════════════════════════════════
                     // NOTCH SECTION
                     // ═══════════════════════════════════════════════════════════════
                     ColumnLayout {
+                        visible: root.currentSection === "notch"
                         Layout.fillWidth: true
                         spacing: 8
 
@@ -646,12 +723,13 @@ Item {
                         }
                     }
 
-                    Separator { Layout.fillWidth: true }
+                    Separator { Layout.fillWidth: true; visible: false }
 
                     // ═══════════════════════════════════════════════════════════════
                     // WORKSPACES SECTION
                     // ═══════════════════════════════════════════════════════════════
                     ColumnLayout {
+                        visible: root.currentSection === "workspaces"
                         Layout.fillWidth: true
                         spacing: 8
 
@@ -722,12 +800,13 @@ Item {
                         }
                     }
 
-                    Separator { Layout.fillWidth: true }
+                    Separator { Layout.fillWidth: true; visible: false }
 
                     // ═══════════════════════════════════════════════════════════════
                     // OVERVIEW SECTION
                     // ═══════════════════════════════════════════════════════════════
                     ColumnLayout {
+                        visible: root.currentSection === "overview"
                         Layout.fillWidth: true
                         spacing: 8
 
@@ -832,12 +911,13 @@ Item {
                         }
                     }
 
-                    Separator { Layout.fillWidth: true }
+                    Separator { Layout.fillWidth: true; visible: false }
 
                     // ═══════════════════════════════════════════════════════════════
                     // DOCK SECTION
                     // ═══════════════════════════════════════════════════════════════
                     ColumnLayout {
+                        visible: root.currentSection === "dock"
                         Layout.fillWidth: true
                         spacing: 8
 
@@ -1042,12 +1122,13 @@ Item {
                         }
                     }
 
-                    Separator { Layout.fillWidth: true }
+                    Separator { Layout.fillWidth: true; visible: false }
 
                     // ═══════════════════════════════════════════════════════════════
                     // LOCKSCREEN SECTION
                     // ═══════════════════════════════════════════════════════════════
                     ColumnLayout {
+                        visible: root.currentSection === "lockscreen"
                         Layout.fillWidth: true
                         spacing: 8
 
@@ -1076,12 +1157,13 @@ Item {
                         }
                     }
 
-                    Separator { Layout.fillWidth: true }
+                    Separator { Layout.fillWidth: true; visible: false }
 
                     // ═══════════════════════════════════════════════════════════════
                     // DESKTOP SECTION
                     // ═══════════════════════════════════════════════════════════════
                     ColumnLayout {
+                        visible: root.currentSection === "desktop"
                         Layout.fillWidth: true
                         spacing: 8
 
