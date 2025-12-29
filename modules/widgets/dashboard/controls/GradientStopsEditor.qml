@@ -213,6 +213,10 @@ Item {
                             target: root
                             function onStopsChanged() { gradientPreviewCanvas.requestPaint(); }
                         }
+                        Connections {
+                            target: Colors
+                            function onLoaded() { gradientPreviewCanvas.requestPaint(); }
+                        }
                         
                         // Repaint when size changes
                         onWidthChanged: requestPaint()

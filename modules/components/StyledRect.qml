@@ -118,6 +118,10 @@ ClippingRectangle {
             target: root
             function onGradientStopsChanged() { linearGradientCanvas.requestPaint(); }
         }
+        Connections {
+            target: Colors
+            function onLoaded() { linearGradientCanvas.requestPaint(); }
+        }
         Component.onCompleted: requestPaint()
     }
 
