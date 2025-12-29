@@ -300,6 +300,7 @@ PanelWindow {
         scanColorPresets();
         // Start directory monitoring
         directoryWatcher.reload();
+        presetsWatcher.reload();
         // Load initial wallpaper config
         wallpaperConfig.reload();
         
@@ -556,6 +557,19 @@ PanelWindow {
         }
 
         // Remove onLoadFailed to prevent premature fallback activation
+    }
+
+    // Directory watcher for color presets
+    FileView {
+        id: presetsWatcher
+        path: colorPresetsDir
+        watchChanges: true
+        printErrors: false
+        
+        onFileChanged: {
+             console.log("Color presets directory changed, rescanning...");
+             scanPresetsProcess.running = true;
+        }
     }
 
     Process {
