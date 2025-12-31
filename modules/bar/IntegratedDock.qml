@@ -34,44 +34,69 @@ StyledRect {
     implicitWidth: isVertical ? 36 : dockLayout.implicitWidth + 8
     implicitHeight: isVertical ? dockLayoutVertical.implicitHeight + 8 : 36
 
-    // Horizontal layout
-    RowLayout {
-        id: dockLayout
-        anchors.centerIn: parent
-        spacing: root.itemSpacing
-        visible: !root.isVertical
+    Layout.fillWidth: !isVertical
+    Layout.fillHeight: isVertical
 
-        // App buttons
-        Repeater {
-            model: TaskbarApps.apps
+    Flickable {
+        id: flickable
+        anchors.fill: parent
+        contentWidth: isVertical ? parent.width : contentContainerHorizontal.width
+        contentHeight: isVertical ? contentContainerVertical.height : parent.height
+        clip: true
+        interactive: true
+        boundsBehavior: Flickable.StopAtBounds
 
-            IntegratedDockAppButton {
-                required property var modelData
-                appToplevel: modelData
-                iconSize: root.iconSize
-                Layout.alignment: Qt.AlignVCenter
-                orientation: root.orientation
+        // Horizontal layout container
+        Item {
+            id: contentContainerHorizontal
+            visible: !root.isVertical
+            height: parent.height
+            width: Math.max(flickable.width, dockLayout.implicitWidth + 8)
+
+            RowLayout {
+                id: dockLayout
+                anchors.centerIn: parent
+                spacing: root.itemSpacing
+
+                // App buttons
+                Repeater {
+                    model: TaskbarApps.apps
+
+                    IntegratedDockAppButton {
+                        required property var modelData
+                        appToplevel: modelData
+                        iconSize: root.iconSize
+                        Layout.alignment: Qt.AlignVCenter
+                        orientation: root.orientation
+                    }
+                }
             }
         }
-    }
 
-    // Vertical layout
-    ColumnLayout {
-        id: dockLayoutVertical
-        anchors.centerIn: parent
-        spacing: root.itemSpacing
-        visible: root.isVertical
+        // Vertical layout container
+        Item {
+            id: contentContainerVertical
+            visible: root.isVertical
+            width: parent.width
+            height: Math.max(flickable.height, dockLayoutVertical.implicitHeight + 8)
 
-        // App buttons
-        Repeater {
-            model: TaskbarApps.apps
+            ColumnLayout {
+                id: dockLayoutVertical
+                anchors.centerIn: parent
+                spacing: root.itemSpacing
 
-            IntegratedDockAppButton {
-                required property var modelData
-                appToplevel: modelData
-                iconSize: root.iconSize
-                Layout.alignment: Qt.AlignHCenter
-                orientation: root.orientation
+                // App buttons
+                Repeater {
+                    model: TaskbarApps.apps
+
+                    IntegratedDockAppButton {
+                        required property var modelData
+                        appToplevel: modelData
+                        iconSize: root.iconSize
+                        Layout.alignment: Qt.AlignHCenter
+                        orientation: root.orientation
+                    }
+                }
             }
         }
     }

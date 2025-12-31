@@ -153,12 +153,6 @@ PanelWindow {
             position: panel.position
         }
 
-        Bar.IntegratedDock {
-            bar: panel
-            orientation: panel.orientation
-            anchors.centerIn: parent
-            visible: panel.orientation === "horizontal" && integratedDockEnabled && integratedDockPosition === "center"
-        }
 
         RowLayout {
             id: horizontalLayout
@@ -188,8 +182,15 @@ PanelWindow {
                 layerEnabled: false
             }
 
+            Bar.IntegratedDock {
+                bar: panel
+                orientation: panel.orientation
+                visible: panel.orientation === "horizontal" && integratedDockEnabled && integratedDockPosition === "center"
+            }
+
             Item {
                 Layout.fillWidth: true
+                visible: !(panel.orientation === "horizontal" && integratedDockEnabled && integratedDockPosition === "center")
             }
 
             PresetsButton {
