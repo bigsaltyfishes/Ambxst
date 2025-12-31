@@ -182,10 +182,31 @@ PanelWindow {
                 layerEnabled: false
             }
 
-            Bar.IntegratedDock {
-                bar: panel
-                orientation: panel.orientation
+            Item {
+                Layout.fillWidth: true
+                Layout.fillHeight: true
                 visible: panel.orientation === "horizontal" && integratedDockEnabled && integratedDockPosition === "center"
+
+                Bar.IntegratedDock {
+                    bar: panel
+                    orientation: panel.orientation
+                    anchors.verticalCenter: parent.verticalCenter
+                    
+                    // Calculate target position to be absolutely centered in the bar
+                    // parent.x is the container's position relative to the RowLayout (and thus the Bar)
+                    property real targetX: (bar.width - width) / 2 - parent.x
+                    
+                    // Clamp the x position so it never leaves the container (preventing overlap)
+                    x: Math.max(0, Math.min(parent.width - width, targetX))
+                    
+                    // Calculate max width that keeps the dock centered without hitting boundaries
+                    property real availableLeft: (bar.width / 2) - parent.x
+                    property real availableRight: (parent.x + parent.width) - (bar.width / 2)
+                    property real maxCenteredWidth: Math.max(0, Math.min(availableLeft, availableRight) * 2)
+                    
+                    width: Math.min(implicitWidth, maxCenteredWidth)
+                    height: implicitHeight
+                }
             }
 
             Item {
@@ -252,33 +273,47 @@ PanelWindow {
                 layerEnabled: false
             }
 
-            LayoutSelectorButton {
-                id: layoutSelectorButtonVert
-                bar: panel
-                layerEnabled: false
-            }
-
-            Workspaces {
-                orientation: panel.orientation
-                bar: QtObject {
-                    property var screen: panel.screen
-                }
-                layer.enabled: false
-            }
-
-            Bar.IntegratedDock {
-                bar: panel
-                orientation: panel.orientation
-                visible: integratedDockEnabled
-            }
-
+            // Center Group Container
             Item {
                 Layout.fillHeight: true
-                visible: !integratedDockEnabled
-            }
+                Layout.fillWidth: true
 
-            ToolsButton {
-                id: toolsButtonVert
+                ColumnLayout {
+                    anchors.centerIn: parent
+                    height: Math.min(parent.height, implicitHeight)
+                    width: parent.width
+                    spacing: 4
+
+                    LayoutSelectorButton {
+                        id: layoutSelectorButtonVert
+                        bar: panel
+                        layerEnabled: false
+                        Layout.alignment: Qt.AlignHCenter
+                    }
+
+                    Workspaces {
+                        id: workspacesVert
+                        orientation: panel.orientation
+                        bar: QtObject {
+                            property var screen: panel.screen
+                        }
+                        layer.enabled: false
+                        Layout.alignment: Qt.AlignHCenter
+                    }
+
+                    Bar.IntegratedDock {
+                        bar: panel
+                        orientation: panel.orientation
+                        visible: integratedDockEnabled
+                        Layout.fillHeight: true
+                        Layout.fillWidth: true
+                    }
+                    
+                    ToolsButton {
+                        id: toolsButtonVert
+                        Layout.alignment: Qt.AlignHCenter
+                    }
+                }
             }
 
             PresetsButton {

@@ -34,9 +34,6 @@ StyledRect {
     implicitWidth: isVertical ? 36 : dockLayout.implicitWidth + 8
     implicitHeight: isVertical ? dockLayoutVertical.implicitHeight + 8 : 36
 
-    Layout.fillWidth: !isVertical
-    Layout.fillHeight: isVertical
-
     Flickable {
         id: flickable
         anchors.fill: parent
