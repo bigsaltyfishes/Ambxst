@@ -28,17 +28,20 @@ PanelWindow {
 
     // Integrated dock configuration
     readonly property bool integratedDockEnabled: (Config.dock?.enabled ?? false) && (Config.dock?.theme ?? "default") === "integrated"
-    // Map dock position for integrated: "bottom"/"top" should be "center" for integrated dock
-    // In vertical orientation, "center" falls back to "left" (start) to avoid layout issues
+    // Map dock position for integrated based on orientation
     readonly property string integratedDockPosition: {
         const pos = Config.dock?.position ?? "center";
-        // For integrated, "bottom" and "top" don't make sense - map to "center"
-        let mappedPos = (pos === "bottom" || pos === "top") ? "center" : pos;
-        // In vertical orientation, center is not supported - fallback to "left" (start)
-        if (panel.orientation === "vertical" && mappedPos === "center") {
-            return "left";
+        
+        if (panel.orientation === "horizontal") {
+            if (pos === "left" || pos === "start") return "start";
+            if (pos === "right" || pos === "end") return "end";
+            return "center";
+        } else {
+            // vertical
+            if (pos === "top" || pos === "start") return "start";
+            if (pos === "bottom" || pos === "end") return "end";
+            return "center";
         }
-        return mappedPos;
     }
 
     anchors {
@@ -185,19 +188,21 @@ PanelWindow {
             Item {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
-                visible: panel.orientation === "horizontal" && integratedDockEnabled && integratedDockPosition === "center"
+                visible: panel.orientation === "horizontal" && integratedDockEnabled
 
                 Bar.IntegratedDock {
                     bar: panel
                     orientation: panel.orientation
                     anchors.verticalCenter: parent.verticalCenter
                     
-                    // Calculate target position to be absolutely centered in the bar
-                    // using mapToItem to account for layout margins and offsets
+                    // Calculate target position based on config
                     property real targetX: {
-                        if (!parent || !bar) return 0;
-                        var parentPos = parent.mapToItem(bar, 0, 0);
-                        return (bar.width - width) / 2 - parentPos.x;
+                        if (integratedDockPosition === "start") return 0;
+                        if (integratedDockPosition === "end") return parent.width - width;
+                        
+                        // Center logic (reactive using parent.x + margin offset)
+                        // RowLayout has anchors.margins: 4, so offset is 4
+                        return (bar.width - width) / 2 - (parent.x + 4);
                     }
                     
                     // Clamp the x position so it never leaves the container (preventing overlap)
@@ -210,7 +215,7 @@ PanelWindow {
 
             Item {
                 Layout.fillWidth: true
-                visible: !(panel.orientation === "horizontal" && integratedDockEnabled && integratedDockPosition === "center")
+                visible: !(panel.orientation === "horizontal" && integratedDockEnabled)
             }
 
             PresetsButton {
@@ -280,11 +285,16 @@ PanelWindow {
                 ColumnLayout {
                     anchors.horizontalCenter: parent.horizontalCenter
                     
-                    // Calculate target position to be absolutely centered in the bar (vertically)
+                    // Calculate target position based on config
                     property real targetY: {
-                        if (!parent || !bar) return 0;
-                        var parentPos = parent.mapToItem(bar, 0, 0);
-                        return (bar.height - height) / 2 - parentPos.y;
+                        if (integratedDockEnabled) {
+                            if (integratedDockPosition === "start") return 0;
+                            if (integratedDockPosition === "end") return parent.height - height;
+                        }
+
+                        // Center logic (reactive using parent.y + margin offset)
+                        // ColumnLayout has anchors.margins: 4, so offset is 4
+                        return (bar.height - height) / 2 - (parent.y + 4);
                     }
                     
                     // Clamp y position
