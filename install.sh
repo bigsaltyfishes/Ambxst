@@ -112,7 +112,7 @@ install_dependencies() {
 
       # Tools
       brightnessctl ddcutil fontconfig grim slurp imagemagick jq sqlite upower
-      wl-clipboard wlsunset wtype zbar glib2 python-pipx zenity inetutils
+      wl-clipboard wlsunset wtype zbar glib2 python-pipx zenity inetutils power-profiles-daemon
 
       # Tesseract
       tesseract tesseract-data-eng tesseract-data-spa tesseract-data-jpn tesseract-data-chi_sim tesseract-data-chi_tra tesseract-data-kor tesseract-data-lat
