@@ -70,6 +70,53 @@ install_dependencies() {
 		nix profile install "$FLAKE_URI" --impure
 		;;
 
+	fedora)
+		log_info "Preparing installation for Fedora..."
+
+		# Enable Quickshell COPR
+		log_info "Enabling Quickshell COPR..."
+		sudo dnf install -y dnf-plugins-core
+		sudo dnf copr enable -y errornointernet/quickshell
+
+		log_info "Installing dependencies..."
+
+		# Package list adapted for Fedora
+		PKGS=(
+			# Apps
+			kitty tmux fuzzel network-manager-applet blueman
+
+			# Audio/Video
+			pipewire wireplumber easyeffects playerctl
+			# Note: ffmpeg/x264 often require rpmfusion, omitting for basic install safety
+			# but ensure ffmpeg-free is present if possible or let user handle restricted codecs
+
+			# Qt6
+			qt6-qtbase qt6-qtdeclarative qt6-qtwayland qt6-qtsvg qt6-qttools
+			qt6-qtimageformats qt6-qtmultimedia qt6-qtshadertools
+
+			# KDE/Icons (Fedora naming)
+			kf6-syntax-highlighting kf6-breeze-icons hicolor-icon-theme
+
+			# Tools
+			brightnessctl ddcutil fontconfig grim slurp ImageMagick jq sqlite upower
+			wl-clipboard wlsunset wtype zbar glib2 pipx zenity power-profiles-daemon
+
+			# Tesseract (Fedora uses langpack naming)
+			tesseract tesseract-langpack-eng tesseract-langpack-spa tesseract-langpack-jpn
+			tesseract-langpack-chi_sim tesseract-langpack-chi_tra tesseract-langpack-kor
+			tesseract-langpack-lat
+
+			# Fonts
+			google-roboto-fonts google-roboto-mono-fonts dejavu-sans-fonts liberation-fonts
+			google-noto-fonts-common google-noto-cjk-fonts google-noto-emoji-fonts
+
+			# Quickshell
+			quickshell-git
+		)
+
+		sudo dnf install -y "${PKGS[@]}"
+		;;
+
 	arch)
 		log_info "Preparing installation..."
 
@@ -155,7 +202,7 @@ setup_repo() {
 
 # === Quickshell Build (Git) ===
 install_quickshell() {
-	if [ "$DISTRO" == "nixos" ]; then return; fi # NixOS installs via flake
+	if [ "$DISTRO" == "nixos" ] || [ "$DISTRO" == "fedora" ]; then return; fi # NixOS installs via flake, Fedora via COPR
 
 	if ! command -v qs >/dev/null; then
 		log_info "Building Quickshell from source..."
