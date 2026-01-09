@@ -286,7 +286,7 @@ Item {
                                         anchors.centerIn: parent
                                         width: 28
                                         height: 28
-                                        radius: 14
+                                        radius: Styling.radius(0)
                                         color: Styling.srItem("overprimary")
                                         visible: dayColumn.isToday
                                     }
