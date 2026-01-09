@@ -21,6 +21,9 @@ QtObject {
     
     // Internal storage for active workspace IDs
     property var _activeWorkspaceIds: []
+    
+    // Store monitor scale factor for coordinate scaling
+    property real monitorScale: 1.0
 
     // Process to resolve XDG_PICTURES_DIR
     property Process xdgProcess: Process {
@@ -64,6 +67,34 @@ QtObject {
         }
     }
     
+    // Process to get scale factor before freeze
+    property Process scaleProcess: Process {
+        id: scaleProcess
+        command: ["hyprctl", "-j", "monitors"]
+        stdout: StdioCollector {}
+        onExited: exitCode => {
+            if (exitCode === 0) {
+                try {
+                    var monitors = JSON.parse(scaleProcess.stdout.text)
+                    for (var i = 0; i < monitors.length; i++) {
+                        if (monitors[i].focused && monitors[i].scale) {
+                            root.monitorScale = monitors[i].scale
+                            console.log("Screenshot: Monitor scale factor detected: " + root.monitorScale)
+                            break
+                        }
+                    }
+                } catch (e) {
+                    console.warn("Screenshot: Failed to parse scale: " + e.message)
+                    root.monitorScale = 1.0
+                }
+            } else {
+                root.monitorScale = 1.0
+            }
+            // After getting scale, proceed with freeze
+            freezeProcess.running = true
+        }
+    }
+    
     // Process for fetching monitors (to get active workspaces reliably)
     property Process monitorsProcess: Process {
         id: monitorsProcess
@@ -78,6 +109,11 @@ QtObject {
                         if (monitors[i].activeWorkspace) {
                             ids.push(monitors[i].activeWorkspace.id)
                         }
+                        // Get scale factor from focused monitor
+                        if (monitors[i].focused && monitors[i].scale) {
+                            root.monitorScale = monitors[i].scale
+                            console.log("Screenshot: Monitor scale factor detected: " + root.monitorScale)
+                        }
                     }
                     root._activeWorkspaceIds = ids
                     console.log("Screenshot: Active workspaces found via hyprctl: " + JSON.stringify(ids))
@@ -88,11 +124,13 @@ QtObject {
                     console.warn("Screenshot: Failed to parse monitors: " + e.message)
                     // Fallback: try fetching clients anyway, filtering might fail or be permissive
                     root._activeWorkspaceIds = []
+                    root.monitorScale = 1.0
                     clientsProcess.running = true
                 }
             } else {
                 console.warn("Screenshot: Failed to fetch monitors")
                 root._activeWorkspaceIds = []
+                root.monitorScale = 1.0
                 clientsProcess.running = true
             }
         }
@@ -155,7 +193,8 @@ QtObject {
     }
 
     function freezeScreen() {
-        freezeProcess.running = true
+        // First get scale factor, then freeze
+        scaleProcess.running = true
     }
 
     function fetchWindows() {
@@ -185,8 +224,16 @@ QtObject {
         var filename = "Screenshot_" + getTimestamp() + ".png"
         root.finalPath = root.screenshotsDir + "/" + filename
         
+        // Scale coordinates by monitor scale factor for accurate cropping
+        var scaledX = Math.round(x * root.monitorScale)
+        var scaledY = Math.round(y * root.monitorScale)
+        var scaledW = Math.round(w * root.monitorScale)
+        var scaledH = Math.round(h * root.monitorScale)
+        
+        console.log(`Screenshot: Region - logical: ${w}x${h}+${x}+${y}, physical: ${scaledW}x${scaledH}+${scaledX}+${scaledY}, scale: ${root.monitorScale}`)
+        
         // convert /tmp/ambxst_freeze.png -crop WxH+X+Y /path/to/save.png
-        var geom = `${w}x${h}+${x}+${y}`
+        var geom = `${scaledW}x${scaledH}+${scaledX}+${scaledY}`
         cropProcess.command = ["convert", root.tempPath, "-crop", geom, root.finalPath]
         cropProcess.running = true
     }

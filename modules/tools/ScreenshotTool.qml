@@ -139,7 +139,7 @@ PanelWindow {
         Image {
             id: previewImage
             anchors.fill: parent
-            fillMode: Image.PreserveAspectFit
+            fillMode: Image.Stretch
             visible: screenshotPopup.state === "active"
         }
 
