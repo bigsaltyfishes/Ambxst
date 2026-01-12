@@ -125,7 +125,7 @@ install_dependencies() {
 			google-noto-fonts-common google-noto-cjk-fonts google-noto-emoji-fonts
 
 			# Special Packages
-			mpvpaper matugen R-CRAN-phosphoricons
+			mpvpaper matugen R-CRAN-phosphoricons adw-gtk3-theme
 
 			# Quickshell
 			quickshell-git
@@ -214,7 +214,7 @@ install_dependencies() {
 
 			# Special Packages
 			matugen gpu-screen-recorder wl-clip-persist mpvpaper
-			quickshell-git ttf-phosphor-icons ttf-league-gothic
+			quickshell-git ttf-phosphor-icons ttf-league-gothic adw-gtk-theme
 		)
 
 		$AUR_HELPER -S --needed --noconfirm "${PKGS[@]}"
