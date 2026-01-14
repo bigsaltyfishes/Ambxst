@@ -1455,51 +1455,73 @@ Singleton {
                         property string key: "C"
                         property string dispatcher: "global"
                         property string argument: "ambxst:config"
+                        property string flags: ""
                     }
                     property JsonObject lockscreen: JsonObject {
                         property list<string> modifiers: ["SUPER"]
                         property string key: "L"
                         property string dispatcher: "exec"
                         property string argument: "loginctl lock-session"
+                        property string flags: ""
                     }
                     property JsonObject overview: JsonObject {
                         property list<string> modifiers: ["SUPER"]
                         property string key: "TAB"
                         property string dispatcher: "global"
                         property string argument: "ambxst:overview"
+                        property string flags: ""
                     }
                     property JsonObject powermenu: JsonObject {
                         property list<string> modifiers: ["SUPER"]
                         property string key: "ESCAPE"
                         property string dispatcher: "global"
                         property string argument: "ambxst:powermenu"
+                        property string flags: ""
                     }
                     property JsonObject tools: JsonObject {
                         property list<string> modifiers: ["SUPER"]
                         property string key: "S"
                         property string dispatcher: "global"
                         property string argument: "ambxst:tools"
+                        property string flags: ""
                     }
                     property JsonObject screenshot: JsonObject {
                         property list<string> modifiers: ["SUPER", "SHIFT"]
                         property string key: "S"
                         property string dispatcher: "global"
                         property string argument: "ambxst:screenshot"
+                        property string flags: ""
                     }
                     property JsonObject screenrecord: JsonObject {
                         property list<string> modifiers: ["SUPER", "SHIFT"]
                         property string key: "R"
                         property string dispatcher: "global"
                         property string argument: "ambxst:screenrecord"
+                        property string flags: ""
                     }
                     property JsonObject lens: JsonObject {
                         property list<string> modifiers: ["SUPER", "SHIFT"]
                         property string key: "A"
                         property string dispatcher: "global"
                         property string argument: "ambxst:lens"
+                        property string flags: ""
                     }
                 }
             }
+            // Functions to get defaults
+            function getAmbxstDefault(section, key) {
+                if (ambxst[section] && ambxst[section][key]) {
+                    return {
+                        "modifiers": ambxst[section][key].modifiers || [],
+                        "key": ambxst[section][key].key || "",
+                        "dispatcher": ambxst[section][key].dispatcher || "",
+                        "argument": ambxst[section][key].argument || "",
+                        "flags": ambxst[section][key].flags || ""
+                    };
+                }
+                return null;
+            }
+
             property list<var> custom: [
                 // Window Management
                 {

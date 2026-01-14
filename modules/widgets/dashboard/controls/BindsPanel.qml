@@ -916,6 +916,69 @@ Item {
                             }
                         }
 
+                        // Reset button (only for Ambxst binds)
+                        StyledRect {
+                            id: resetButton
+                            visible: root.isEditingAmbxst
+                            variant: resetButtonArea.pressed ? "primary" : (resetButtonArea.containsMouse ? "focus" : "common")
+                            Layout.preferredWidth: resetButtonContent.width + 24
+                            Layout.preferredHeight: 36
+                            radius: Styling.radius(-2)
+
+                            Row {
+                                id: resetButtonContent
+                                anchors.centerIn: parent
+                                spacing: 6
+
+                                Text {
+                                    text: Icons.arrowCounterClockwise
+                                    font.family: Icons.font
+                                    font.pixelSize: 14
+                                    color: Styling.srItem(resetButton.variant)
+                                    anchors.verticalCenter: parent.verticalCenter
+                                }
+
+                                Text {
+                                    text: "Reset to default"
+                                    font.family: Config.theme.font
+                                    font.pixelSize: Styling.fontSize(0)
+                                    font.weight: Font.Medium
+                                    color: Styling.srItem(resetButton.variant)
+                                    anchors.verticalCenter: parent.verticalCenter
+                                }
+                            }
+
+                            MouseArea {
+                                id: resetButtonArea
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                cursorShape: Qt.PointingHandCursor
+                                onClicked: {
+                                    if (root.isEditingAmbxst && root.editingBind) {
+                                        const path = root.editingBind.path.split(".");
+                                        // path = ["ambxst", "dashboard"|"system", "bindName"]
+                                        const section = path[1];
+                                        const bindName = path[2];
+                                        
+                                        // Use the new helper in Config.qml to get the default values
+                                        const defaultBind = Config.keybindsLoader.adapter.getAmbxstDefault(section, bindName);
+                                        
+                                        if (defaultBind) {
+                                            root.editKeys = [{
+                                                "modifiers": defaultBind.modifiers || [],
+                                                "key": defaultBind.key || ""
+                                            }];
+                                            root.editActions = [{
+                                                "dispatcher": defaultBind.dispatcher || "",
+                                                "argument": defaultBind.argument || "",
+                                                "flags": defaultBind.flags || ""
+                                            }];
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
                         // Save button
                         StyledRect {
                             id: saveButton
