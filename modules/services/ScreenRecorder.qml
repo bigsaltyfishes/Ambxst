@@ -185,6 +185,6 @@ QtObject {
 
     property Process stopProcess: Process {
         id: stopProcess
-        command: ["killall", "-SIGINT", "gpu-screen-recorder"]
+        command: ["pkill", "-SIGINT", "-f", "gpu-screen-recorder"]
     }
 }
