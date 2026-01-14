@@ -64,7 +64,7 @@ PanelWindow {
         }
     }
     
-    // Listen for global changes
+    // Listen for global changes - MUST be outside any property binding loop
     Connections {
         target: GlobalStates
         function onScreenshotCaptureModeChanged() {
@@ -139,7 +139,7 @@ PanelWindow {
                 Screenshot.selectionH = 0;
                 
                 // Fetch windows if needed (idempotent call)
-                Screenshot.fetchWindows();
+                // Screenshot.fetchWindows();
                 
                 modeGrid.forceActiveFocus();
             }
@@ -348,7 +348,7 @@ PanelWindow {
             MouseArea {
                 anchors.fill: parent
                 hoverEnabled: true
-                preventStealing: true
+                // preventStealing: true 
             }
 
             ActionGrid {
@@ -360,6 +360,7 @@ PanelWindow {
                 spacing: 10
 
                 onCurrentIndexChanged: {
+                    // Update local property, which triggers GlobalStates update
                     screenshotPopup.currentMode = screenshotPopup.modes[currentIndex].name;
                 }
 

@@ -168,7 +168,14 @@ Singleton {
 
     // Screenshot Tool state
     property bool screenshotToolVisible: false
-    property string screenshotToolMode: "normal" // "normal" or "lens"
+    // property string screenshotToolMode: "normal" // DEPRECATED
+    property string screenshotCaptureMode: "region" // region, window, screen
+    
+    // Global selection state for synchronization
+    property int screenshotSelectionX: 0
+    property int screenshotSelectionY: 0
+    property int screenshotSelectionW: 0
+    property int screenshotSelectionH: 0
 
     // Screen Record Tool state
     property bool screenRecordToolVisible: false

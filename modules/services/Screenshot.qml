@@ -195,12 +195,13 @@ QtObject {
         _freezing = true;
         // Start by fetching monitors, then trigger freeze
         monitorsProcess.running = true
-        
-        // Reset flag after a delay or on completion?
-        // Since processes are async, we rely on them finishing.
-        // But if called simultaneously from 2 screens, we only want one chain.
-        // We can reset _freezing in executeFreezeBatch or onExited.
-        // Let's reset it in freezeProcess.onExited
+    }
+    
+    function fetchWindows() {
+        // Just fetch clients for window mode, using cached workspace IDs if available
+        // If no IDs, maybe we should fetch monitors first? 
+        // For speed, let's assume if this is called, monitors were likely fetched during freeze.
+        clientsProcess.running = true
     }
     
     function executeFreezeBatch() {
