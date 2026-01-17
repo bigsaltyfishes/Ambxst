@@ -107,8 +107,8 @@ QtObject {
                     }
                     root._activeWorkspaceIds = ids
                     
-                    // Now freeze screens using the monitor list
-                    root.executeFreezeBatch();
+                    // Freeze already initiated in freezeScreen(), so we don't call it here.
+                    // root.executeFreezeBatch();
                     
                     // Also fetch clients for window mode
                     clientsProcess.running = true
@@ -193,7 +193,29 @@ QtObject {
     function freezeScreen() {
         if (_freezing) return;
         _freezing = true;
-        // Start by fetching monitors, then trigger freeze
+
+        // FAST PATH: Use Quickshell.screens to start freeze immediately
+        // Map Quickshell screens to the format expected (physical dimensions)
+        var qsScreens = Quickshell.screens;
+        var mappedMonitors = [];
+        for (var i = 0; i < qsScreens.length; i++) {
+             var s = qsScreens[i];
+             mappedMonitors.push({
+                 id: i, // Dummy ID
+                 name: s.name,
+                 x: s.x,
+                 y: s.y,
+                 width: s.width * s.scale, // approx physical width
+                 height: s.height * s.scale, // approx physical height
+                 scale: s.scale
+             });
+        }
+        root.monitors = mappedMonitors;
+        
+        // Trigger freeze immediately
+        root.executeFreezeBatch();
+
+        // Start fetching full metadata (workspaces) for Window Mode
         monitorsProcess.running = true
     }
     
