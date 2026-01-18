@@ -159,13 +159,21 @@ PanelWindow {
                     
                     // Show Grab Hand
                     cursorShape: Qt.DragCopyCursor
+                    acceptedButtons: Qt.LeftButton | Qt.MiddleButton
                     
                     // Bind drag target to initiate the drag sequence
                     drag.target: dragTarget
                     
-                    // Click to Open
-                    onClicked: {
-                        Qt.openUrlExternally("file://" + root.imagePath);
+                    // Click to Open (Left) or Delete (Middle)
+                    onClicked: mouse => {
+                        if (mouse.button === Qt.MiddleButton) {
+                             var proc = Qt.createQmlObject('import Quickshell; import Quickshell.Io; Process { }', root);
+                             proc.command = ["rm", root.imagePath];
+                             proc.running = true;
+                             root.imagePath = "";
+                        } else {
+                             Qt.openUrlExternally("file://" + root.imagePath);
+                        }
                     }
                 }
                 
