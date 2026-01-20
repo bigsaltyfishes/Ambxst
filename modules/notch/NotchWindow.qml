@@ -397,7 +397,7 @@ PanelWindow {
                 Qt.callLater(() => notchContainer.forceActiveFocus());
             } else {
                 if (notchContainer.stackView.depth > 1) {
-                    notchContainer.stackView.replace(defaultViewComponent);
+                    notchContainer.stackView.pop();
                     notchContainer.isShowingDefault = true;
                     notchContainer.isShowingNotifications = false;
                 }
@@ -410,7 +410,7 @@ PanelWindow {
                 Qt.callLater(() => notchContainer.forceActiveFocus());
             } else {
                 if (notchContainer.stackView.depth > 1) {
-                    notchContainer.stackView.replace(defaultViewComponent);
+                    notchContainer.stackView.pop();
                     notchContainer.isShowingDefault = true;
                     notchContainer.isShowingNotifications = false;
                 }
@@ -423,7 +423,7 @@ PanelWindow {
                 Qt.callLater(() => notchContainer.forceActiveFocus());
             } else {
                 if (notchContainer.stackView.depth > 1) {
-                    notchContainer.stackView.replace(defaultViewComponent);
+                    notchContainer.stackView.pop();
                     notchContainer.isShowingDefault = true;
                     notchContainer.isShowingNotifications = false;
                 }
