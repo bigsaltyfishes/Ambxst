@@ -48,13 +48,20 @@ Rectangle {
 
     SettingsIndex { id: searchIndex }
 
+    // Store pending subsection to apply when panel loads
+    property string pendingSubSection: ""
+
     function dispatchSubSection(sectionId, subSectionId) {
         if (!subSectionId || subSectionId === "") return;
         
-        if (sectionId === 4) themePanel.currentSection = subSectionId;
-        if (sectionId === 6) systemPanel.currentSection = subSectionId;
-        if (sectionId === 7) compositorPanel.currentSection = subSectionId;
-        if (sectionId === 8) shellPanel.currentSection = subSectionId;
+        // Panels that support subsections: Theme(4), System(6), Compositor(7), Shell(8)
+        if ([4, 6, 7, 8].includes(sectionId)) {
+            if (panelLoader.item && panelLoader.status === Loader.Ready) {
+                panelLoader.item.currentSection = subSectionId;
+            } else {
+                pendingSubSection = subSectionId;
+            }
+        }
     }
 
     // Scroll sidebar to ensure visible selection
@@ -414,14 +421,28 @@ Rectangle {
                 }
             }
 
-            // WiFi Panel
-            WifiPanel {
-                id: wifiPanel
-                anchors.fill: parent
-                maxContentWidth: contentArea.maxContentWidth
-                visible: opacity > 0
-                opacity: root.currentSection === 0 ? 1 : 0
+            // Panel definitions for Loader
+            readonly property var panelComponents: [
+                { component: "WifiPanel.qml", section: 0 },
+                { component: "BluetoothPanel.qml", section: 1 },
+                { component: "AudioMixerPanel.qml", section: 2 },
+                { component: "EasyEffectsPanel.qml", section: 3 },
+                { component: "ThemePanel.qml", section: 4 },
+                { component: "BindsPanel.qml", section: 5 },
+                { component: "SystemPanel.qml", section: 6 },
+                { component: "CompositorPanel.qml", section: 7 },
+                { component: "ShellPanel.qml", section: 8 }
+            ]
 
+            // Lazy-loaded panel using Loader
+            Loader {
+                id: panelLoader
+                anchors.fill: parent
+                asynchronous: true
+                source: contentArea.panelComponents[root.currentSection]?.component ?? ""
+
+                // Fade in animation
+                opacity: status === Loader.Ready ? 1 : 0
                 Behavior on opacity {
                     enabled: Config.animDuration > 0
                     NumberAnimation {
@@ -430,246 +451,13 @@ Rectangle {
                     }
                 }
 
-                transform: Translate {
-                    y: root.currentSection === 0 ? 0 : (root.currentSection > 0 ? -20 : 20)
-
-                    Behavior on y {
-                        enabled: Config.animDuration > 0
-                        NumberAnimation {
-                            duration: Config.animDuration
-                            easing.type: Easing.OutCubic
-                        }
-                    }
-                }
-            }
-
-            // Bluetooth Panel
-            BluetoothPanel {
-                id: bluetoothPanel
-                anchors.fill: parent
-                maxContentWidth: contentArea.maxContentWidth
-                visible: opacity > 0
-                opacity: root.currentSection === 1 ? 1 : 0
-
-                Behavior on opacity {
-                    enabled: Config.animDuration > 0
-                    NumberAnimation {
-                        duration: Config.animDuration
-                        easing.type: Easing.OutCubic
-                    }
-                }
-
-                transform: Translate {
-                    y: root.currentSection === 1 ? 0 : (root.currentSection > 1 ? -20 : 20)
-
-                    Behavior on y {
-                        enabled: Config.animDuration > 0
-                        NumberAnimation {
-                            duration: Config.animDuration
-                            easing.type: Easing.OutCubic
-                        }
-                    }
-                }
-            }
-
-            // Audio Mixer Panel
-            AudioMixerPanel {
-                id: audioPanel
-                anchors.fill: parent
-                maxContentWidth: contentArea.maxContentWidth
-                visible: opacity > 0
-                opacity: root.currentSection === 2 ? 1 : 0
-
-                Behavior on opacity {
-                    enabled: Config.animDuration > 0
-                    NumberAnimation {
-                        duration: Config.animDuration
-                        easing.type: Easing.OutCubic
-                    }
-                }
-
-                transform: Translate {
-                    y: root.currentSection === 2 ? 0 : (root.currentSection > 2 ? -20 : 20)
-
-                    Behavior on y {
-                        enabled: Config.animDuration > 0
-                        NumberAnimation {
-                            duration: Config.animDuration
-                            easing.type: Easing.OutCubic
-                        }
-                    }
-                }
-            }
-
-            // EasyEffects Panel
-            EasyEffectsPanel {
-                id: effectsPanel
-                anchors.fill: parent
-                maxContentWidth: contentArea.maxContentWidth
-                visible: opacity > 0
-                opacity: root.currentSection === 3 ? 1 : 0
-
-                Behavior on opacity {
-                    enabled: Config.animDuration > 0
-                    NumberAnimation {
-                        duration: Config.animDuration
-                        easing.type: Easing.OutCubic
-                    }
-                }
-
-                transform: Translate {
-                    y: root.currentSection === 3 ? 0 : (root.currentSection > 3 ? -20 : 20)
-
-                    Behavior on y {
-                        enabled: Config.animDuration > 0
-                        NumberAnimation {
-                            duration: Config.animDuration
-                            easing.type: Easing.OutCubic
-                        }
-                    }
-                }
-            }
-
-            // Theme Panel
-            ThemePanel {
-                id: themePanel
-                anchors.fill: parent
-                maxContentWidth: contentArea.maxContentWidth
-                visible: opacity > 0
-                opacity: root.currentSection === 4 ? 1 : 0
-
-                Behavior on opacity {
-                    enabled: Config.animDuration > 0
-                    NumberAnimation {
-                        duration: Config.animDuration
-                        easing.type: Easing.OutCubic
-                    }
-                }
-
-                transform: Translate {
-                    y: root.currentSection === 4 ? 0 : (root.currentSection > 4 ? -20 : 20)
-
-                    Behavior on y {
-                        enabled: Config.animDuration > 0
-                        NumberAnimation {
-                            duration: Config.animDuration
-                            easing.type: Easing.OutCubic
-                        }
-                    }
-                }
-            }
-
-            // Binds Panel
-            BindsPanel {
-                id: bindsPanel
-                anchors.fill: parent
-                maxContentWidth: contentArea.maxContentWidth
-                visible: opacity > 0
-                opacity: root.currentSection === 5 ? 1 : 0
-
-                Behavior on opacity {
-                    enabled: Config.animDuration > 0
-                    NumberAnimation {
-                        duration: Config.animDuration
-                        easing.type: Easing.OutCubic
-                    }
-                }
-
-                transform: Translate {
-                    y: root.currentSection === 5 ? 0 : (root.currentSection > 5 ? -20 : 20)
-
-                    Behavior on y {
-                        enabled: Config.animDuration > 0
-                        NumberAnimation {
-                            duration: Config.animDuration
-                            easing.type: Easing.OutCubic
-                        }
-                    }
-                }
-            }
-
-            // System Panel
-            SystemPanel {
-                id: systemPanel
-                anchors.fill: parent
-                maxContentWidth: contentArea.maxContentWidth
-                visible: opacity > 0
-                opacity: root.currentSection === 6 ? 1 : 0
-
-                Behavior on opacity {
-                    enabled: Config.animDuration > 0
-                    NumberAnimation {
-                        duration: Config.animDuration
-                        easing.type: Easing.OutCubic
-                    }
-                }
-
-                transform: Translate {
-                    y: root.currentSection === 6 ? 0 : (root.currentSection > 6 ? -20 : 20)
-
-                    Behavior on y {
-                        enabled: Config.animDuration > 0
-                        NumberAnimation {
-                            duration: Config.animDuration
-                            easing.type: Easing.OutCubic
-                        }
-                    }
-                }
-            }
-
-            // Compositor Panel
-            CompositorPanel {
-                id: compositorPanel
-                anchors.fill: parent
-                maxContentWidth: contentArea.maxContentWidth
-                visible: opacity > 0
-                opacity: root.currentSection === 7 ? 1 : 0
-
-                Behavior on opacity {
-                    enabled: Config.animDuration > 0
-                    NumberAnimation {
-                        duration: Config.animDuration
-                        easing.type: Easing.OutCubic
-                    }
-                }
-
-                transform: Translate {
-                    y: root.currentSection === 7 ? 0 : (root.currentSection > 7 ? -20 : 20)
-
-                    Behavior on y {
-                        enabled: Config.animDuration > 0
-                        NumberAnimation {
-                            duration: Config.animDuration
-                            easing.type: Easing.OutCubic
-                        }
-                    }
-                }
-            }
-
-            // Shell Panel
-            ShellPanel {
-                id: shellPanel
-                anchors.fill: parent
-                maxContentWidth: contentArea.maxContentWidth
-                visible: opacity > 0
-                opacity: root.currentSection === 8 ? 1 : 0
-
-                Behavior on opacity {
-                    enabled: Config.animDuration > 0
-                    NumberAnimation {
-                        duration: Config.animDuration
-                        easing.type: Easing.OutCubic
-                    }
-                }
-
-                transform: Translate {
-                    y: root.currentSection === 8 ? 0 : (root.currentSection > 8 ? -20 : 20)
-
-                    Behavior on y {
-                        enabled: Config.animDuration > 0
-                        NumberAnimation {
-                            duration: Config.animDuration
-                            easing.type: Easing.OutCubic
+                onLoaded: {
+                    if (item) {
+                        item.maxContentWidth = contentArea.maxContentWidth;
+                        // Apply pending subsection if any
+                        if (root.pendingSubSection !== "" && item.currentSection !== undefined) {
+                            item.currentSection = root.pendingSubSection;
+                            root.pendingSubSection = "";
                         }
                     }
                 }
