@@ -8,7 +8,7 @@ import qs.config
 PanelWindow {
     id: screenCorners
 
-    visible: Config.theme.enableCorners
+    visible: Config.theme.enableCorners && Config.roundness > 0
 
     color: "transparent"
     exclusionMode: ExclusionMode.Ignore
@@ -26,7 +26,7 @@ PanelWindow {
         return Math.max(1, Math.min(Math.round(value), 40));
     }
 
-    readonly property int cornerSize: frameEnabled ? thickness * 3 : Styling.radius(4)
+    readonly property int cornerSize: Styling.radius(4) + (frameEnabled ? thickness : 0)
 
     anchors {
         top: true

@@ -5,6 +5,7 @@ import Quickshell.Wayland
 import qs.modules.components
 import qs.modules.corners
 import qs.modules.services
+import qs.modules.theme
 import qs.config
 
 Item {
@@ -21,7 +22,7 @@ Item {
         return Math.max(1, Math.min(Math.round(value), 40));
     }
     readonly property int actualFrameSize: frameEnabled ? thickness : 0
-    readonly property int innerRadius: Math.max(Config.roundness + 4, thickness * 2)
+    readonly property int innerRadius: Styling.radius(4)
 
     Item {
         id: noInputRegion
