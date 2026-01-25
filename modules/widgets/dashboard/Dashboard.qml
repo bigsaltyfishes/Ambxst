@@ -378,6 +378,7 @@ NotchAnimationBehavior {
                 // Tab 0: Unified Launcher
                 TabLoader {
                     property int index: 0
+                    active: true // Always load first tab
                     sourceComponent: unifiedLauncherComponent
                     z: visible ? 1 : 0
                 }

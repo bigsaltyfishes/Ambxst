@@ -24,30 +24,10 @@ Rectangle {
         anchors.fill: parent
         spacing: 8
 
-        // Player Loader (Replaces Launcher Placeholder)
-        Loader {
+        // Player (Replaces Loader)
+        FullPlayer {
             Layout.preferredWidth: root.leftPanelWidth
             Layout.fillHeight: true
-            
-            asynchronous: true
-            sourceComponent: Component {
-                FullPlayer { 
-                    anchors.fill: parent
-                    // Disable background since it's inside the panel area?
-                    // Actually FullPlayer is a StyledRect with variant="pane". 
-                    // If we want it to fill the height, we might need to adjust FullPlayer to fill vertically.
-                    // But FullPlayer layout is ColumnLayout.
-                    
-                    // Let's keep it simple first: just put it there.
-                    // FullPlayer has implicitHeight based on content.
-                    // If we want it to be centered vertically in the left panel?
-                    
-                    // The left panel was "Layout.fillHeight: true".
-                    // FullPlayer is a pane. If we fill height, the background will fill.
-                    
-                    // Let's let FullPlayer handle its content.
-                }
-            }
         }
 
         // Separator
@@ -190,15 +170,9 @@ Rectangle {
                     } 
                     */
 
-                    Loader {
+                    Calendar {
                         Layout.fillWidth: true
                         Layout.preferredHeight: width
-                        asynchronous: true
-                        sourceComponent: Component {
-                            Calendar { 
-                                anchors.fill: parent 
-                            }
-                        }
                     }
 
                     StyledRect {
@@ -211,15 +185,9 @@ Rectangle {
         }
 
         // Notification History
-        Loader {
+        NotificationHistory {
             Layout.fillWidth: true
             Layout.fillHeight: true
-            asynchronous: true
-            sourceComponent: Component {
-                NotificationHistory {
-                    anchors.fill: parent
-                }
-            }
         }
 
         // Circular controls column
