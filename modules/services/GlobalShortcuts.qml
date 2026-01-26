@@ -1,3 +1,6 @@
+pragma Singleton
+pragma ComponentBehavior: Bound
+
 import QtQuick
 import Quickshell.Hyprland._GlobalShortcuts
 import qs.modules.globals
@@ -6,15 +9,14 @@ import qs.config
 
 import Quickshell.Io
 
-Item {
+QtObject {
     id: root
 
     readonly property string appId: "ambxst"
     readonly property string ipcPipe: "/tmp/ambxst_ipc.pipe"
 
     // High-performance Pipe Listener (Daemon mode)
-    Process {
-        id: pipeListener
+    property Process pipeListener: Process {
         command: ["bash", "-c", "rm -f " + root.ipcPipe + "; mkfifo " + root.ipcPipe + "; tail -f " + root.ipcPipe]
         running: true
         
@@ -74,7 +76,7 @@ Item {
         }
     }
 
-    IpcHandler {
+    property IpcHandler ipcHandler: IpcHandler {
         target: "ambxst"
 
         function run(command: string) {
@@ -190,51 +192,45 @@ Item {
         player.position = clamped;
     }
 
-    GlobalShortcut {
+    property GlobalShortcut shortcutOverview: GlobalShortcut {
         appid: root.appId
         name: "overview"
         description: "Toggle window overview"
-
         onPressed: toggleSimpleModule("overview")
     }
 
-    GlobalShortcut {
+    property GlobalShortcut shortcutPowermenu: GlobalShortcut {
         appid: root.appId
         name: "powermenu"
         description: "Toggle power menu"
-
         onPressed: toggleSimpleModule("powermenu")
     }
 
-    GlobalShortcut {
+    property GlobalShortcut shortcutTools: GlobalShortcut {
         appid: root.appId
         name: "tools"
         description: "Toggle tools menu"
-
         onPressed: toggleSimpleModule("tools")
     }
 
-    GlobalShortcut {
+    property GlobalShortcut shortcutScreenshot: GlobalShortcut {
         appid: root.appId
         name: "screenshot"
         description: "Open screenshot tool"
-
         onPressed: GlobalStates.screenshotToolVisible = true
     }
 
-    GlobalShortcut {
+    property GlobalShortcut shortcutScreenrecord: GlobalShortcut {
         appid: root.appId
         name: "screenrecord"
         description: "Open screen record tool"
-
         onPressed: GlobalStates.screenRecordToolVisible = true
     }
 
-    GlobalShortcut {
+    property GlobalShortcut shortcutLens: GlobalShortcut {
         appid: root.appId
         name: "lens"
         description: "Open Google Lens (screenshot)"
-
         onPressed: {
             Screenshot.captureMode = "lens";
             GlobalStates.screenshotToolVisible = true;
@@ -242,101 +238,89 @@ Item {
     }
 
     // Launcher standalone shortcuts
-    GlobalShortcut {
+    property GlobalShortcut shortcutLauncher: GlobalShortcut {
         appid: root.appId
         name: "launcher"
         description: "Open standalone launcher"
-
         onPressed: toggleLauncher()
     }
 
-    GlobalShortcut {
+    property GlobalShortcut shortcutClipboard: GlobalShortcut {
         appid: root.appId
         name: "clipboard"
         description: "Open launcher clipboard"
-
         onPressed: toggleLauncherWithPrefix(1, Config.prefix.clipboard + " ")
     }
 
-    GlobalShortcut {
+    property GlobalShortcut shortcutEmoji: GlobalShortcut {
         appid: root.appId
         name: "emoji"
         description: "Open launcher emoji picker"
-
         onPressed: toggleLauncherWithPrefix(2, Config.prefix.emoji + " ")
     }
 
-    GlobalShortcut {
+    property GlobalShortcut shortcutTmux: GlobalShortcut {
         appid: root.appId
         name: "tmux"
         description: "Open launcher tmux sessions"
-
         onPressed: toggleLauncherWithPrefix(3, Config.prefix.tmux + " ")
     }
 
-    GlobalShortcut {
+    property GlobalShortcut shortcutNotes: GlobalShortcut {
         appid: root.appId
         name: "notes"
         description: "Open launcher notes"
-
         onPressed: toggleLauncherWithPrefix(4, Config.prefix.notes + " ")
     }
 
     // Dashboard shortcuts
-    GlobalShortcut {
+    property GlobalShortcut shortcutDashboard: GlobalShortcut {
         appid: root.appId
         name: "dashboard"
         description: "Open dashboard widgets tab"
-
         onPressed: toggleDashboardTab(0)
     }
 
-    GlobalShortcut {
+    property GlobalShortcut shortcutWallpapers: GlobalShortcut {
         appid: root.appId
         name: "wallpapers"
         description: "Open dashboard wallpapers tab"
-
         onPressed: toggleDashboardTab(1)
     }
 
-    GlobalShortcut {
+    property GlobalShortcut shortcutAssistant: GlobalShortcut {
         appid: root.appId
         name: "assistant"
         description: "Open dashboard assistant tab"
-
         onPressed: toggleDashboardTab(3)
     }
 
-    GlobalShortcut {
+    property GlobalShortcut shortcutDashboardControls: GlobalShortcut {
         appid: root.appId
         name: "dashboard-controls"
         description: "Open dashboard controls tab"
-
         onPressed: GlobalStates.settingsWindowVisible = !GlobalStates.settingsWindowVisible
     }
 
     // Media player shortcuts
-    GlobalShortcut {
+    property GlobalShortcut shortcutMediaSeekBackward: GlobalShortcut {
         appid: root.appId
         name: "media-seek-backward"
         description: "Seek backward in media player"
-
         onPressed: seekActivePlayer(-mediaSeekStepMs)
     }
 
-    GlobalShortcut {
+    property GlobalShortcut shortcutMediaSeekForward: GlobalShortcut {
         appid: root.appId
         name: "media-seek-forward"
         description: "Seek forward in media player"
-
         onPressed: seekActivePlayer(mediaSeekStepMs)
     }
 
-    GlobalShortcut {
+    property GlobalShortcut shortcutMediaPlayPause: GlobalShortcut {
         appid: root.appId
         name: "media-play-pause"
         description: "Toggle play/pause in media player"
-
         onPressed: {
             if (MprisController.canTogglePlaying) {
                 MprisController.togglePlaying();

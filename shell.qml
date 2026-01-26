@@ -159,10 +159,6 @@ ShellRoot {
         }
     }
 
-    GlobalShortcuts {
-        id: globalShortcuts
-    }
-
     HyprlandConfig {
         id: hyprlandConfig
     }
@@ -264,6 +260,7 @@ ShellRoot {
             _ = WeatherService.dataAvailable
             _ = SystemResources.cpuUsage
             _ = IdleService.lockCmd // Force init
+            _ = GlobalShortcuts.appId // Force init
         }
     }
 }

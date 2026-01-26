@@ -1,5 +1,14 @@
 #!/usr/bin/env bash
 
+LOCKFILE="/tmp/ambxst_loginlock.lock"
+if [ -e "$LOCKFILE" ]; then
+	PID=$(cat "$LOCKFILE")
+	if kill -0 "$PID" 2>/dev/null; then
+		exit 0
+	fi
+fi
+echo $$ >"$LOCKFILE"
+
 CONFIG_FILE="${XDG_CONFIG_HOME:-$HOME/.config}/Ambxst/config/system.json"
 
 get_lock_cmd() {
