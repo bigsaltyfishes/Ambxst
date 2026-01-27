@@ -401,20 +401,26 @@ PanelWindow {
     }
 
     function updateMpvRuntime(enable) {
-        var cmd;
+        var cmdString;
         if (enable) {
-            // Set the shader property to our file path
-            var jsonCmd = JSON.stringify({ "command": ["set_property", "glsl-shaders", mpvShaderPath] });
-            cmd = ["bash", "-c", "echo '" + jsonCmd + "' | socat - " + mpvSocket];
+            // Force reload: Clear shaders first, then set the new one.
+            // MPV won't re-read the file if we just set the same path that's already active.
+            var clearCmd = JSON.stringify({ "command": ["set_property", "glsl-shaders", ""] });
+            var setCmd = JSON.stringify({ "command": ["set_property", "glsl-shaders", mpvShaderPath] });
+            
+            // Send clear, wait a tiny bit, then send set.
+            cmdString = "echo '" + clearCmd + "' | socat - " + mpvSocket + "; sleep 0.05; echo '" + setCmd + "' | socat - " + mpvSocket;
         } else {
             // Clear shaders
             var jsonCmd = JSON.stringify({ "command": ["set_property", "glsl-shaders", ""] });
-            cmd = ["bash", "-c", "echo '" + jsonCmd + "' | socat - " + mpvSocket];
+            cmdString = "echo '" + jsonCmd + "' | socat - " + mpvSocket;
         }
         
-        mpvIpcProcess.command = cmd;
+        mpvIpcProcess.command = ["bash", "-c", cmdString];
         mpvIpcProcess.running = true;
     }
+
+    property int shaderToggle: 0
 
     function updateMpvShader() {
         if (!wallpaperAdapter.tintEnabled) {
@@ -423,6 +429,10 @@ PanelWindow {
         }
         
         var colors = [];
+        // Log the first color to see if it changed
+        var firstColorRaw = Colors[optimizedPalette[0]];
+        console.log("Generating MPV shader. First palette color (" + optimizedPalette[0] + "):", firstColorRaw);
+
         for (var i = 0; i < optimizedPalette.length; i++) {
             var rawColor = Colors[optimizedPalette[i]];
             if (rawColor) {
@@ -435,10 +445,17 @@ PanelWindow {
 
         var shaderContent = ShaderGenerator.generate(colors);
         
+        // Rotate filename to force MPV to see it as a new resource
+        shaderToggle = 1 - shaderToggle;
+        var currentShaderPath = Quickshell.dataDir + "/mpv_tint_" + shaderToggle + ".glsl";
+        
+        // Store the current active path so updateMpvRuntime knows which one to use
+        wallpaper.mpvShaderPath = currentShaderPath;
+        
         var cmd = [
             "python3", "-c", 
             "import sys; open(sys.argv[1], 'w').write(sys.argv[2])", 
-            mpvShaderPath, 
+            currentShaderPath, 
             shaderContent
         ];
         
@@ -473,16 +490,41 @@ PanelWindow {
     Timer {
         id: shaderUpdateDebounce
         interval: 500
-        onTriggered: updateMpvShader()
+        onTriggered: {
+            console.log("Shader debounce triggered, updating MPV...");
+            updateMpvShader();
+        }
     }
     
     Connections {
         target: Colors
-        // Watch for a primary color change as a signal that theme has updated
-        function onPrimaryChanged() { shaderUpdateDebounce.restart() }
+        // Watch for file reload (theme change)
+        function onFileChanged() { 
+            console.log("Colors file changed, scheduling update...");
+            shaderUpdateDebounce.restart();
+        }
+        // Watch for background change (OLED mode often affects this first/only)
+        function onBackgroundChanged() {
+            console.log("Colors background changed, scheduling update...");
+            shaderUpdateDebounce.restart();
+        }
+        // Fallback
+        function onPrimaryChanged() { 
+            console.log("Colors primary changed, scheduling update...");
+            shaderUpdateDebounce.restart();
+        }
+    }
+    
+    Connections {
+        target: Config
+        function onOledModeChanged() {
+            console.log("Config OLED mode changed, scheduling update...");
+            shaderUpdateDebounce.restart();
+        }
     }
     
     onTintEnabledChanged: {
+        console.log("Tint enabled changed to", tintEnabled);
         updateMpvShader();
     }
 
