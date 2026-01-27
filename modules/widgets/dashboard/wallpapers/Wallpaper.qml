@@ -358,6 +358,8 @@ PanelWindow {
         }
     }
 
+    property string mpvSocket: "/tmp/ambxst_mpv_socket"
+
     function runMatugenForCurrentWallpaper() {
         if (activeColorPreset) {
             console.log("Skipping Matugen because color preset is active:", activeColorPreset);
@@ -398,27 +400,41 @@ PanelWindow {
         }
     }
 
+    function updateMpvRuntime(enable) {
+        var cmd;
+        if (enable) {
+            // Set the shader property to our file path
+            var jsonCmd = JSON.stringify({ "command": ["set_property", "glsl-shaders", mpvShaderPath] });
+            cmd = ["bash", "-c", "echo '" + jsonCmd + "' | socat - " + mpvSocket];
+        } else {
+            // Clear shaders
+            var jsonCmd = JSON.stringify({ "command": ["set_property", "glsl-shaders", ""] });
+            cmd = ["bash", "-c", "echo '" + jsonCmd + "' | socat - " + mpvSocket];
+        }
+        
+        mpvIpcProcess.command = cmd;
+        mpvIpcProcess.running = true;
+    }
+
     function updateMpvShader() {
-        if (!wallpaperAdapter.tintEnabled) return;
+        if (!wallpaperAdapter.tintEnabled) {
+            updateMpvRuntime(false);
+            return;
+        }
         
         var colors = [];
         for (var i = 0; i < optimizedPalette.length; i++) {
             var rawColor = Colors[optimizedPalette[i]];
-            // Verify color validity before pushing
             if (rawColor) {
                 var c = Qt.darker(rawColor, 1.0);
                 colors.push({r: c.r, g: c.g, b: c.b});
             }
         }
         
-        if (colors.length === 0) {
-            console.warn("MpvShaderGenerator: No colors found for palette!");
-            return;
-        }
+        if (colors.length === 0) return;
 
         var shaderContent = ShaderGenerator.generate(colors);
         
-        // Write to file using python one-liner
         var cmd = [
             "python3", "-c", 
             "import sys; open(sys.argv[1], 'w').write(sys.argv[2])", 
@@ -431,16 +447,22 @@ PanelWindow {
     }
 
     Process {
+        id: mpvIpcProcess
+        running: false
+        onExited: code => {
+            if (code !== 0) console.warn("MPV IPC failed (is mpvpaper running?)");
+        }
+    }
+
+    Process {
         id: mpvShaderWriter
         running: false
         onExited: code => {
             if (code === 0) {
                 console.log("MPV tint shader generated at:", mpvShaderPath);
                 mpvShaderReady = true;
-                
-                // Force restart mpvpaper if running
-                // We do this by triggering the signal or just letting the user interactions handle it
-                // For now, let's just log it. 
+                // Apply immediately via IPC
+                updateMpvRuntime(true);
             } else {
                 console.warn("Failed to generate MPV shader");
             }
@@ -461,7 +483,7 @@ PanelWindow {
     }
     
     onTintEnabledChanged: {
-        if (tintEnabled) updateMpvShader();
+        updateMpvShader();
     }
 
     Component.onCompleted: {
