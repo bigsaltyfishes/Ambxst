@@ -201,15 +201,20 @@ Rectangle {
         const query = searchQuery.toLowerCase();
         return searchIndex.items.filter(item => {
              return fuzzyMatch(query, item.label) || (item.keywords && item.keywords.includes(query));
-        }).map(item => ({ 
-            label: item.label,
-            section: item.section,
-            subSection: item.subSection || "",
-            subLabel: item.subLabel || "",
-            icon: item.icon,
-            isIcon: item.isIcon !== undefined ? item.isIcon : true,
-            score: fuzzyScore(query, item.label) 
-        })).sort((a, b) => b.score - a.score);
+        }).map(item => {
+            // Find section metadata
+            const sectionMeta = sectionModel.find(s => s.section === item.section) || {};
+            return {
+                label: item.label,
+                section: item.section,
+                subSection: item.subSection || "",
+                subLabel: item.subLabel || "",
+                // Use section icon instead of item icon
+                icon: sectionMeta.icon || item.icon,
+                isIcon: sectionMeta.isIcon !== undefined ? sectionMeta.isIcon : (item.isIcon !== undefined ? item.isIcon : true),
+                score: fuzzyScore(query, item.label)
+            };
+        }).sort((a, b) => b.score - a.score);
     }
 
     // Find the index of current section in filtered list
