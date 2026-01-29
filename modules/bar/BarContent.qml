@@ -154,6 +154,7 @@ Item {
     readonly property bool dockAtEnd: integratedDockEnabled && integratedDockPosition === "end"
 
     readonly property int frameOffset: Config.bar?.frameEnabled ? (Config.bar?.frameThickness ?? 6) : 0
+    readonly property int borderWidth: Config.theme.srBg.border[1]
 
     // Shadow logic for bar components
     readonly property bool shadowsEnabled: Config.showBackground && (!Config.bar.containBar || Config.bar.keepBarShadow)
@@ -321,7 +322,7 @@ Item {
                 id: horizontalLayout
                 visible: root.orientation === "horizontal"
                 anchors.fill: parent
-                anchors.margins: 4
+                anchors.margins: 4 + root.borderWidth
                 spacing: 4
 
                 // Obtener referencia al notch de esta pantalla
@@ -521,7 +522,7 @@ Item {
                 id: verticalLayout
                 visible: root.orientation === "vertical"
                 anchors.fill: parent
-                anchors.margins: 4
+                anchors.margins: 4 + root.borderWidth
                 spacing: 4
 
                 LauncherButton {

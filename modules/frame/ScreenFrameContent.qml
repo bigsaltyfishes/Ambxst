@@ -68,7 +68,8 @@ Item {
 
     readonly property int actualFrameSize: frameEnabled ? thickness : 0
 
-    readonly property int innerRadius: Styling.radius(4)
+    readonly property int borderWidth: Config.theme.srBg.border[1]
+    readonly property int innerRadius: Styling.radius(4 + borderWidth)
 
     // Visual part
     StyledRect {

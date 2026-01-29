@@ -17,6 +17,8 @@ Item {
     property int barHeight: Config.showBackground ? 44 : 40
     property bool containBar: Config.bar?.containBar ?? false
 
+    readonly property int borderWidth: Config.theme.srBg.border[1]
+
     property bool dockEnabled: true
     property string dockPosition: "bottom"
     property bool dockPinned: true
@@ -36,10 +38,11 @@ Item {
 
     // Helper to check if a component is active for exclusive zone on a specific side
     function getExtraZone(side) {
-        let zone = actualFrameSize;
+        let zone = actualFrameSize > 0 ? actualFrameSize + borderWidth : 0;
 
         // Bar zone
         if (barEnabled && barPosition === side && barPinned && barReveal && !barFullscreen) {
+            if (zone === 0) zone = borderWidth;
             zone += barHeight;
             // Add extra thickness if containing bar
             if (containBar) {
@@ -49,6 +52,7 @@ Item {
 
         // Dock zone
         if (dockEnabled && dockPosition === side && dockPinned && dockReveal && !dockFullscreen) {
+            if (zone === 0) zone = borderWidth;
             zone += dockHeight;
         }
 
