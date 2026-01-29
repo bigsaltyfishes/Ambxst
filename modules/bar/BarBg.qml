@@ -15,9 +15,9 @@ Item {
     readonly property bool isHorizontal: position === "top" || position === "bottom"
     readonly property bool cornersVisible: Config.theme.enableCorners && cornerSize > 0
 
-    // New logic: padding 2 if opaque, 0 if transparent
+    // New logic: padding 4 if opaque (>1%), 0 if transparent
     readonly property real bgOpacity: Config.theme.srBarBg.opacity
-    readonly property int padding: bgOpacity < 1.0 ? 0 : 4
+    readonly property int padding: bgOpacity < 0.01 ? 0 : 4
     readonly property int borderWidth: Config.theme.srBarBg.border[1]
 
     // StyledRect expanded that covers bar + corners
