@@ -14,6 +14,8 @@ Singleton {
     property var barPanels: ({})
     property var notches: ({})
     property var notchPanels: ({})
+    property var docks: ({})
+    property var dockPanels: ({})
     property string currentActiveModule: ""
     property string lastFocusedScreen: ""
     property var contextMenu: null
@@ -108,6 +110,30 @@ Singleton {
 
     function getNotchPanelForScreen(screenName) {
         return notchPanels[screenName] || null;
+    }
+
+    function registerDock(screenName, dockContainer) {
+        docks = _updateMap(docks, screenName, dockContainer);
+    }
+
+    function unregisterDock(screenName) {
+        docks = _updateMap(docks, screenName, null);
+    }
+
+    function getDockForScreen(screenName) {
+        return docks[screenName] || null;
+    }
+
+    function registerDockPanel(screenName, dockPanel) {
+        dockPanels = _updateMap(dockPanels, screenName, dockPanel);
+    }
+
+    function unregisterDockPanel(screenName) {
+        dockPanels = _updateMap(dockPanels, screenName, null);
+    }
+
+    function getDockPanelForScreen(screenName) {
+        return dockPanels[screenName] || null;
     }
 
     function setActiveModule(moduleName) {

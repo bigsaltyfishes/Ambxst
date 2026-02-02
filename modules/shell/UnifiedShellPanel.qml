@@ -93,15 +93,19 @@ PanelWindow {
     Component.onCompleted: {
         Visibilities.registerBarPanel(screen.name, unifiedPanel);
         Visibilities.registerNotchPanel(screen.name, unifiedPanel);
+        Visibilities.registerDockPanel(screen.name, dockContent);
         Visibilities.registerBar(screen.name, barContent);
         Visibilities.registerNotch(screen.name, notchContent.notchContainerRef);
+        Visibilities.registerDock(screen.name, dockContent);
     }
 
     Component.onDestruction: {
         Visibilities.unregisterBarPanel(screen.name);
         Visibilities.unregisterNotchPanel(screen.name);
+        Visibilities.unregisterDockPanel(screen.name);
         Visibilities.unregisterBar(screen.name);
         Visibilities.unregisterNotch(screen.name);
+        Visibilities.unregisterDock(screen.name);
     }
 
     // Mask Region Logic
