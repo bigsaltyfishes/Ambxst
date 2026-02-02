@@ -140,17 +140,17 @@ Item {
             Layout.alignment: Qt.AlignHCenter
             spacing: 8
 
-            // +1 Minute Button
+            // -1 Minute Button
             StyledRect {
                 variant: "common"
-                implicitWidth: 44
+                implicitWidth: 32
                 implicitHeight: 32
                 radius: Styling.radius(-4)
                 property bool isHovered: false
 
                 Text {
                     anchors.centerIn: parent
-                    text: "+1m"
+                    text: "-1m"
                     font.family: Config.theme.font
                     font.pixelSize: Styling.fontSize(-1)
                     color: parent.isHovered ? Styling.srItem("overprimary") : Colors.overBackground
@@ -162,9 +162,14 @@ Item {
                     onEntered: parent.isHovered = true
                     onExited: parent.isHovered = false
                     onClicked: {
-                        root.timeLeft += 60;
-                        if (root.isWorkSession) Config.system.pomodoro.workTime += 60;
-                        else Config.system.pomodoro.restTime += 60;
+                        if (root.timeLeft > 60) {
+                            root.timeLeft -= 60;
+                            if (root.isWorkSession) {
+                                if (Config.system.pomodoro.workTime > 60) Config.system.pomodoro.workTime -= 60;
+                            } else {
+                                if (Config.system.pomodoro.restTime > 60) Config.system.pomodoro.restTime -= 60;
+                            }
+                        }
                     }
                 }
             }
@@ -196,29 +201,32 @@ Item {
                 }
             }
 
-            // Reset
+            // +1 Minute Button
             StyledRect {
-                id: resetBtn
                 variant: "common"
-                implicitWidth: 44
+                implicitWidth: 32
                 implicitHeight: 32
                 radius: Styling.radius(-4)
                 property bool isHovered: false
 
                 Text {
                     anchors.centerIn: parent
-                    text: Icons.arrowCounterClockwise
-                    font.family: Icons.font
-                    font.pixelSize: 16
-                    color: resetBtn.isHovered ? Styling.srItem("overprimary") : Colors.overBackground
+                    text: "+1m"
+                    font.family: Config.theme.font
+                    font.pixelSize: Styling.fontSize(-1)
+                    color: parent.isHovered ? Styling.srItem("overprimary") : Colors.overBackground
                 }
 
                 MouseArea {
                     anchors.fill: parent
                     hoverEnabled: true
-                    onEntered: resetBtn.isHovered = true
-                    onExited: resetBtn.isHovered = false
-                    onClicked: root.resetTimer()
+                    onEntered: parent.isHovered = true
+                    onExited: parent.isHovered = false
+                    onClicked: {
+                        root.timeLeft += 60;
+                        if (root.isWorkSession) Config.system.pomodoro.workTime += 60;
+                        else Config.system.pomodoro.restTime += 60;
+                    }
                 }
             }
         }
@@ -297,40 +305,72 @@ Item {
                 color: Colors.outline
             }
 
-            // Custom minimalist checkbox
-            Item {
-                Layout.preferredWidth: 36
-                Layout.preferredHeight: 20
+            // Settings Bottom Row (Checkbox + Reset)
+            RowLayout {
+                Layout.fillWidth: true
                 Layout.alignment: Qt.AlignRight
+                spacing: 12
 
-                Rectangle {
-                    anchors.fill: parent
-                    radius: height / 2
-                    color: Config.system.pomodoro.autoStart ? Styling.srItem("overprimary") : Colors.surfaceBright
-                    opacity: Config.system.pomodoro.autoStart ? 1.0 : 0.3
+                // Custom minimalist checkbox
+                Item {
+                    Layout.preferredWidth: 36
+                    Layout.preferredHeight: 20
 
                     Rectangle {
-                        x: Config.system.pomodoro.autoStart ? parent.width - width - 2 : 2
-                        y: 2
-                        width: 16
-                        height: 16
-                        radius: 8
-                        color: Config.system.pomodoro.autoStart ? Colors.background : Colors.overBackground
+                        anchors.fill: parent
+                        radius: height / 2
+                        color: Config.system.pomodoro.autoStart ? Styling.srItem("overprimary") : Colors.surfaceBright
+                        opacity: Config.system.pomodoro.autoStart ? 1.0 : 0.3
 
-                        Behavior on x {
-                            NumberAnimation { duration: 200; easing.type: Easing.OutQuart }
+                        Rectangle {
+                            x: Config.system.pomodoro.autoStart ? parent.width - width - 2 : 2
+                            y: 2
+                            width: 16
+                            height: 16
+                            radius: 8
+                            color: Config.system.pomodoro.autoStart ? Colors.background : Colors.overBackground
+
+                            Behavior on x {
+                                NumberAnimation { duration: 200; easing.type: Easing.OutQuart }
+                            }
+                        }
+
+                        Behavior on color {
+                            ColorAnimation { duration: 200 }
                         }
                     }
 
-                    Behavior on color {
-                        ColorAnimation { duration: 200 }
+                    MouseArea {
+                        anchors.fill: parent
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: Config.system.pomodoro.autoStart = !Config.system.pomodoro.autoStart
                     }
                 }
 
-                MouseArea {
-                    anchors.fill: parent
-                    cursorShape: Qt.PointingHandCursor
-                    onClicked: Config.system.pomodoro.autoStart = !Config.system.pomodoro.autoStart
+                // Reset Button (32x32)
+                StyledRect {
+                    id: resetBtn
+                    variant: "common"
+                    implicitWidth: 32
+                    implicitHeight: 32
+                    radius: Styling.radius(-4)
+                    property bool isHovered: false
+
+                    Text {
+                        anchors.centerIn: parent
+                        text: Icons.arrowCounterClockwise
+                        font.family: Icons.font
+                        font.pixelSize: 16
+                        color: resetBtn.isHovered ? Styling.srItem("overprimary") : Colors.overBackground
+                    }
+
+                    MouseArea {
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        onEntered: resetBtn.isHovered = true
+                        onExited: resetBtn.isHovered = false
+                        onClicked: root.resetTimer()
+                    }
                 }
             }
         }
