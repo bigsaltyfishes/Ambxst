@@ -740,7 +740,6 @@ Rectangle {
                                 anchors.fill: parent
                                 source: "image://icon/" + appIcon
                                 fillMode: Image.PreserveAspectFit
-                                visible: !Config.tintIcons
                                 
                                 onStatusChanged: {
                                     if (status === Image.Error) {
@@ -751,18 +750,7 @@ Rectangle {
 
                             Tinted {
                                 anchors.fill: parent
-                                visible: Config.tintIcons
-                                sourceItem: Image {
-                                    id: tintedAppIcon
-                                    source: "image://icon/" + appIcon
-                                    fillMode: Image.PreserveAspectFit
-                                    
-                                    onStatusChanged: {
-                                        if (status === Image.Error) {
-                                            source = "image://icon/image-missing";
-                                        }
-                                    }
-                                }
+                                sourceItem: appIconImage
                             }
                         }
 

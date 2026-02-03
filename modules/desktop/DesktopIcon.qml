@@ -114,12 +114,7 @@ Item {
                 anchors.centerIn: parent
                 width: Config.desktop.iconSize
                 height: Config.desktop.iconSize
-                sourceComponent: {
-                    if (root.hasThumbnail) {
-                        return normalIconComponent;
-                    }
-                    return Config.tintIcons ? tintedIconComponent : normalIconComponent;
-                }
+                sourceComponent: Config.tintIcons && !root.hasThumbnail ? tintedIconComponent : normalIconComponent
             }
         }
 

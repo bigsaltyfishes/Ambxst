@@ -71,23 +71,28 @@ Button {
         }
 
         // Image icon (SVG/PNG)
-        Image {
-            id: iconImage
+        Item {
+            id: iconImageContainer
             visible: root.isIconPath
             anchors.centerIn: parent
             width: root.iconSize
             height: root.iconSize
-            source: root.isIconPath ? root.buttonIcon : ""
-            sourceSize: Qt.size(width * 2, height * 2)
-            fillMode: Image.PreserveAspectFit
-            smooth: true
-            asynchronous: true
-            layer.enabled: root.iconTint || root.iconFullTint
-            layer.effect: MultiEffect {
-                brightness: root.iconFullTint ? 1.0 : 0.1
-                contrast: root.iconFullTint ? 0.0 : -0.25
-                colorization: root.iconFullTint ? 1.0 : 0.25
-                colorizationColor: Styling.srItem("overprimary") || Colors.foreground
+
+            Image {
+                id: iconImage
+                anchors.fill: parent
+                source: root.isIconPath ? root.buttonIcon : ""
+                sourceSize: Qt.size(width * 2, height * 2)
+                fillMode: Image.PreserveAspectFit
+                smooth: true
+                asynchronous: true
+            }
+
+            Tinted {
+                anchors.fill: parent
+                sourceItem: iconImage
+                active: root.iconTint || root.iconFullTint
+                fullTint: root.iconFullTint
             }
         }
     }

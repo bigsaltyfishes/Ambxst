@@ -49,8 +49,6 @@ void main() {
     // Normalize
     vec3 finalColor = accumulatedColor / (totalWeight + 0.00001); // Avoid div by zero
 
-    // Optional: Restore a bit of original luminance to keep texture details 
-    // if the blending is too flat. For now, pure mixing is usually cleaner.
-
-    fragColor = vec4(finalColor, tex.a) * ubuf.qt_Opacity;
+    // Pre-multiply alpha for proper blending in Qt Quick
+    fragColor = vec4(finalColor * tex.a, tex.a) * ubuf.qt_Opacity;
 }

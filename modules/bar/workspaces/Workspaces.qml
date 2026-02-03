@@ -496,7 +496,6 @@ Item {
 
                             source: workspaceButtonBackground.mainAppIconSource
                             implicitSize: (!Config.workspaces.alwaysShowNumbers && Config.workspaces.showAppIcons) ? workspaceIconSize : workspaceIconSizeShrinked
-                            visible: !Config.tintIcons
 
                             Behavior on opacity {
                                 enabled: Config.animDuration > 0
@@ -628,7 +627,6 @@ Item {
 
                             source: workspaceButtonBackgroundVert.mainAppIconSource
                             implicitSize: (!Config.workspaces.alwaysShowNumbers && Config.workspaces.showAppIcons) ? workspaceIconSize : workspaceIconSizeShrinked
-                            visible: !Config.tintIcons
 
                             Behavior on opacity {
                                 enabled: Config.animDuration > 0

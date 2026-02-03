@@ -47,7 +47,6 @@ MouseArea {
         width: parent.width
         height: parent.height
         smooth: true
-        visible: !Config.tintIcons
     }
 
     Tinted {
