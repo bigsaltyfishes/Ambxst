@@ -1326,6 +1326,10 @@ Item {
                                     value: "default"
                                 },
                                 {
+                                    label: "Floating",
+                                    value: "floating"
+                                },
+                                {
                                     label: "Integrated",
                                     value: "integrated"
                                 }
@@ -1340,7 +1344,23 @@ Item {
                         }
 
                         NumberInputRow {
+                            label: "Height"
+                            visible: (Config.dock.theme ?? "default") !== "integrated"
+                            value: Config.dock.height ?? 48
+                            minValue: 32
+                            maxValue: 128
+                            suffix: "px"
+                            onValueEdited: newValue => {
+                                if (newValue !== Config.dock.height) {
+                                    GlobalStates.markShellChanged();
+                                    Config.dock.height = newValue;
+                                }
+                            }
+                        }
+
+                        NumberInputRow {
                             label: "Icon Size"
+                            visible: (Config.dock.theme ?? "default") !== "integrated"
                             value: Config.dock.iconSize ?? 40
                             minValue: 24
                             maxValue: 96
@@ -1355,6 +1375,7 @@ Item {
 
                         NumberInputRow {
                             label: "Spacing"
+                            visible: (Config.dock.theme ?? "default") !== "integrated"
                             value: Config.dock.spacing ?? 10
                             minValue: 0
                             maxValue: 32
@@ -1368,21 +1389,23 @@ Item {
                         }
 
                         NumberInputRow {
-                            label: "Padding"
-                            value: Config.dock.padding ?? 8
+                            label: "Margin"
+                            visible: (Config.dock.theme ?? "default") !== "integrated"
+                            value: Config.dock.margin ?? 8
                             minValue: 0
                             maxValue: 32
                             suffix: "px"
                             onValueEdited: newValue => {
-                                if (newValue !== Config.dock.padding) {
+                                if (newValue !== Config.dock.margin) {
                                     GlobalStates.markShellChanged();
-                                    Config.dock.padding = newValue;
+                                    Config.dock.margin = newValue;
                                 }
                             }
                         }
 
                         ToggleRow {
                             label: "Hover to Reveal"
+                            visible: (Config.dock.theme ?? "default") !== "integrated"
                             checked: Config.dock.hoverToReveal ?? true
                             onToggled: value => {
                                 if (value !== Config.dock.hoverToReveal) {
@@ -1394,20 +1417,22 @@ Item {
 
                         NumberInputRow {
                             label: "Hover Region"
-                            value: Config.dock.hoverRegionSize ?? 8
+                            visible: (Config.dock.theme ?? "default") !== "integrated"
+                            value: Config.dock.hoverRegionHeight ?? 8
                             minValue: 0
                             maxValue: 32
                             suffix: "px"
                             onValueEdited: newValue => {
-                                if (newValue !== Config.dock.hoverRegionSize) {
+                                if (newValue !== Config.dock.hoverRegionHeight) {
                                     GlobalStates.markShellChanged();
-                                    Config.dock.hoverRegionSize = newValue;
+                                    Config.dock.hoverRegionHeight = newValue;
                                 }
                             }
                         }
 
                         ToggleRow {
                             label: "Pinned on Startup"
+                            visible: (Config.dock.theme ?? "default") !== "integrated"
                             checked: Config.dock.pinnedOnStartup ?? true
                             onToggled: value => {
                                 if (value !== Config.dock.pinnedOnStartup) {
@@ -1419,6 +1444,7 @@ Item {
 
                         ToggleRow {
                             label: "Show Pin Button"
+                            visible: (Config.dock.theme ?? "default") !== "integrated"
                             checked: Config.dock.showPinButton ?? true
                             onToggled: value => {
                                 if (value !== Config.dock.showPinButton) {
@@ -1430,11 +1456,48 @@ Item {
 
                         ToggleRow {
                             label: "Available on Fullscreen"
+                            visible: (Config.dock.theme ?? "default") !== "integrated"
                             checked: Config.dock.availableOnFullscreen ?? false
                             onToggled: value => {
                                 if (value !== Config.dock.availableOnFullscreen) {
                                     GlobalStates.markShellChanged();
                                     Config.dock.availableOnFullscreen = value;
+                                }
+                            }
+                        }
+
+                        ToggleRow {
+                            label: "Keep Hidden"
+                            visible: (Config.dock.theme ?? "default") !== "integrated"
+                            checked: Config.dock.keepHidden ?? false
+                            onToggled: value => {
+                                if (value !== Config.dock.keepHidden) {
+                                    GlobalStates.markShellChanged();
+                                    Config.dock.keepHidden = value;
+                                }
+                            }
+                        }
+
+                        ToggleRow {
+                            label: "Show Running Indicators"
+                            visible: (Config.dock.theme ?? "default") !== "integrated"
+                            checked: Config.dock.showRunningIndicators ?? true
+                            onToggled: value => {
+                                if (value !== Config.dock.showRunningIndicators) {
+                                    GlobalStates.markShellChanged();
+                                    Config.dock.showRunningIndicators = value;
+                                }
+                            }
+                        }
+
+                        ToggleRow {
+                            label: "Show Overview Button"
+                            visible: (Config.dock.theme ?? "default") !== "integrated"
+                            checked: Config.dock.showOverviewButton ?? true
+                            onToggled: value => {
+                                if (value !== Config.dock.showOverviewButton) {
+                                    GlobalStates.markShellChanged();
+                                    Config.dock.showOverviewButton = value;
                                 }
                             }
                         }
