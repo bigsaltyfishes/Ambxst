@@ -103,10 +103,26 @@ find_ambxst_pid_cached() {
 	echo "$pid"
 }
 
+restart_ambxst() {
+	PID=$(find_ambxst_pid_cached)
+	if [ -n "$PID" ]; then
+		echo "Stopping Ambxst (PID $PID)..."
+		kill "$PID"
+		# Wait for process to exit
+		while kill -0 "$PID" 2>/dev/null; do
+			sleep 0.1
+		done
+	fi
+	echo "Starting Ambxst..."
+	# Relaunch the script in background
+	nohup "$0" >/dev/null 2>&1 &
+}
+
 case "${1:-}" in
 update)
 	echo "Updating Ambxst..."
-	exec curl -fsSL get.axeni.de/ambxst | sh
+	curl -fsSL get.axeni.de/ambxst | sh
+	restart_ambxst
 	;;
 refresh)
 	echo "Refreshing Ambxst profile..."
@@ -151,18 +167,7 @@ lock)
 	}
 	;;
 reload)
-	PID=$(find_ambxst_pid_cached)
-	if [ -n "$PID" ]; then
-		echo "Stopping Ambxst (PID $PID)..."
-		kill "$PID"
-		# Wait for process to exit
-		while kill -0 "$PID" 2>/dev/null; do
-			sleep 0.1
-		done
-	fi
-	echo "Starting Ambxst..."
-	# Relaunch the script in background
-	nohup "$0" >/dev/null 2>&1 &
+	restart_ambxst
 	;;
 quit)
 	PID=$(find_ambxst_pid_cached)
