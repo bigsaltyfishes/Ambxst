@@ -104,8 +104,8 @@ StyledRect {
         anchors.margins: 16
         visible: !MprisController.activePlayer && wallpaperPath === ""
 
-        WavyLine {
-            id: noPlayerWavyLine
+        CarouselProgress {
+            id: noPlayerDots
             anchors.left: parent.left
             anchors.right: parent.right
             anchors.verticalCenter: parent.verticalCenter
@@ -117,8 +117,8 @@ StyledRect {
             fullLength: width
             visible: true
             opacity: 1.0
-            // Disable animations - this is a static "no player" indicator
-            animationsEnabled: false
+            animationsEnabled: true
+            active: true
 
             Behavior on color {
                 enabled: Config.animDuration > 0

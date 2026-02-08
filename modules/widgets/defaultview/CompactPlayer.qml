@@ -74,8 +74,8 @@ Item {
         anchors.fill: parent
         radius: Styling.radius(-4)
 
-        WavyLine {
-            id: noPlayerWavyLine
+        CarouselProgress {
+            id: noPlayerDots
             anchors.left: parent.left
             anchors.right: parent.right
             anchors.verticalCenter: parent.verticalCenter
@@ -88,8 +88,9 @@ Item {
             fullLength: width
             visible: compactPlayer.player === null
             opacity: 1.0
-            // Disable animations - this is a static "no player" indicator
-            animationsEnabled: false
+            // Enable animations for carousel effect
+            animationsEnabled: true
+            active: true
             Behavior on color {
                 enabled: Config.animDuration > 0
                 ColorAnimation {
