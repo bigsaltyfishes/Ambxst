@@ -24,7 +24,7 @@ Item {
     Behavior on dashLength {
         enabled: Config.animDuration > 0
         NumberAnimation {
-            duration: Config.animDuration / 2
+            duration: Config.animDuration
             easing.type: Easing.InOutQuad
         }
     }
@@ -50,7 +50,7 @@ Item {
         Behavior on spacing {
             enabled: Config.animDuration > 0
             NumberAnimation {
-                duration: Config.animDuration / 2
+                duration: Config.animDuration
                 easing.type: Easing.InOutQuad
             }
         }
