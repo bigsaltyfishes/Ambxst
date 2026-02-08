@@ -195,15 +195,17 @@ StyledRect {
             Layout.topMargin: -8
             Layout.bottomMargin: -24
 
-            CircularSeekBar {
+                CircularSeekBar {
                 id: realSeekBar
                 anchors.fill: parent
                 accentColor: Colors.primary
                 trackColor: Colors.outline
                 lineWidth: 6
-                wavy: true
-                waveAmplitude: player.isPlaying ? 3 : 0
-                waveFrequency: 24
+                dashed: true
+                dashedActive: player.isPlaying
+                targetSpacing: 12
+                handleSpacing: 20
+
 
                 startAngleDeg: 180
                 spanAngleDeg: 180
