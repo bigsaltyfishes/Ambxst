@@ -20,7 +20,7 @@ Item {
     property bool animating: amplitude > 0
     
     // -- Internal --
-    readonly property real supersample: 2.0 // 2x is usually sufficient for high DPI, 4x if needed
+    readonly property real supersample: 1.0 // 2x is usually sufficient for high DPI, 4x if needed
     
     Item {
         anchors.fill: parent

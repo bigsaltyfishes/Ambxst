@@ -44,6 +44,7 @@ StyledRect {
 
         Image {
             id: lockPlayerBgArt
+            sourceSize: Qt.size(64, 64)
             anchors.fill: parent
             source: (MprisController.activePlayer?.trackArtUrl ?? "") !== "" ? MprisController.activePlayer.trackArtUrl : lockPlayer.wallpaperPath
             fillMode: Image.PreserveAspectCrop
@@ -161,6 +162,7 @@ StyledRect {
 
                 Image {
                     id: albumArt
+                    sourceSize: Qt.size(128, 128)
                     anchors.fill: parent
                     source: (MprisController.activePlayer?.trackArtUrl ?? "") !== "" ? MprisController.activePlayer.trackArtUrl : lockPlayer.wallpaperPath
                     fillMode: Image.PreserveAspectCrop

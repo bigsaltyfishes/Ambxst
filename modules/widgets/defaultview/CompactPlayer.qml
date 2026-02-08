@@ -108,6 +108,7 @@ Item {
                 id: backgroundArt
                 anchors.fill: parent
                 source: (compactPlayer.player?.trackArtUrl ?? "") !== "" ? compactPlayer.player.trackArtUrl : compactPlayer.wallpaperPath
+                sourceSize: Qt.size(64, 64)
                 fillMode: Image.PreserveAspectCrop
                 asynchronous: true
                 visible: false
@@ -174,6 +175,7 @@ Item {
                         id: artworkImage
                         anchors.fill: parent
                         source: (compactPlayer.player?.trackArtUrl ?? "") !== "" ? compactPlayer.player.trackArtUrl : compactPlayer.wallpaperPath
+                        sourceSize: Qt.size(48, 48)
                         fillMode: Image.PreserveAspectCrop
                         asynchronous: true
                         visible: false

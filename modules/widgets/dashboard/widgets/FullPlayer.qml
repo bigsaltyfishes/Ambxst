@@ -111,6 +111,7 @@ StyledRect {
         id: backgroundArtBlurred
         anchors.fill: parent
         source: (MprisController.activePlayer?.trackArtUrl ?? "") !== "" ? MprisController.activePlayer.trackArtUrl : player.wallpaperPath
+        sourceSize: Qt.size(64, 64)
         fillMode: Image.PreserveAspectCrop
         visible: false
         asynchronous: true
@@ -240,6 +241,7 @@ StyledRect {
                         id: coverArt
                         anchors.fill: parent
                         source: (MprisController.activePlayer?.trackArtUrl ?? "") !== "" ? MprisController.activePlayer.trackArtUrl : player.wallpaperPath
+                        sourceSize: Qt.size(256, 256)
                         fillMode: Image.PreserveAspectCrop
                         asynchronous: true
 

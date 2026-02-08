@@ -12,14 +12,10 @@ Item {
     property real speed: 2.4
 
     // Factor de supersampling optimizado
-    readonly property real supersampleFactor: 2.0
+    readonly property real supersampleFactor: 1.0
 
     // Control for animations - can be disabled from parent to save GPU
     property bool animationsEnabled: true
-
-    layer.enabled: true
-    layer.smooth: true
-    layer.samples: 4  // MSAA para el layer principal
 
     // Contenedor para el shader renderizado a mayor resolución
     Item {
