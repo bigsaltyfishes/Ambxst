@@ -676,7 +676,7 @@ FocusScope {
                 highlightFollowsCurrentItem: !isScrolling
 
                 // Optimizaciones de rendimiento
-                cacheBuffer: cellHeight * 2
+                cacheBuffer: cellHeight
                 displayMarginBeginning: cellHeight
                 displayMarginEnd: cellHeight
                 reuseItems: true
@@ -906,9 +906,19 @@ FocusScope {
 
                                     Text {
                                         anchors.centerIn: parent
-                                        text: "⏳"
+                                        text: Icons.circleNotch
+                                        font.family: Icons.font
                                         font.pixelSize: 24
                                         color: Colors.overSurfaceVariant
+                                        rotation: 0
+
+                                        NumberAnimation on rotation {
+                                            from: 0
+                                            to: 360
+                                            duration: 1000
+                                            loops: Animation.Infinite
+                                            running: parent.visible
+                                        }
                                     }
                                 }
                             }
@@ -992,7 +1002,7 @@ FocusScope {
             fillMode: Image.PreserveAspectCrop
             asynchronous: true
             smooth: true
-            cache: true // El caché se invalida por el parámetro ?v=
+            cache: false // Deshabilitar cache para reducir uso de RAM
             sourceSize.width: wallpaperGridContainer.cellSize
             sourceSize.height: wallpaperGridContainer.cellSize
 
