@@ -3,6 +3,7 @@ import QtQuick.Layouts
 import QtQuick.Effects
 import Quickshell
 import Quickshell.Io
+import Quickshell.Wayland
 import Quickshell.Widgets
 import Quickshell.Hyprland
 import Quickshell.Services.Mpris
@@ -34,33 +35,7 @@ Item {
         return frame ? "file://" + frame : "";
     }
 
-    property string focusedTitle: ""
-
-    Process {
-        id: activeWindowReader
-        command: ["bash", "-c", "hyprctl activewindow -j | jq -r .title"]
-        stdout: StdioCollector {
-            onStreamFinished: {
-                const title = text.trim();
-                if (title && title !== "null") {
-                    compactPlayer.focusedTitle = title;
-                } else {
-                    compactPlayer.focusedTitle = "";
-                }
-            }
-        }
-    }
-
-    Connections {
-        target: Hyprland
-        function onRawEvent(event) {
-            if (event.name === "activewindow" || event.name === "windowtitle") {
-                activeWindowReader.running = true;
-            }
-        }
-    }
-
-    Component.onCompleted: activeWindowReader.running = true;
+    readonly property string focusedTitle: ToplevelManager.activeToplevel?.title ?? ""
 
     property string hostname: ""
 
