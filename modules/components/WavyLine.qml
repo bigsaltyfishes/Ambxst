@@ -49,7 +49,11 @@ Item {
             // Speed is pixels per second
             // dx per tick = speed * dt
             let dt = interval / 1000.0;
-            let dx = root.speed * dt;
+            
+            // Apply a multiplier to make the default speed values (usually ~5-10) feel responsive
+            // Reduced from 20.0 to 4.0 based on feedback
+            let visualSpeedMultiplier = 4.0; 
+            let dx = root.speed * visualSpeedMultiplier * dt;
             
             // Convert dx to dPhase
             // phase = (dx / wavelength) * 2PI
