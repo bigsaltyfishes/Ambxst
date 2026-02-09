@@ -35,7 +35,14 @@ Item {
         return frame ? "file://" + frame : "";
     }
 
-    readonly property string focusedTitle: ToplevelManager.activeToplevel?.title ?? ""
+    readonly property string focusedTitle: {
+        const client = Hyprland.focusedClient;
+        const monitor = Hyprland.focusedMonitor;
+        if (!client || !monitor || client.workspace.id !== monitor.activeWorkspace.id) {
+            return "";
+        }
+        return client.title;
+    }
 
     property string hostname: ""
 
@@ -57,7 +64,7 @@ Item {
 
     readonly property string userHostText: {
         const user = Quickshell.env("USER") || "user";
-        const host = hostname || "Linux";
+        const host = hostname || "host";
         return user + "@" + host;
     }
 
