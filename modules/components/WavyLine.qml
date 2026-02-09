@@ -1,9 +1,7 @@
 import QtQuick
-import QtQuick.Shapes
-import qs.config
 import qs.modules.theme
 
-Item {
+Canvas {
     id: root
 
     // =========================================================================
@@ -12,127 +10,53 @@ Item {
     property color color: Styling.srItem("overprimary")
     property real lineWidth: 2
     property real frequency: 2
-    property real amplitude: 4
-    property real speed: 5
+    property real amplitudeMultiplier: 0.5
+    property real fullLength: width
     property bool running: true
 
-    // Compatibility properties
-    property real amplitudeMultiplier: 1.0 // Legacy support
-    property real fullLength: width
+    // Legacy compatibility
+    property real amplitude: lineWidth * amplitudeMultiplier
+    property real speed: 5  // Not used with Date.now() technique, kept for API compat
     property bool animationsEnabled: true
 
     // =========================================================================
-    // Internal Logic
+    // Rendering
     // =========================================================================
+    readonly property bool shouldAnimate: running && animationsEnabled && 
+                                          visible && width > 0 && opacity > 0
 
-    property real actualAmplitude: amplitude * amplitudeMultiplier
-    
-    // Wave Animation (Phase Shift)
-    property real wavePhase: 0
+    onPaint: {
+        var ctx = getContext("2d");
+        ctx.clearRect(0, 0, width, height);
 
-    Timer {
-        id: animationTimer
-        interval: 32 // ~30 fps target
-        running: root.running && root.visible && root.animationsEnabled && root.width > 0
-        repeat: true
-        onTriggered: {
-            if (root.width <= 0) return;
+        if (width <= 0 || height <= 0) return;
 
-            // Calculate phase shift per tick
-            // Wave equation: y = A * sin(kx - wt)
-            // k = 2PI / wavelength
-            
-            // Use fullLength if available to ensure constant wavelength regardless of current width
-            let baseLen = (root.fullLength > 0) ? root.fullLength : root.width;
-            let freq = (root.frequency > 0) ? root.frequency : 1;
-            let wavelength = baseLen / freq;
-            
-            // Speed is pixels per second
-            // dx per tick = speed * dt
-            let dt = interval / 1000.0;
-            
-            // Apply a multiplier to make the default speed values (usually ~5-10) feel responsive
-            // Reduced from 20.0 to 4.0 based on feedback
-            let visualSpeedMultiplier = 4.0; 
-            let dx = root.speed * visualSpeedMultiplier * dt;
-            
-            // Convert dx to dPhase
-            // phase = (dx / wavelength) * 2PI
-            let dPhase = (dx / wavelength) * Math.PI * 2;
-            
-            // Subtract phase to move wave right
-            root.wavePhase = (root.wavePhase - dPhase) % (Math.PI * 2);
+        var amp = root.lineWidth * root.amplitudeMultiplier;
+        var freq = root.frequency;
+        var phase = Date.now() / 400.0;
+        var centerY = height / 2;
+
+        ctx.strokeStyle = root.color;
+        ctx.lineWidth = root.lineWidth;
+        ctx.lineCap = "round";
+        ctx.beginPath();
+
+        for (var x = ctx.lineWidth / 2; x <= root.width - ctx.lineWidth / 2; x += 1) {
+            var waveY = centerY + amp * Math.sin(freq * 2 * Math.PI * x / root.fullLength + phase);
+            if (x === ctx.lineWidth / 2)
+                ctx.moveTo(x, waveY);
+            else
+                ctx.lineTo(x, waveY);
         }
+
+        ctx.stroke();
     }
 
-    // Dynamic Point Generation
-    function generatePoints(phase) {
-        let points = [];
-        if (root.width <= 0) return points;
-
-        let w = root.width;
-        let h = root.height;
-        let cy = h / 2;
-        let amp = root.actualAmplitude;
-        
-        let baseLen = (root.fullLength > 0) ? root.fullLength : root.width;
-        let freq = (root.frequency > 0) ? root.frequency : 1;
-        
-        // Step size: 2px is a good balance for smoothness vs performance
-        let step = 2; 
-
-        // Generate points covering 0 to width
-        // Because we animate phase, the wave slides through these fixed x-coordinates
-        for (let x = 0; x <= w + step; x += step) {
-            let cx = Math.min(x, w);
-            
-            // Calculate angle based on fixed baseLength/fullLength to prevent squashing
-            // angle = x * (2PI * frequency / fullLength)
-            let angle = cx * (freq * 2 * Math.PI / baseLen);
-            
-            // Apply phase
-            let yOffset = Math.sin(angle + phase) * amp;
-            
-            points.push(Qt.point(cx, cy + yOffset));
-            
-            if (cx >= w) break;
-        }
-        return points;
-    }
-
-    // Clipper Item to handle stroke caps extending beyond bounds
-    // We expand the clip rect by lineWidth to show round caps, but clip any large overflows
-    Item {
-        id: clipper
-        anchors.fill: parent
-        anchors.margins: -root.lineWidth 
-        clip: true 
-        
-        Shape {
-            // Position shape correctly relative to clipper (which starts at -margin)
-            x: root.lineWidth
-            y: root.lineWidth
-            width: root.width
-            height: root.height
-            
-            // Use CurveRenderer for smooth anti-aliased lines
-            preferredRendererType: Shape.CurveRenderer
-            
-            ShapePath {
-                strokeColor: root.color
-                strokeWidth: root.lineWidth
-                fillColor: "transparent"
-                capStyle: ShapePath.RoundCap
-                joinStyle: ShapePath.RoundJoin
-                
-                startX: polyline.path.length > 0 ? polyline.path[0].x : 0
-                startY: polyline.path.length > 0 ? polyline.path[0].y : root.height / 2
-
-                PathPolyline {
-                    id: polyline
-                    path: root.generatePoints(root.wavePhase)
-                }
-            }
-        }
+    // =========================================================================
+    // Animation Driver - FrameAnimation for smooth 60fps
+    // =========================================================================
+    FrameAnimation {
+        running: root.shouldAnimate
+        onTriggered: root.requestPaint()
     }
 }
